@@ -1,0 +1,159 @@
+/* ---- Reset & Base ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+	font-family: system-ui, -apple-system, sans-serif;
+	background: #0f172a;
+	color: #e2e8f0;
+	min-height: 100vh;
+}
+
+a { color: #60a5fa; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- Layout ---- */
+header {
+	background: #1e293b;
+	padding: 1rem 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid #334155;
+}
+header h1 { font-size: 1.4rem; }
+
+main {
+	max-width: 900px;
+	margin: 1.5rem auto;
+	padding: 0 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+/* ---- Card ---- */
+.card {
+	background: #1e293b;
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	border: 1px solid #334155;
+}
+.card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #94a3b8; }
+
+/* ---- Mode Controls ---- */
+.mode-buttons { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+
+.mode-panel {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	margin-bottom: 0.75rem;
+	padding: 0.75rem;
+	background: #0f172a;
+	border-radius: 0.5rem;
+}
+.mode-panel label { min-width: 140px; color: #94a3b8; font-size: 0.9rem; }
+.mode-panel input[type="range"] { flex: 1; min-width: 120px; }
+.mode-panel span { min-width: 50px; text-align: right; font-weight: bold; }
+
+.inline-field { display: flex; align-items: center; gap: 0.5rem; }
+
+/* ---- Telemetry Grid ---- */
+.telemetry-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 0.75rem;
+}
+
+.metric {
+	background: #0f172a;
+	border-radius: 0.5rem;
+	padding: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+.metric .icon { font-size: 1.25rem; }
+.metric .label { font-size: 0.75rem; color: #64748b; }
+.metric .value { font-size: 1.1rem; font-weight: bold; }
+.metric.error { border: 1px solid #ef4444; background: #450a0a; }
+
+/* ---- Chart ---- */
+.chart-section canvas { width: 100% !important; }
+
+/* ---- Buttons ---- */
+.btn {
+	padding: 0.5rem 1.1rem;
+	border-radius: 0.5rem;
+	border: none;
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: #3b82f6; color: #fff; }
+.btn-danger  { background: #ef4444; color: #fff; }
+.btn-warning { background: #f59e0b; color: #000; }
+
+/* ---- Config Form ---- */
+.config-form form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+fieldset {
+	border: 1px solid #334155;
+	border-radius: 0.5rem;
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+legend {
+	padding: 0 0.5rem;
+	font-size: 0.85rem;
+	color: #94a3b8;
+	font-weight: 600;
+}
+
+label {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	font-size: 0.9rem;
+	color: #cbd5e1;
+}
+label.checkbox-label {
+	flex-direction: row;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="password"] {
+	background: #0f172a;
+	border: 1px solid #475569;
+	border-radius: 0.4rem;
+	padding: 0.45rem 0.7rem;
+	color: #e2e8f0;
+	font-size: 0.9rem;
+	width: 100%;
+}
+input[type="range"] { width: 100%; accent-color: #3b82f6; }
+input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: #3b82f6; }
+
+.form-actions { display: flex; justify-content: flex-end; }
+
+/* ---- Notification ---- */
+.notification {
+	padding: 0.75rem 1rem;
+	border-radius: 0.5rem;
+	margin-bottom: 0.75rem;
+	font-weight: 600;
+}
+.notification.success { background: #14532d; border: 1px solid #16a34a; color: #86efac; }
+.notification.error   { background: #450a0a; border: 1px solid #dc2626; color: #fca5a5; }

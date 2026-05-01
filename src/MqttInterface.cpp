@@ -1,0 +1,288 @@
+#include "MqttInterface.h"
+
+#define MQTT_RECONNECT_INTERVAL_MS	5000
+
+MqttInterface* MqttInterface::_instance = nullptr;
+
+MqttInterface::MqttInterface(State& state, Controller& controller)
+	: _state(state), _controller(controller),
+	  _mqttClient(_wifiClient),
+	  _enabled(false), _lastReconnectMs(0) {
+	_instance = this;
+}
+
+void MqttInterface::begin() {
+	{
+		StateGuard guard(_state);
+		_enabled = _state.mqtt.get();
+	}
+	if (!_enabled) return;
+
+	_mqttClient.setCallback(_mqttCallback);
+	_mqttClient.setBufferSize(2048);
+
+	_connect();
+}
+
+void MqttInterface::loop() {
+	if (!_enabled) return;
+
+	if (!_mqttClient.connected()) {
+		unsigned long now = millis();
+		if (now - _lastReconnectMs >= MQTT_RECONNECT_INTERVAL_MS) {
+			_lastReconnectMs = now;
+			_connect();
+		}
+	} else {
+		_mqttClient.loop();
+	}
+}
+
+void MqttInterface::publishState() {
+	if (!_enabled || !_mqttClient.connected()) return;
+
+	String rootTopic;
+	{
+		StateGuard guard(_state);
+		rootTopic = _state.mqttRootTopic.get();
+	}
+
+	JsonDocument doc;
+	JsonObject obj = doc.to<JsonObject>();
+	{
+		StateGuard guard(_state);
+		// Publish all state except mqtt* config
+		_state.toJson(obj, true, true, true);
+	}
+
+	String payload;
+	serializeJson(doc, payload);
+	String topic = rootTopic + "/state";
+	_mqttClient.publish(topic.c_str(), payload.c_str(), true /* retained */);
+}
+
+void MqttInterface::_connect() {
+	String server, username, password, rootTopic, hostname;
+	int port;
+	bool haDiscovery;
+
+	{
+		StateGuard guard(_state);
+		server = _state.mqttServer.get();
+		port = _state.mqttPort.get();
+		username = _state.mqttUsername.get();
+		password = _state.mqttPassword.get();
+		rootTopic = _state.mqttRootTopic.get();
+		hostname = _state.hostname.get();
+		haDiscovery = _state.mqttHADiscovery.get();
+	}
+
+	if (server.isEmpty()) {
+		Serial.println("[MQTT] No server configured, skipping connect");
+		return;
+	}
+
+	_mqttClient.setServer(server.c_str(), port);
+
+	String clientId = "cool-bed-" + hostname;
+	bool connected;
+	if (username.isEmpty()) {
+		connected = _mqttClient.connect(clientId.c_str());
+	} else {
+		connected = _mqttClient.connect(clientId.c_str(), username.c_str(), password.c_str());
+	}
+
+	if (connected) {
+		Serial.printf("[MQTT] Connected to %s:%d\n", server.c_str(), port);
+
+		// Subscribe to set topics for all non-mqtt config properties
+		String subTopic = rootTopic + "/+/set";
+		_mqttClient.subscribe(subTopic.c_str());
+		Serial.printf("[MQTT] Subscribed to: %s\n", subTopic.c_str());
+
+		// Publish current state on connect
+		publishState();
+
+		// Publish HA discovery if enabled
+		if (haDiscovery) {
+			_publishDiscovery();
+		}
+	} else {
+		Serial.printf("[MQTT] Connection failed, rc=%d\n", _mqttClient.state());
+	}
+}
+
+void MqttInterface::_onMessage(char* topic, uint8_t* payload, unsigned int length) {
+	String topicStr = String(topic);
+	String rootTopic;
+	{
+		StateGuard guard(_state);
+		rootTopic = _state.mqttRootTopic.get();
+	}
+
+	// Extract property name: ${rootTopic}/<name>/set
+	String prefix = rootTopic + "/";
+	String suffix = "/set";
+	if (!topicStr.startsWith(prefix) || !topicStr.endsWith(suffix)) return;
+
+	String propName = topicStr.substring(prefix.length(), topicStr.length() - suffix.length());
+
+	// Filter out mqtt* properties — these must only be set via web interface
+	if (propName.startsWith("mqtt") || propName.startsWith("Mqtt")) {
+		Serial.printf("[MQTT] Ignoring mqtt* property via MQTT: %s\n", propName.c_str());
+		return;
+	}
+
+	String value = String((char*)payload).substring(0, length);
+	Serial.printf("[MQTT] Received %s = %s\n", propName.c_str(), value.c_str());
+
+	// Apply to state
+	JsonDocument doc;
+	doc[propName] = value;
+	JsonObjectConst obj = doc.as<JsonObjectConst>();
+	bool changed;
+	{
+		StateGuard guard(_state);
+		changed = _state.applyConfigJson(obj);
+	}
+
+	if (changed) {
+		// If mode changed, notify controller
+		if (propName == "mode") {
+			_controller.setMode(value);
+		} else {
+			_controller.notifyConfigChanged();
+		}
+	}
+}
+
+void MqttInterface::_mqttCallback(char* topic, uint8_t* payload, unsigned int length) {
+	if (_instance) {
+		_instance->_onMessage(topic, payload, length);
+	}
+}
+
+void MqttInterface::_addDeviceInfo(JsonObject& obj) {
+	String hostname;
+	{
+		StateGuard guard(_state);
+		hostname = _state.hostname.get();
+	}
+	JsonObject device = obj["device"].to<JsonObject>();
+	JsonArray ids = device["identifiers"].to<JsonArray>();
+	ids.add(hostname);
+	device["name"] = "Cool Bed (" + hostname + ")";
+	device["model"] = "Cool Bed v1";
+	device["manufacturer"] = "AYG";
+}
+
+void MqttInterface::_publishDiscovery() {
+	String haTopic, rootTopic, hostname;
+	{
+		StateGuard guard(_state);
+		haTopic = _state.mqttHADiscoveryTopic.get();
+		rootTopic = _state.mqttRootTopic.get();
+		hostname = _state.hostname.get();
+	}
+
+	String stateTopic = rootTopic + "/state";
+	String deviceTopic = haTopic + "/device/" + hostname + "/config";
+
+	// Build single device discovery document with all entities
+	JsonDocument doc;
+	JsonObject root = doc.to<JsonObject>();
+
+	// Device info
+	JsonObject device = root["device"].to<JsonObject>();
+	JsonArray ids = device["identifiers"].to<JsonArray>();
+	ids.add(hostname);
+	device["name"] = "Cool Bed (" + hostname + ")";
+	device["model"] = "Cool Bed v1";
+	device["manufacturer"] = "AYG";
+
+	// Components (entities)
+	JsonObject components = root["components"].to<JsonObject>();
+
+	// --- Telemetry sensors ---
+	auto addSensor = [&](const char* id, const char* name, const char* deviceClass,
+	                      const char* unit, const char* valueKey) {
+		JsonObject e = components[id].to<JsonObject>();
+		e["platform"] = "sensor";
+		e["name"] = name;
+		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
+		if (unit && strlen(unit) > 0) e["unit_of_measurement"] = unit;
+		e["state_topic"] = stateTopic;
+		e["value_template"] = String("{{ value_json.") + valueKey + " }}";
+		e["unique_id"] = hostname + "_" + id;
+	};
+
+	auto addBinarySensor = [&](const char* id, const char* name, const char* deviceClass,
+	                            const char* valueKey) {
+		JsonObject e = components[id].to<JsonObject>();
+		e["platform"] = "binary_sensor";
+		e["name"] = name;
+		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
+		e["state_topic"] = stateTopic;
+		e["value_template"] = String("{{ value_json.") + valueKey + " }}";
+		e["payload_on"] = true;
+		e["payload_off"] = false;
+		e["unique_id"] = hostname + "_" + id;
+	};
+
+	addSensor("status", "Status", "", "", "status");
+	addBinarySensor("error", "Error", "problem", "error");
+	addSensor("pump_speed", "Pump Speed", "", "", "pumpSpeed");
+	addSensor("flow", "Flow", "", "L/min", "flow");
+	addSensor("flow_pulses_filtered_per_sec", "Flow Pulses/s (filtered)", "", "p/s", "flowPulsesFilteredPerSec");
+	addSensor("out_temperature", "Outgoing Temperature", "temperature", "°C", "outTemperature");
+	addSensor("return_temperature", "Return Temperature", "temperature", "°C", "returnTemperature");
+	addSensor("pump_voltage", "Pump Voltage", "voltage", "mV", "pumpVoltage");
+	addSensor("pump_current", "Pump Current", "current", "mA", "pumpCurrent");
+
+	// --- Settable config (number entities) ---
+	auto addNumber = [&](const char* id, const char* name, const char* unit,
+	                      const char* valueKey, float minVal, float maxVal, float step) {
+		JsonObject e = components[id].to<JsonObject>();
+		e["platform"] = "number";
+		e["name"] = name;
+		if (unit && strlen(unit) > 0) e["unit_of_measurement"] = unit;
+		e["state_topic"] = stateTopic;
+		e["value_template"] = String("{{ value_json.") + valueKey + " }}";
+		e["command_topic"] = rootTopic + "/" + valueKey + "/set";
+		e["min"] = minVal;
+		e["max"] = maxVal;
+		e["step"] = step;
+		e["unique_id"] = hostname + "_" + id;
+	};
+
+	addNumber("speed_set_point", "Speed Set Point", "", "speedSetPoint", 1, 255, 1);
+	addNumber("temperature_set_point", "Temperature Set Point", "°C", "temperatureSetPoint", 10, 40, 0.5);
+	addNumber("calibration_volume", "Calibration Volume", "ml", "calibrationVolume", 1, 5000, 1);
+	addNumber("calibration_flow", "Calibration Flow", "L/min", "calibrationFlow", 0, 100, 0.01);
+	addNumber("calibration_flow_pulses", "Calibration Flow Pulses", "", "calibrationFlowPulses", 1, 10000, 1);
+	addNumber("system_time", "System Response Time", "s", "systemTime", 0, 600, 1);
+	addNumber("min_flow_pulses_per_sec", "Min Flow Pulses/s", "p/s", "minFlowPulsesPerSec", 1, 1000, 1);
+	addNumber("max_current", "Max Current", "mA", "maxCurrent", 1, 1200, 1);
+	addNumber("min_voltage", "Min Voltage", "mV", "minVoltage", 0, 40000, 1);
+
+	// --- Mode select ---
+	{
+		JsonObject e = components["mode"].to<JsonObject>();
+		e["platform"] = "select";
+		e["name"] = "Mode";
+		e["state_topic"] = stateTopic;
+		e["value_template"] = "{{ value_json.mode }}";
+		e["command_topic"] = rootTopic + "/mode/set";
+		JsonArray options = e["options"].to<JsonArray>();
+		options.add("stop");
+		options.add("speed");
+		options.add("temperature");
+		options.add("calibration");
+		e["unique_id"] = hostname + "_mode";
+	}
+
+	String payload;
+	serializeJson(doc, payload);
+	_mqttClient.publish(deviceTopic.c_str(), payload.c_str(), true /* retained */);
+	Serial.printf("[MQTT] Published HA discovery to: %s\n", deviceTopic.c_str());
+}
