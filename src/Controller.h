@@ -93,7 +93,7 @@ private:
 
 	// Button debounce
 	unsigned long _buttonPressMs;
-	bool _buttonWasPressed;
+	bool _buttonIsPressed;
 
 	// Built-in LED blink
 	unsigned long _lastLedToggleMs;

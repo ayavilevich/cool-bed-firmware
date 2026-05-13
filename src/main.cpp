@@ -5,8 +5,10 @@
 #include "WebInterface.h"
 #include "MqttInterface.h"
 
+#define SERIAL_BAUD_RATE 115200
+
 // Global instances (accessible by Connectivity.cpp for button-triggered reset)
-Connectivity* g_connectivity = nullptr;
+Connectivity* g_connectivity = nullptr; // TODO, remove this. make come less spaghetti.
 
 State         g_state;
 Controller    g_controller(g_state);
@@ -15,7 +17,7 @@ WebInterface  g_webInterface(g_state, g_controller);
 MqttInterface g_mqttInterface(g_state, g_controller);
 
 void setup() {
-	Serial.begin(115200);
+	Serial.begin(SERIAL_BAUD_RATE);
 	Serial.println("\n[Main] Cool Bed firmware starting...");
 
 	// Initialise state (loads persisted config)

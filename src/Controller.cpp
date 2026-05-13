@@ -8,7 +8,7 @@ Controller::Controller(State& state)
 	  _owReturn(DALLAS_SENSOR_RETURNING_PIN),
 	  _tempOut(&_owOut),
 	  _tempReturn(&_owReturn),
-	  _ina226(INA226_I2C_ADDRESS, &Wire),
+	  _ina226(INA226_I2C_ADDRESS),
 	  _lastSampleMs(0),
 	  _prevRawPulses(0),
 	  _prevFilteredPulses(0),
@@ -20,13 +20,14 @@ Controller::Controller(State& state)
 	  _modeJustChanged(false),
 	  _inError(false),
 	  _buttonPressMs(0),
-	  _buttonWasPressed(false),
+	  _buttonIsPressed(false),
 	  _lastLedToggleMs(0),
 	  _builtinLedState(false),
 	  _lastTempAdjMs(0) {
 }
 
 void Controller::begin() {
+	// init LEDs
 	pinMode(RED_LED_PIN, OUTPUT);
 	pinMode(GREEN_LED_PIN, OUTPUT);
 	pinMode(BUILTIN_LED_PIN, OUTPUT);
@@ -34,6 +35,7 @@ void Controller::begin() {
 	digitalWrite(GREEN_LED_PIN, LOW);
 	digitalWrite(BUILTIN_LED_PIN, LOW);
 
+	// init button with pullup
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
 #ifdef MOTOR_DRIVER_TB6612_AIN1_PIN
@@ -56,9 +58,9 @@ void Controller::begin() {
 	_ina226.init();
 	_ina226.setResistorRange(INA226_SHUNT_RESISTANCE, INA226_MAX_CURRENT_A);
 	_ina226.setAverage(INA226_AVERAGE_128);
-	_ina226.setConversionTime(INA226_CONV_TIME_204US);
-	_ina226.setCorrectionFactor(1.0f);
-	_ina226.startContinuousMode();
+	_ina226.setConversionTime(INA226_CONV_TIME_204);
+	// _ina226.setCorrectionFactor(1.0f);
+	_ina226.waitUntilConversionCompleted(); // if you comment this line the first data might be zero
 
 	_modeStartMs = millis();
 	_modeJustChanged = true;
@@ -75,16 +77,16 @@ void Controller::loop() {
 
 void Controller::checkButton() {
 	bool pressed = (digitalRead(BUTTON_PIN) == LOW);
-	if (pressed && !_buttonWasPressed) {
+	if (pressed && !_buttonIsPressed) { // button was pressed
 		_buttonPressMs = millis();
-		_buttonWasPressed = true;
-	} else if (!pressed) {
-		_buttonWasPressed = false;
+		_buttonIsPressed = true;
+	} else if (!pressed) { // button is not pressed
+		_buttonIsPressed = false;
 		_buttonPressMs = 0;
-	} else if (pressed && _buttonWasPressed && _buttonPressMs > 0) {
+	} else if (pressed && _buttonIsPressed && _buttonPressMs > 0) { // button is being held
 		if (millis() - _buttonPressMs >= BUTTON_HOLD_MS) {
 			Serial.println("[Controller] Button held 5s - requesting WiFi reset");
-			_buttonPressMs = 0;
+			_buttonPressMs = 0; // reset timer to avoid multiple triggers
 			extern void requestWifiReset();
 			requestWifiReset();
 		}

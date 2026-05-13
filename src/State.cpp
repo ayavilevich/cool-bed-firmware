@@ -16,6 +16,7 @@ void State::unlock() {
 	xSemaphoreGive(_mutex);
 }
 
+// load config from preferences to memory. Called at startup.
 void State::loadConfig() {
 	Preferences prefs;
 	prefs.begin(PREFS_NAMESPACE, true); // read-only
@@ -41,10 +42,9 @@ void State::loadConfig() {
 	prefs.end();
 }
 
+// convert config to JSON
 void State::_configToJson(JsonObject obj, bool excludeMqtt) const {
-	if (!excludeMqtt || (String(hostname.getName()).indexOf("mqtt") == -1 && String(hostname.getName()).indexOf("Mqtt") == -1)) {
-		hostname.toJson(obj);
-	}
+	hostname.toJson(obj);
 	if (!excludeMqtt) {
 		mqtt.toJson(obj);
 		mqttServer.toJson(obj);
@@ -67,6 +67,7 @@ void State::_configToJson(JsonObject obj, bool excludeMqtt) const {
 	minVoltage.toJson(obj);
 }
 
+// convert telemetry to JSON
 void State::_telemetryToJson(JsonObject obj) const {
 	status.toJson(obj);
 	error.toJson(obj);
@@ -82,6 +83,7 @@ void State::_telemetryToJson(JsonObject obj) const {
 	flow.toJson(obj);
 }
 
+// convert state to JSON
 void State::toJson(JsonObject obj, bool includeConfig, bool includeTelemetry, bool excludeMqttConfig) const {
 	if (includeConfig) {
 		_configToJson(obj, excludeMqttConfig);
@@ -91,17 +93,18 @@ void State::toJson(JsonObject obj, bool includeConfig, bool includeTelemetry, bo
 	}
 }
 
+// convert JSON with config to State and Preferences
 bool State::applyConfigJson(const JsonObjectConst& obj) {
 	bool changed = false;
 	Preferences prefs;
 	prefs.begin(PREFS_NAMESPACE, false);
 
 	auto applyAndSave = [&](auto& var) {
-		String key = var.getName();
-		if (!obj[key].isNull()) {
-			var.fromJson(obj);
-			var.save(prefs);
-			changed = true;
+		String key = var.getName(); // get config name
+		if (!obj[key].isNull()) { // check if config is in JSON
+			var.fromJson(obj); // load value from JSON to memory
+			var.save(prefs); // persist to preferences
+			changed = true; // mark flag
 		}
 	};
 

@@ -28,7 +28,7 @@ void FlowSensor::begin() {
 	esp_timer_create_args_t timerArgs = {
 		.callback = _timerIsr,
 		.arg = nullptr,
-		.dispatch_method = ESP_TIMER_ISR,
+		.dispatch_method = ESP_TIMER_TASK, // ESP_TIMER_ISR needs CONFIG_ESP_TIMER_SUPPORTS_ISR_DISPATCH_METHOD
 		.name = "flow_filter_timer",
 		.skip_unhandled_events = true,
 	};
@@ -50,9 +50,9 @@ void IRAM_ATTR FlowSensor::_rawIsr() {
 	}
 }
 
-bool IRAM_ATTR FlowSensor::_timerIsr(void* arg) {
+void IRAM_ATTR FlowSensor::_timerIsr(void* arg) {
 	FlowSensor* self = _instance;
-	if (!self) return false;
+	if (!self) return;
 
 	// Read current pin level
 	int level = gpio_get_level(self->_gpioNum);
@@ -74,6 +74,4 @@ bool IRAM_ATTR FlowSensor::_timerIsr(void* arg) {
 			// falling edge — don't count, we count rising edges only
 		}
 	}
-
-	return false; // no high-priority task woken
 }

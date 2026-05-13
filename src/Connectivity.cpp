@@ -11,14 +11,15 @@ Connectivity::Connectivity(State& state)
 }
 
 void Connectivity::begin() {
-	String apSsid;
+	String apSsid, hostname;
 	{
 		StateGuard guard(_state);
 		apSsid = _state.hostname.get();
+		hostname = _state.hostname.get();
 	}
 
 	_wifiManager.setConfigPortalBlocking(true);
-	_wifiManager.setHostname(apSsid.c_str());
+	_wifiManager.setHostname(hostname.c_str());
 
 	// Connect or open config portal
 	bool ok = _wifiManager.autoConnect(apSsid.c_str());

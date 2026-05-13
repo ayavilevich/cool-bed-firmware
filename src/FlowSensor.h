@@ -41,5 +41,5 @@ private:
 	// Statics needed because ISR callbacks can't be member functions
 	static FlowSensor* _instance;
 	static void IRAM_ATTR _rawIsr();
-	static bool IRAM_ATTR _timerIsr(void* arg);
+	static void IRAM_ATTR _timerIsr(void* arg);
 };

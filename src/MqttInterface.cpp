@@ -112,6 +112,7 @@ void MqttInterface::_connect() {
 	}
 }
 
+// on incoming mqtt data
 void MqttInterface::_onMessage(char* topic, uint8_t* payload, unsigned int length) {
 	String topicStr = String(topic);
 	String rootTopic;
@@ -133,11 +134,16 @@ void MqttInterface::_onMessage(char* topic, uint8_t* payload, unsigned int lengt
 		return;
 	}
 
-	String value = String((char*)payload).substring(0, length);
+	// String value = String((char*)payload).substring(0, length); // don't do this as payload might not be null terminated
+	String value;
+	value.reserve(length); // reserve will add space for null terminator
+	for (unsigned int i = 0; i < length; i++) {
+		value += (char)payload[i];
+	}
 	Serial.printf("[MQTT] Received %s = %s\n", propName.c_str(), value.c_str());
 
 	// Apply to state
-	JsonDocument doc;
+	JsonDocument doc; // setting values via MQTT is done one by one, so create a JSON document with just one property and pass to State::applyConfigJson
 	doc[propName] = value;
 	JsonObjectConst obj = doc.as<JsonObjectConst>();
 	bool changed;
