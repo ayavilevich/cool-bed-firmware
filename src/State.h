@@ -10,6 +10,12 @@
 // Namespace for preferences storage
 #define PREFS_NAMESPACE "cool-bed"
 
+// Operating mode values
+#define STATE_STOP "stop"
+#define STATE_SPEED "speed"
+#define STATE_TEMPERATURE "temperature"
+#define STATE_CALIBRATION "calibration"
+
 class State {
 public:
 	State();
@@ -48,7 +54,7 @@ public:
 	ConfigVar<String>        mqttRootTopic   { "mqttRootTopic",   "cool-bed",       "",     "MQTT root topic"                                 };
 	ConfigVar<bool>          mqttHADiscovery { "mqttHADiscovery", true,             "",     "Enable HA MQTT discovery"                        };
 	ConfigVar<String>        mqttHADiscoveryTopic { "mqttHADiscoveryTopic", "homeassistant", "", "HA discovery topic prefix"                  };
-	ConfigVar<String>        mode            { "mode",            "stop",           "",     "Operating mode: stop/speed/temperature/calibration" };
+	ConfigVar<String>        mode            { "mode",            STATE_STOP,        "",     "Operating mode: stop/speed/temperature/calibration" };
 	ConfigVar<uint8_t>       speedSetPoint   { "speedSetPoint",   255,              "",     "Pump speed set point",        1,    255           };
 	ConfigVar<float>         temperatureSetPoint { "temperatureSetPoint", 20.0f,    "°C",   "Temperature set point",       10.0f, 40.0f        };
 	ConfigVar<unsigned int>  calibrationVolume { "calibrationVolume", 500,          "ml",   "Calibration volume",          1,    5000         };

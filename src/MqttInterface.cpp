@@ -206,12 +206,6 @@ void MqttInterface::_publishDiscovery() {
 
 	// Device info
 	_addDeviceInfo(root);
-	// JsonObject device = root["device"].to<JsonObject>();
-	// JsonArray ids = device["identifiers"].to<JsonArray>();
-	// ids.add(hostname);
-	// device["name"] = "Cool Bed (" + hostname + ")";
-	// device["model"] = "Cool Bed v1";
-	// device["manufacturer"] = "AYG";
 
 	// Components (entities)
 	JsonObject components = root["components"].to<JsonObject>();
@@ -287,10 +281,10 @@ void MqttInterface::_publishDiscovery() {
 		e["value_template"] = "{{ value_json.mode }}";
 		e["command_topic"] = rootTopic + "/mode/set";
 		JsonArray options = e["options"].to<JsonArray>();
-		options.add("stop");
-		options.add("speed");
-		options.add("temperature");
-		options.add("calibration");
+		options.add(STATE_STOP);
+		options.add(STATE_SPEED);
+		options.add(STATE_TEMPERATURE);
+		options.add(STATE_CALIBRATION);
 		e["unique_id"] = hostname + "_mode";
 	}
 

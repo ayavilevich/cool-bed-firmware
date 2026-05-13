@@ -121,7 +121,7 @@ void Controller::setMode(const String& newMode) {
 
 	{
 		StateGuard guard(_state);
-		if (_state.mode.get() == "calibration" && newMode != "calibration") {
+		if (_state.mode.get() == STATE_CALIBRATION && newMode != STATE_CALIBRATION) {
 			leavingCalibration = true;
 			uint64_t pulsesDelta = _state.flowPulsesFiltered.get() - _calibStartPulses;
 			unsigned int fps = _state.flowPulsesFilteredPerSec.get();
@@ -158,7 +158,7 @@ void Controller::setMode(const String& newMode) {
 	_currentSpeed = 255;
 	_lastTempAdjMs = 0;
 
-	if (newMode == "calibration") {
+	if (newMode == STATE_CALIBRATION) {
 		StateGuard guard(_state);
 		_calibStartPulses = _state.flowPulsesFiltered.get();
 		_calibStartMs = millis();
@@ -351,7 +351,7 @@ void Controller::_runMode() {
 	unsigned long now = millis();
 	unsigned long elapsed = (now - _modeStartMs) / 1000;
 
-	if (currentMode == "stop") {
+	if (currentMode == STATE_STOP) {
 		if (_modeJustChanged) {
 			_setPumpSpeed(0);
 			{
@@ -361,7 +361,7 @@ void Controller::_runMode() {
 			_modeJustChanged = false;
 		}
 
-	} else if (currentMode == "speed") {
+	} else if (currentMode == STATE_SPEED) {
 		uint8_t setPoint;
 		{
 			StateGuard guard(_state);
@@ -386,7 +386,7 @@ void Controller::_runMode() {
 			}
 		}
 
-	} else if (currentMode == "temperature") {
+	} else if (currentMode == STATE_TEMPERATURE) {
 		float returnTemp, setPoint;
 		unsigned int filteredPerSec;
 		{
@@ -426,7 +426,7 @@ void Controller::_runMode() {
 			// Equal: do nothing
 		}
 
-	} else if (currentMode == "calibration") {
+	} else if (currentMode == STATE_CALIBRATION) {
 		uint8_t setPoint;
 		{
 			StateGuard guard(_state);

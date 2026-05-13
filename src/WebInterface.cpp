@@ -55,7 +55,7 @@ void WebInterface::_handleGetState(AsyncWebServerRequest* request) {
 		StateGuard guard(_state);
 		_state.toJson(obj, true, true, false);
 		// Remove password from response for security
-		obj.remove("mqttPassword");
+		// obj.remove("mqttPassword"); // Already excluded by toJson
 	}
 
 	String response;
@@ -102,7 +102,7 @@ void WebInterface::_handlePostMode(AsyncWebServerRequest* request, uint8_t* data
 
 	String newMode = doc["mode"].as<String>();
 	// Validate mode value
-	if (newMode != "stop" && newMode != "speed" && newMode != "temperature" && newMode != "calibration") {
+	if (newMode != STATE_STOP && newMode != STATE_SPEED && newMode != STATE_TEMPERATURE && newMode != STATE_CALIBRATION) {
 		request->send(400, "application/json", "{\"error\":\"Invalid mode\"}");
 		return;
 	}
