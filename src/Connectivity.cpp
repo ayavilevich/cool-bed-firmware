@@ -1,11 +1,5 @@
 #include "Connectivity.h"
 
-// Forward declaration — implemented in main.cpp and called by Controller
-void requestWifiReset() {
-	extern Connectivity* g_connectivity;
-	if (g_connectivity) g_connectivity->resetWifi();
-}
-
 Connectivity::Connectivity(State& state)
 	: _state(state), _connected(false) {
 }

@@ -1,8 +1,10 @@
 #include "Controller.h"
+#include "Connectivity.h"
 #include <Wire.h>
 
-Controller::Controller(State& state)
+Controller::Controller(State& state, Connectivity& connectivity)
 	: _state(state),
+	  _connectivity(connectivity),
 	  _flowSensor(FLOW_SENSOR_PIN),
 	  _owOut(DALLAS_SENSOR_OUTGOING_PIN),
 	  _owReturn(DALLAS_SENSOR_RETURNING_PIN),
@@ -87,8 +89,7 @@ void Controller::checkButton() {
 		if (millis() - _buttonPressMs >= BUTTON_HOLD_MS) {
 			Serial.println("[Controller] Button held 5s - requesting WiFi reset");
 			_buttonPressMs = 0; // reset timer to avoid multiple triggers
-			extern void requestWifiReset();
-			requestWifiReset();
+			_connectivity.resetWifi();
 		}
 	}
 }

@@ -4,6 +4,8 @@
 #include "State.h"
 #include "FlowSensor.h"
 
+class Connectivity; // can't include Connectivity.h here due to circular dependency or conflict between WebServer.h and ESPAsyncWebServer.h, just forward declare
+
 // INA226 library
 #include <INA226_WE.h>
 // Dallas temperature
@@ -35,7 +37,7 @@ using EventCallback = std::function<void()>;
 
 class Controller {
 public:
-	Controller(State& state);
+	Controller(State& state, Connectivity& connectivity);
 
 	void begin();
 	void loop();
@@ -58,6 +60,7 @@ public:
 
 private:
 	State& _state;
+	Connectivity& _connectivity;
 	FlowSensor _flowSensor;
 
 	OneWire _owOut;

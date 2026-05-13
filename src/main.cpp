@@ -7,12 +7,9 @@
 
 #define SERIAL_BAUD_RATE 115200
 
-// Global instances (accessible by Connectivity.cpp for button-triggered reset)
-Connectivity* g_connectivity = nullptr; // TODO, remove this. make come less spaghetti.
-
 State         g_state;
-Controller    g_controller(g_state);
 Connectivity  g_connectivityObj(g_state);
+Controller    g_controller(g_state, g_connectivityObj);
 WebInterface  g_webInterface(g_state, g_controller);
 MqttInterface g_mqttInterface(g_state, g_controller);
 
@@ -22,9 +19,6 @@ void setup() {
 
 	// Initialise state (loads persisted config)
 	g_state.begin();
-
-	// Set global pointer used by requestWifiReset()
-	g_connectivity = &g_connectivityObj;
 
 	// Wire up MQTT callbacks to controller events
 	g_controller.onTelemetryUpdated([&]() {
