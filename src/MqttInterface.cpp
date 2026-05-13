@@ -1,6 +1,10 @@
 #include "MqttInterface.h"
 
-#define MQTT_RECONNECT_INTERVAL_MS	5000
+#define MQTT_RECONNECT_INTERVAL_MS 5000
+#define AD_NAME_PREFIX "Cool Bed ("
+#define AD_NAME_SUFFIX ")"
+#define AD_MANUFACTURER "AY Garage"
+#define AD_MODEL "Cool Bed v1"
 
 MqttInterface* MqttInterface::_instance = nullptr;
 
@@ -162,6 +166,7 @@ void MqttInterface::_onMessage(char* topic, uint8_t* payload, unsigned int lengt
 	}
 }
 
+// static callback to pass data to our single instance method
 void MqttInterface::_mqttCallback(char* topic, uint8_t* payload, unsigned int length) {
 	if (_instance) {
 		_instance->_onMessage(topic, payload, length);
@@ -175,11 +180,12 @@ void MqttInterface::_addDeviceInfo(JsonObject& obj) {
 		hostname = _state.hostname.get();
 	}
 	JsonObject device = obj["device"].to<JsonObject>();
-	JsonArray ids = device["identifiers"].to<JsonArray>();
-	ids.add(hostname);
-	device["name"] = "Cool Bed (" + hostname + ")";
-	device["model"] = "Cool Bed v1";
-	device["manufacturer"] = "AYG";
+	// JsonArray ids = device["identifiers"].to<JsonArray>();
+	// ids.add(hostname);
+	device["ids"] = hostname;
+	device["name"] = AD_NAME_PREFIX + hostname + AD_NAME_SUFFIX;
+	device["model"] = AD_MODEL;
+	device["manufacturer"] = AD_MANUFACTURER;
 }
 
 void MqttInterface::_publishDiscovery() {
@@ -199,12 +205,13 @@ void MqttInterface::_publishDiscovery() {
 	JsonObject root = doc.to<JsonObject>();
 
 	// Device info
-	JsonObject device = root["device"].to<JsonObject>();
-	JsonArray ids = device["identifiers"].to<JsonArray>();
-	ids.add(hostname);
-	device["name"] = "Cool Bed (" + hostname + ")";
-	device["model"] = "Cool Bed v1";
-	device["manufacturer"] = "AYG";
+	_addDeviceInfo(root);
+	// JsonObject device = root["device"].to<JsonObject>();
+	// JsonArray ids = device["identifiers"].to<JsonArray>();
+	// ids.add(hostname);
+	// device["name"] = "Cool Bed (" + hostname + ")";
+	// device["model"] = "Cool Bed v1";
+	// device["manufacturer"] = "AYG";
 
 	// Components (entities)
 	JsonObject components = root["components"].to<JsonObject>();

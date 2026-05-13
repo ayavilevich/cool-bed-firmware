@@ -6,6 +6,8 @@
 #include "State.h"
 #include "Controller.h"
 
+// Note that the implementation allows for just one instance of this class due to use of static callback members.
+
 class MqttInterface {
 public:
 	MqttInterface(State& state, Controller& controller);

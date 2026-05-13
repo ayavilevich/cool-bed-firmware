@@ -13,6 +13,8 @@
 // Both counters are uint64_t and increase monotonically (never reset).
 // The caller subtracts snapshots to get per-interval counts.
 
+// Note that the implementation allows for just one instance of this class due to use of static members as ISRs.
+
 #define FLOW_TIMER_INTERVAL_US	50		// timer fires every 50 microseconds
 #define FLOW_HISTORY_BITS		16		// bits in the pin history window
 
