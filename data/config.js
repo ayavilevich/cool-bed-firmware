@@ -24,6 +24,8 @@ function configApp() {
 					mqttHADiscoveryTopic:   data.mqttHADiscoveryTopic ?? 'homeassistant',
 					speedSetPoint:          data.speedSetPoint ?? 128,
 					temperatureSetPoint:    data.temperatureSetPoint ?? 20,
+					outTemperatureCalibrationOffset: data.outTemperatureCalibrationOffset ?? 0,
+					returnTemperatureCalibrationOffset: data.returnTemperatureCalibrationOffset ?? 0,
 					calibrationVolume:      data.calibrationVolume ?? 500,
 					calibrationFlow:        data.calibrationFlow ?? 1.0,
 					calibrationFlowPulses:  data.calibrationFlowPulses ?? 500,

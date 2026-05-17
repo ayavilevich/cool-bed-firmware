@@ -64,6 +64,12 @@
 						<input type="range" min="10" max="40" step="0.5" x-model.number="cfg.temperatureSetPoint">
 						<span x-text="cfg.temperatureSetPoint + ' °C'"></span>
 					</label>
+					<label>Outgoing Temperature Offset (°C)
+						<input type="number" x-model.number="cfg.outTemperatureCalibrationOffset" min="-10" max="10" step="0.1">
+					</label>
+					<label>Return Temperature Offset (°C)
+						<input type="number" x-model.number="cfg.returnTemperatureCalibrationOffset" min="-10" max="10" step="0.1">
+					</label>
 					<label>System Response Time (s)
 						<input type="number" x-model.number="cfg.systemTime" min="0" max="600">
 					</label>

@@ -308,6 +308,12 @@ void Controller::_sampleSensors() {
 		_triggerError("outgoing temperature sensor failure");
 		return;
 	}
+	float outTempOffset = 0.0f;
+	{
+		StateGuard guard(_state);
+		outTempOffset = _state.outTemperatureCalibrationOffset.get();
+	}
+	outTemp += outTempOffset;
 	{
 		StateGuard guard(_state);
 		_state.outTemperature.set(outTemp);
@@ -318,6 +324,12 @@ void Controller::_sampleSensors() {
 		_triggerError("return temperature sensor failure");
 		return;
 	}
+	float returnTempOffset = 0.0f;
+	{
+		StateGuard guard(_state);
+		returnTempOffset = _state.returnTemperatureCalibrationOffset.get();
+	}
+	returnTemp += returnTempOffset;
 	{
 		StateGuard guard(_state);
 		_state.returnTemperature.set(returnTemp);

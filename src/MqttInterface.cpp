@@ -281,6 +281,8 @@ void MqttInterface::_publishDiscovery() {
 
 	addNumber("speed_set_point", "Speed Set Point", "", "speedSetPoint", 1, 255, 1);
 	addNumber("temperature_set_point", "Temperature Set Point", "°C", "temperatureSetPoint", 10, 40, 0.5);
+	addNumber("out_temp_calibration_offset", "Outgoing Temperature Offset", "°C", "outTemperatureCalibrationOffset", -10, 10, 0.1);
+	addNumber("return_temp_calibration_offset", "Return Temperature Offset", "°C", "returnTemperatureCalibrationOffset", -10, 10, 0.1);
 	addNumber("calibration_volume", "Calibration Volume", "ml", "calibrationVolume", 1, 5000, 1);
 	addNumber("calibration_flow", "Calibration Flow", "L/min", "calibrationFlow", 0, 100, 0.01);
 	addNumber("calibration_flow_pulses", "Calibration Flow Pulses", "", "calibrationFlowPulses", 1, 10000, 1);

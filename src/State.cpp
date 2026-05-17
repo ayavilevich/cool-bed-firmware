@@ -32,6 +32,8 @@ void State::loadConfig() {
 	mode.load(prefs);
 	speedSetPoint.load(prefs);
 	temperatureSetPoint.load(prefs);
+	outTemperatureCalibrationOffset.load(prefs);
+	returnTemperatureCalibrationOffset.load(prefs);
 	calibrationVolume.load(prefs);
 	calibrationFlow.load(prefs);
 	calibrationFlowPulses.load(prefs);
@@ -58,6 +60,8 @@ void State::_configToJson(JsonObject obj, bool excludeMqtt) const {
 	mode.toJson(obj);
 	speedSetPoint.toJson(obj);
 	temperatureSetPoint.toJson(obj);
+	outTemperatureCalibrationOffset.toJson(obj);
+	returnTemperatureCalibrationOffset.toJson(obj);
 	calibrationVolume.toJson(obj);
 	calibrationFlow.toJson(obj);
 	calibrationFlowPulses.toJson(obj);
@@ -120,6 +124,8 @@ bool State::applyConfigJson(const JsonObjectConst& obj) {
 	applyAndSave(mode);
 	applyAndSave(speedSetPoint);
 	applyAndSave(temperatureSetPoint);
+	applyAndSave(outTemperatureCalibrationOffset);
+	applyAndSave(returnTemperatureCalibrationOffset);
 	applyAndSave(calibrationVolume);
 	applyAndSave(calibrationFlow);
 	applyAndSave(calibrationFlowPulses);
