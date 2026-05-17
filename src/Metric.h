@@ -20,6 +20,7 @@ public:
 	T getMax() const { return _maxVal; }
 
 	T get() const { return _value; }
+	bool isDefault() const { return _value == _defaultValue; }
 
 	void set(T val) { _value = val; }
 

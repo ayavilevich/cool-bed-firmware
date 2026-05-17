@@ -99,7 +99,7 @@ Protect state by a semaphore/mutex.
 Create a templated class to facilitate metrics/variables. One instance of the class will be created for each variable. The class will keep the value, implement serializing and parsing to String, serializing and parsing to json value, min/max values, units, description and perform other common functionality that all configuration properties have.
 
 Create a templated class to facilitate configuration variables (inherits from the "metric" class above). One instance of the class will be created for each configuration variable. The class will allow loading and saving to "Preferences" and perform other common functionality that all configuration variables have.
-Based on template type, decide Preference type, etc.
+Based on template type, decide Preference type, etc. Use a second shorter key for Preferences that is no more than 16 chars.
 
 Here are the variables of the state that are set by the user and we need to persist (configuration):
 
@@ -124,6 +124,8 @@ Here are the variables of the state that are set by the user and we need to pers
 | minFlowPulsesPerSec| uint   | 10      | minimum filtered flow pulses to consider flow       | [1, 1000]                             | input.number      | Number         |
 | maxCurrent         | uint   | 1000    | mA of pump current after which to trigger error     | [1, 1200]                             | input.number      | Number         |
 | minVoltage         | uint   | 4000    | mV of pump voltage below which to trigger error     | [0, 40000]                            | input.number      | Number         |
+| outTemperatureCalibrationOffset    | float  | 0       | value to add to out temperature sensor reading    | [-10, 10]               | input.number      | Number         |
+| returnTemperatureCalibrationOffset | float  | 0       | value to add to return temperature sensor reading | [-10, 10]               | input.number      | Number         |
 
 Note: calibrationFlow and calibrationFlowPulses are user-editable config but also can be set by the firmware. This is to allow tuning by the user. Assume most of the time they will be automatically calculated.
 

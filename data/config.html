@@ -17,16 +17,12 @@
 		<section class="card config-form">
 			<h2>Settings</h2>
 
-			<template x-if="notification">
-				<div class="notification" :class="notificationClass" x-text="notification"></div>
-			</template>
-
 			<form @submit.prevent="save()">
 
 				<fieldset>
 					<legend>Device</legend>
 					<label>Hostname
-						<input type="text" x-model="cfg.hostname" pattern="[a-zA-Z0-9_-]+" required>
+						<input type="text" x-model="cfg.hostname" pattern="[a-zA-Z0-9_\-]+" required>
 					</label>
 				</fieldset>
 
@@ -99,6 +95,10 @@
 					<button type="submit" class="btn btn-primary">💾 Save</button>
 				</div>
 			</form>
+
+			<template x-if="notification">
+				<div class="notification" :class="notificationClass" x-text="notification"></div>
+			</template>
 		</section>
 	</main>
 

@@ -82,7 +82,7 @@ private:
 
 	// Mode operation state
 	unsigned long _modeStartMs;		// when current mode was entered
-	uint8_t _currentSpeed;			// used in temperature mode
+	uint8_t _currentSpeed;			// track current speed to avoid redundant writes to motor driver and adjust value relative to it in temperature mode
 	uint64_t _calibStartPulses;		// flowPulsesFiltered at calibration start
 	unsigned long _calibStartMs;	// millis at calibration start
 	bool _modeJustChanged;
@@ -104,6 +104,9 @@ private:
 
 	// Temperature mode timing
 	unsigned long _lastTempAdjMs;
+
+	// Serial state summary
+	unsigned long _lastSerialPrintMs;
 
 	void _sampleSensors();
 	void _runMode();

@@ -1,10 +1,14 @@
 #include "MqttInterface.h"
 
 #define MQTT_RECONNECT_INTERVAL_MS 5000
+#define MQTT_BUFFER_SIZE 6144 // our auto-discovery payload is about 5KB, so need to increase default 256B buffer size
+// autodiscovery consts
+#define AD_NAME "Cool Bed"
 #define AD_NAME_PREFIX "Cool Bed ("
 #define AD_NAME_SUFFIX ")"
 #define AD_MANUFACTURER "AY Garage"
 #define AD_MODEL "Cool Bed v1"
+#define AD_ORIGIN_NAME "cool-bed-firmware"
 
 MqttInterface* MqttInterface::_instance = nullptr;
 
@@ -23,7 +27,7 @@ void MqttInterface::begin() {
 	if (!_enabled) return;
 
 	_mqttClient.setCallback(_mqttCallback);
-	_mqttClient.setBufferSize(2048);
+	_mqttClient.setBufferSize(MQTT_BUFFER_SIZE);
 
 	_connect();
 }
@@ -175,15 +179,22 @@ void MqttInterface::_mqttCallback(char* topic, uint8_t* payload, unsigned int le
 
 void MqttInterface::_addDeviceInfo(JsonObject& obj) {
 	String hostname;
+	bool isHostnameDefault;
 	{
 		StateGuard guard(_state);
 		hostname = _state.hostname.get();
+		isHostnameDefault = _state.hostname.isDefault();
 	}
 	JsonObject device = obj["device"].to<JsonObject>();
-	// JsonArray ids = device["identifiers"].to<JsonArray>();
-	// ids.add(hostname);
-	device["ids"] = hostname;
-	device["name"] = AD_NAME_PREFIX + hostname + AD_NAME_SUFFIX;
+	JsonArray ids = device["identifiers"].to<JsonArray>();
+	ids.add(hostname);
+	if (isHostnameDefault) {
+		device["name"] = AD_NAME;
+		Serial.printf("[MQTT] Hostname is default (%s), using generic device name: %s\n", hostname.c_str(), AD_NAME);
+	} else {
+		device["name"] = AD_NAME_PREFIX + hostname + AD_NAME_SUFFIX;
+		Serial.printf("[MQTT] Hostname is custom (%s), using device name: %s\n", hostname.c_str(), (AD_NAME_PREFIX + hostname + AD_NAME_SUFFIX).c_str());
+	}
 	device["model"] = AD_MODEL;
 	device["manufacturer"] = AD_MANUFACTURER;
 }
@@ -206,6 +217,10 @@ void MqttInterface::_publishDiscovery() {
 
 	// Device info
 	_addDeviceInfo(root);
+
+	// Origin
+	JsonObject origin = root["origin"].to<JsonObject>();
+	origin["name"] = AD_ORIGIN_NAME;
 
 	// Components (entities)
 	JsonObject components = root["components"].to<JsonObject>();
@@ -230,9 +245,10 @@ void MqttInterface::_publishDiscovery() {
 		e["name"] = name;
 		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
 		e["state_topic"] = stateTopic;
-		e["value_template"] = String("{{ value_json.") + valueKey + " }}";
-		e["payload_on"] = true;
-		e["payload_off"] = false;
+		// e["value_template"] = String("{{ value_json.") + valueKey + " }}";
+		e["value_template"] = String("{{ 'ON' if value_json.") + valueKey + " else 'OFF' }}"; // AI suggested that Home Assistant expects "ON"/"OFF" strings, so need to convert boolean to string here
+		// e["payload_on"] = "ON"; // should be default this way
+		// e["payload_off"] = "OFF"; // should be default this way
 		e["unique_id"] = hostname + "_" + id;
 	};
 
@@ -241,6 +257,7 @@ void MqttInterface::_publishDiscovery() {
 	addSensor("pump_speed", "Pump Speed", "", "", "pumpSpeed");
 	addSensor("flow", "Flow", "", "L/min", "flow");
 	addSensor("flow_pulses_filtered_per_sec", "Flow Pulses/s (filtered)", "", "p/s", "flowPulsesFilteredPerSec");
+	addSensor("flow_pulses_raw_per_sec", "Flow Pulses/s (raw)", "", "p/s", "flowPulsesRawPerSec");
 	addSensor("out_temperature", "Outgoing Temperature", "temperature", "°C", "outTemperature");
 	addSensor("return_temperature", "Return Temperature", "temperature", "°C", "returnTemperature");
 	addSensor("pump_voltage", "Pump Voltage", "voltage", "mV", "pumpVoltage");
@@ -281,15 +298,21 @@ void MqttInterface::_publishDiscovery() {
 		e["value_template"] = "{{ value_json.mode }}";
 		e["command_topic"] = rootTopic + "/mode/set";
 		JsonArray options = e["options"].to<JsonArray>();
-		options.add(STATE_STOP);
-		options.add(STATE_SPEED);
-		options.add(STATE_TEMPERATURE);
-		options.add(STATE_CALIBRATION);
+		options.add(MODE_STOP);
+		options.add(MODE_SPEED);
+		options.add(MODE_TEMPERATURE);
+		options.add(MODE_CALIBRATION);
 		e["unique_id"] = hostname + "_mode";
 	}
 
 	String payload;
 	serializeJson(doc, payload);
+	if (payload.length() > MQTT_BUFFER_SIZE) {
+		Serial.printf("[MQTT] Error - HA discovery payload size %d exceeds buffer size %d, cannot publish\n", payload.length(), MQTT_BUFFER_SIZE);
+		return;
+	}
+	// Serial.printf("[MQTT] Publishing HA discovery to: %s\nPayload size: %d\nPayload:\n%s\n", deviceTopic.c_str(), payload.length(), payload.c_str());
+	Serial.printf("[MQTT] Publishing HA discovery to: %s\nPayload size: %d\n", deviceTopic.c_str(), payload.length());
 	_mqttClient.publish(deviceTopic.c_str(), payload.c_str(), true /* retained */);
 	Serial.printf("[MQTT] Published HA discovery to: %s\n", deviceTopic.c_str());
 }

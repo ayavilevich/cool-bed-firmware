@@ -2,6 +2,8 @@
 #include "Connectivity.h"
 #include <Wire.h>
 
+#define SERIAL_PRINT_INTERVAL_MS		5000
+
 Controller::Controller(State& state, Connectivity& connectivity)
 	: _state(state),
 	  _connectivity(connectivity),
@@ -25,7 +27,8 @@ Controller::Controller(State& state, Connectivity& connectivity)
 	  _buttonIsPressed(false),
 	  _lastLedToggleMs(0),
 	  _builtinLedState(false),
-	  _lastTempAdjMs(0) {
+	  _lastTempAdjMs(0),
+	  _lastSerialPrintMs(0) {
 }
 
 void Controller::begin() {
@@ -41,10 +44,6 @@ void Controller::begin() {
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
 #ifdef MOTOR_DRIVER_TB6612_AIN1_PIN
-	pinMode(MOTOR_DRIVER_TB6612_AIN1_PIN, OUTPUT);
-	pinMode(MOTOR_DRIVER_TB6612_AIN2_PIN, OUTPUT);
-	pinMode(MOTOR_DRIVER_TB6612_STBY_PIN, OUTPUT);
-	digitalWrite(MOTOR_DRIVER_TB6612_STBY_PIN, HIGH);
 	_motor = new Motor(MOTOR_DRIVER_TB6612_AIN1_PIN, MOTOR_DRIVER_TB6612_AIN2_PIN,
 	                   MOTOR_DRIVER_PWM_PIN, 1, MOTOR_DRIVER_TB6612_STBY_PIN);
 #else
@@ -70,11 +69,30 @@ void Controller::begin() {
 
 void Controller::loop() {
 	unsigned long now = millis();
+
+	// sensors
 	if (now - _lastSampleMs >= SENSOR_SAMPLE_INTERVAL_MS) {
 		_lastSampleMs = now;
 		_sampleSensors();
 	}
+
+	// BL
 	_runMode();
+
+	// Serial report
+	if (now - _lastSerialPrintMs >= SERIAL_PRINT_INTERVAL_MS) {
+		_lastSerialPrintMs = now;
+		StateGuard guard(_state);
+		Serial.printf("[State] mode=%-12s status=%-12s speed=%3u outT=%5.1f°C retT=%5.1f°C flow=%5.2fL/min V=%4umV I=%4umA\n",
+			_state.mode.get().c_str(),
+			_state.status.get().c_str(),
+			_state.pumpSpeed.get(),
+			_state.outTemperature.get(),
+			_state.returnTemperature.get(),
+			_state.flow.get(),
+			_state.pumpVoltage.get(),
+			_state.pumpCurrent.get());
+	}
 }
 
 void Controller::checkButton() {
@@ -121,7 +139,7 @@ void Controller::setMode(const String& newMode) {
 
 	{
 		StateGuard guard(_state);
-		if (_state.mode.get() == STATE_CALIBRATION && newMode != STATE_CALIBRATION) {
+		if (_state.mode.get() == MODE_CALIBRATION && newMode != MODE_CALIBRATION) {
 			leavingCalibration = true;
 			uint64_t pulsesDelta = _state.flowPulsesFiltered.get() - _calibStartPulses;
 			unsigned int fps = _state.flowPulsesFilteredPerSec.get();
@@ -158,7 +176,7 @@ void Controller::setMode(const String& newMode) {
 	_currentSpeed = 255;
 	_lastTempAdjMs = 0;
 
-	if (newMode == STATE_CALIBRATION) {
+	if (newMode == MODE_CALIBRATION) {
 		StateGuard guard(_state);
 		_calibStartPulses = _state.flowPulsesFiltered.get();
 		_calibStartMs = millis();
@@ -184,6 +202,7 @@ void Controller::_triggerError(const String& cause) {
 	_inError = true;
 	_errorCause = cause;
 	_setPumpSpeed(0);
+	_state.mode.set(MODE_STOP);
 	digitalWrite(RED_LED_PIN, HIGH);
 	Serial.printf("[Controller] ERROR: %s\n", cause.c_str());
 	if (_onTelemetryUpdated) _onTelemetryUpdated();
@@ -206,11 +225,13 @@ void Controller::_setPumpSpeed(uint8_t speed) {
 	}
 #ifdef MOTOR_DRIVER_TB6612_AIN1_PIN
 	if (_motor) {
-		if (speed == 0) {
-			_motor->brake();
-		} else {
-			_motor->drive(map(speed, 0, 255, 0, 100));
-		}
+		// this is a pump, not a wheel, no need to use braking or handle reverse direction
+		// if (speed == 0) {
+		// 	_motor->brake();
+		// } else {
+		// 	_motor->drive(speed);
+		// }
+		_motor->drive(speed);
 	}
 #else
 	analogWrite(MOTOR_DRIVER_PWM_PIN, speed);
@@ -351,7 +372,7 @@ void Controller::_runMode() {
 	unsigned long now = millis();
 	unsigned long elapsed = (now - _modeStartMs) / 1000;
 
-	if (currentMode == STATE_STOP) {
+	if (currentMode == MODE_STOP) {
 		if (_modeJustChanged) {
 			_setPumpSpeed(0);
 			{
@@ -361,20 +382,28 @@ void Controller::_runMode() {
 			_modeJustChanged = false;
 		}
 
-	} else if (currentMode == STATE_SPEED) {
+	} else if (currentMode == MODE_SPEED) {
 		uint8_t setPoint;
 		{
 			StateGuard guard(_state);
 			setPoint = _state.speedSetPoint.get();
 		}
+		// init
 		if (_modeJustChanged) {
-			_setPumpSpeed(setPoint);
 			{
 				StateGuard guard(_state);
 				_state.status.set("speed");
 			}
 			_modeJustChanged = false;
+			_currentSpeed = setPoint;
+			_setPumpSpeed(_currentSpeed);
 		}
+		// update speed
+		if (setPoint != _currentSpeed) {
+			_currentSpeed = setPoint;
+			_setPumpSpeed(_currentSpeed);
+		}
+		// check for errors
 		if (elapsed >= sysTime) {
 			unsigned int fps;
 			{
@@ -386,7 +415,7 @@ void Controller::_runMode() {
 			}
 		}
 
-	} else if (currentMode == STATE_TEMPERATURE) {
+	} else if (currentMode == MODE_TEMPERATURE) {
 		float returnTemp, setPoint;
 		unsigned int filteredPerSec;
 		{
@@ -426,7 +455,7 @@ void Controller::_runMode() {
 			// Equal: do nothing
 		}
 
-	} else if (currentMode == STATE_CALIBRATION) {
+	} else if (currentMode == MODE_CALIBRATION) {
 		uint8_t setPoint;
 		{
 			StateGuard guard(_state);

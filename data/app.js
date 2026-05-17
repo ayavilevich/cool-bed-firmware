@@ -37,9 +37,13 @@ function coolBedApp() {
 				this.state = data;
 				this._loadFromState();
 				this._recordHistory(data);
-				this._updateChart();
 			} catch (e) {
 				console.error('Failed to fetch state:', e);
+			}
+			try {
+				this._updateChart();
+			} catch (e) {
+				console.error('Failed to update chart:', e);
 			}
 		},
 
@@ -130,6 +134,8 @@ function coolBedApp() {
 
 		// ---- Chart ----
 		_updateChart() {
+			if (!this._history.length) return;
+
 			const labels = this._history.map(h =>
 				new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 			);
@@ -144,7 +150,11 @@ function coolBedApp() {
 			];
 
 			if (!this._chart) {
-				const ctx = document.getElementById('telemetryChart').getContext('2d');
+				const canvas = document.getElementById('telemetryChart');
+				if (!canvas) return;
+				const ctx = canvas.getContext('2d');
+				if (!ctx) return;
+
 				this._chart = new Chart(ctx, {
 					type: 'line',
 					data: { labels, datasets },
@@ -153,7 +163,9 @@ function coolBedApp() {
 						responsive: true,
 						interaction: { mode: 'index', intersect: false },
 						plugins: {
-							legend: { labels: { color: '#e2e8f0', boxWidth: 12 } },
+							// Work around a legend layout crash seen in some browser/Chart.js combinations.
+							legend: false,
+							// legend: { labels: { color: '#e2e8f0', boxWidth: 12 } },
 						},
 						scales: {
 							x: {
@@ -175,9 +187,7 @@ function coolBedApp() {
 				});
 			} else {
 				this._chart.data.labels = labels;
-				this._chart.data.datasets.forEach((ds, i) => {
-					ds.data = datasets[i].data;
-				});
+				this._chart.data.datasets = datasets;
 				this._chart.update('none');
 			}
 		},

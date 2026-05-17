@@ -11,10 +11,10 @@
 #define PREFS_NAMESPACE "cool-bed"
 
 // Operating mode values
-#define STATE_STOP "stop"
-#define STATE_SPEED "speed"
-#define STATE_TEMPERATURE "temperature"
-#define STATE_CALIBRATION "calibration"
+#define MODE_STOP "stop"
+#define MODE_SPEED "speed"
+#define MODE_TEMPERATURE "temperature"
+#define MODE_CALIBRATION "calibration"
 
 class State {
 public:
@@ -53,15 +53,15 @@ public:
 	ConfigVar<String>        mqttPassword    { "mqttPassword",    "",               "",     "MQTT password"                                   };
 	ConfigVar<String>        mqttRootTopic   { "mqttRootTopic",   "cool-bed",       "",     "MQTT root topic"                                 };
 	ConfigVar<bool>          mqttHADiscovery { "mqttHADiscovery", true,             "",     "Enable HA MQTT discovery"                        };
-	ConfigVar<String>        mqttHADiscoveryTopic { "mqttHADiscoveryTopic", "homeassistant", "", "HA discovery topic prefix"                  };
-	ConfigVar<String>        mode            { "mode",            STATE_STOP,        "",     "Operating mode: stop/speed/temperature/calibration" };
+	ConfigVar<String>        mqttHADiscoveryTopic { "mqttHADiscoveryTopic", "homeassistant", "", "HA discovery topic prefix",                  {}, {}, "mqttHADiscTopic" };
+	ConfigVar<String>        mode            { "mode",            MODE_STOP,        "",     "Operating mode: stop/speed/temperature/calibration" };
 	ConfigVar<uint8_t>       speedSetPoint   { "speedSetPoint",   255,              "",     "Pump speed set point",        1,    255           };
-	ConfigVar<float>         temperatureSetPoint { "temperatureSetPoint", 20.0f,    "°C",   "Temperature set point",       10.0f, 40.0f        };
-	ConfigVar<unsigned int>  calibrationVolume { "calibrationVolume", 500,          "ml",   "Calibration volume",          1,    5000         };
-	ConfigVar<float>         calibrationFlow { "calibrationFlow", 1.0f,             "L/min","Calibration end flow",        0.0f, 100.0f        };
-	ConfigVar<unsigned int>  calibrationFlowPulses { "calibrationFlowPulses", 500,  "",     "Calibration flow pulses",     1,    10000        };
+	ConfigVar<float>         temperatureSetPoint { "temperatureSetPoint", 20.0f,    "°C",   "Temperature set point",       10.0f, 40.0f, "tempSetPoint" };
+	ConfigVar<unsigned int>  calibrationVolume { "calibrationVolume", 500,          "ml",   "Calibration volume",          1,    5000,  "calVolume"     };
+	ConfigVar<float>         calibrationFlow { "calibrationFlow", 1.0f,             "L/min","Calibration end flow",        0.0f, 100.0f,"calFlow"       };
+	ConfigVar<unsigned int>  calibrationFlowPulses { "calibrationFlowPulses", 500,  "",     "Calibration flow pulses",     1,    10000, "calFlowPulses" };
 	ConfigVar<unsigned int>  systemTime      { "systemTime",      30,               "s",    "System response time",        0,    600          };
-	ConfigVar<unsigned int>  minFlowPulsesPerSec { "minFlowPulsesPerSec", 10,       "p/s",  "Min flow pulses/sec",         1,    1000         };
+	ConfigVar<unsigned int>  minFlowPulsesPerSec { "minFlowPulsesPerSec", 10,       "p/s",  "Min flow pulses/sec",         1,    1000,  "minFlowPPS"    };
 	ConfigVar<unsigned int>  maxCurrent      { "maxCurrent",      1000,             "mA",   "Max pump current",            1,    1200         };
 	ConfigVar<unsigned int>  minVoltage      { "minVoltage",      4000,             "mV",   "Min pump voltage",            0,    40000        };
 
