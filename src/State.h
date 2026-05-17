@@ -63,7 +63,7 @@ public:
 	ConfigVar<float>         calibrationFlow { "calibrationFlow", 1.0f,             "L/min","Calibration end flow",        0.0f, 100.0f,"calFlow"       };
 	ConfigVar<unsigned int>  calibrationFlowPulses { "calibrationFlowPulses", 500,  "",     "Calibration flow pulses",     1,    10000, "calFlowPulses" };
 	ConfigVar<unsigned int>  systemTime      { "systemTime",      30,               "s",    "System response time",        0,    600          };
-	ConfigVar<unsigned int>  minFlowPulsesPerSec { "minFlowPulsesPerSec", 10,       "p/s",  "Min flow pulses/sec",         1,    1000,  "minFlowPPS"    };
+	ConfigVar<unsigned int>  minFlowPulsesPerSec { "minFlowPulsesPerSec", 5,        "p/s",  "Min flow pulses/sec",         1,    1000,  "minFlowPPS"    };
 	ConfigVar<unsigned int>  maxCurrent      { "maxCurrent",      1000,             "mA",   "Max pump current",            1,    1200         };
 	ConfigVar<unsigned int>  minVoltage      { "minVoltage",      4000,             "mV",   "Min pump voltage",            0,    40000        };
 

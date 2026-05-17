@@ -30,7 +30,7 @@ function configApp() {
 					calibrationFlow:        data.calibrationFlow ?? 1.0,
 					calibrationFlowPulses:  data.calibrationFlowPulses ?? 500,
 					systemTime:             data.systemTime ?? 30,
-					minFlowPulsesPerSec:    data.minFlowPulsesPerSec ?? 10,
+					minFlowPulsesPerSec:    data.minFlowPulsesPerSec ?? 5,
 					maxCurrent:             data.maxCurrent ?? 1000,
 					minVoltage:             data.minVoltage ?? 4000,
 				};

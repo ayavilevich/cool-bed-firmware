@@ -121,7 +121,7 @@ Here are the variables of the state that are set by the user and we need to pers
 | calibrationFlow    | float  | 1       | end flow in liters/min during calibration           | [0, 100]                              | input.number      | Number         |
 | calibrationFlowPulses| uint | 500     | filtered flow pulses measured while calibrating flow| [1, 10000]                            | input.number      | Number         |
 | systemTime         | uint   | 30      | seconds to respond to a change in input             | [0, 600]                              | input.number      | Number         |
-| minFlowPulsesPerSec| uint   | 10      | minimum filtered flow pulses to consider flow       | [1, 1000]                             | input.number      | Number         |
+| minFlowPulsesPerSec| uint   | 5       | minimum filtered flow pulses per sec to consider flow | [1, 1000]                           | input.number      | Number         |
 | maxCurrent         | uint   | 1000    | mA of pump current after which to trigger error     | [1, 1200]                             | input.number      | Number         |
 | minVoltage         | uint   | 4000    | mV of pump voltage below which to trigger error     | [0, 40000]                            | input.number      | Number         |
 | outTemperatureCalibrationOffset    | float  | 0       | value to add to out temperature sensor reading    | [-10, 10]               | input.number      | Number         |
