@@ -254,8 +254,8 @@ void MqttInterface::_publishDiscovery() {
 
 	addSensor("status", "Status", "", "", "status");
 	addBinarySensor("error", "Error", "problem", "error");
-	addSensor("pump_speed", "Pump Speed", "", "", "pumpSpeed");
-	addSensor("flow", "Flow", "", "L/min", "flow");
+	addSensor("pump_speed", "Pump Speed", "", "counts", "pumpSpeed");
+	addSensor("flow", "Flow", "volume_flow_rate", "L/min", "flow");
 	addSensor("flow_pulses_filtered_per_sec", "Flow Pulses/s (filtered)", "", "p/s", "flowPulsesFilteredPerSec");
 	addSensor("flow_pulses_raw_per_sec", "Flow Pulses/s (raw)", "", "p/s", "flowPulsesRawPerSec");
 	addSensor("out_temperature", "Outgoing Temperature", "temperature", "°C", "outTemperature");
@@ -279,7 +279,7 @@ void MqttInterface::_publishDiscovery() {
 		e["unique_id"] = hostname + "_" + id;
 	};
 
-	addNumber("speed_set_point", "Speed Set Point", "", "speedSetPoint", 1, 255, 1);
+	addNumber("speed_set_point", "Speed Set Point", "counts", "speedSetPoint", 1, 255, 1);
 	addNumber("temperature_set_point", "Temperature Set Point", "°C", "temperatureSetPoint", 10, 40, 0.5);
 	addNumber("out_temp_calibration_offset", "Outgoing Temperature Offset", "°C", "outTemperatureCalibrationOffset", -10, 10, 0.1);
 	addNumber("return_temp_calibration_offset", "Return Temperature Offset", "°C", "returnTemperatureCalibrationOffset", -10, 10, 0.1);
