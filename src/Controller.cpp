@@ -21,7 +21,6 @@ Controller::Controller(State& state, Connectivity& connectivity)
 	  _currentSpeed(255),
 	  _calibStartPulses(0),
 	  _calibStartMs(0),
-	  _modeJustChanged(false),
 	  _inError(false),
 	  _buttonPressMs(0),
 	  _buttonIsPressed(false),
@@ -63,8 +62,13 @@ void Controller::begin() {
 	// _ina226.setCorrectionFactor(1.0f);
 	_ina226.waitUntilConversionCompleted(); // if you comment this line the first data might be zero
 
-	_modeStartMs = millis();
-	_modeJustChanged = true;
+	String mode;
+	{
+		StateGuard guard(_state);
+		mode = _state.mode.get();
+	}
+	setMode(mode); // start with last mode
+	// setMode(MODE_STOP); // start with STOP
 }
 
 void Controller::loop() {
@@ -135,12 +139,10 @@ void Controller::updateLeds(bool wifiConnected) {
 
 void Controller::setMode(const String& newMode) {
 	bool calibrationError = false;
-	bool leavingCalibration = false;
 
 	{
 		StateGuard guard(_state);
-		if (_state.mode.get() == MODE_CALIBRATION && newMode != MODE_CALIBRATION) {
-			leavingCalibration = true;
+		if (_state.mode.get() == MODE_CALIBRATION && newMode != MODE_CALIBRATION) { // is leaving calibration mode
 			uint64_t pulsesDelta = _state.flowPulsesFiltered.get() - _calibStartPulses;
 			unsigned int fps = _state.flowPulsesFilteredPerSec.get();
 			if (pulsesDelta == 0 || fps < _state.minFlowPulsesPerSec.get()) {
@@ -151,19 +153,16 @@ void Controller::setMode(const String& newMode) {
 				_state.status.set("calibrated");
 				Serial.printf("[Controller] Calibration complete: %llu pulses, %.2f L/min\n",
 				              pulsesDelta, _state.flow.get());
+
+				Preferences prefs;
+				prefs.begin(PREFS_NAMESPACE, false);
+				{
+					_state.calibrationFlowPulses.save(prefs);
+					_state.calibrationFlow.save(prefs);
+				}
+				prefs.end();
 			}
 		}
-	}
-
-	if (leavingCalibration && !calibrationError) {
-		Preferences prefs;
-		prefs.begin(PREFS_NAMESPACE, false);
-		{
-			StateGuard guard(_state);
-			_state.calibrationFlowPulses.save(prefs);
-			_state.calibrationFlow.save(prefs);
-		}
-		prefs.end();
 	}
 
 	{
@@ -172,14 +171,44 @@ void Controller::setMode(const String& newMode) {
 	}
 	_clearError();
 	_modeStartMs = millis();
-	_modeJustChanged = true;
 	_currentSpeed = 255;
 	_lastTempAdjMs = 0;
 
-	if (newMode == MODE_CALIBRATION) {
-		StateGuard guard(_state);
-		_calibStartPulses = _state.flowPulsesFiltered.get();
+	// init new mode
+	if (newMode == MODE_CALIBRATION) { // mark start of calibration process
+		uint8_t setPoint;
+		{
+			StateGuard guard(_state);
+			_calibStartPulses = _state.flowPulsesFiltered.get();
+			setPoint = _state.speedSetPoint.get();
+			_state.status.set("calibrating");
+		}
 		_calibStartMs = millis();
+		_setPumpSpeed(setPoint);
+	} else if (newMode == MODE_SPEED) {
+		uint8_t setPoint;
+		{
+			StateGuard guard(_state);
+			setPoint = _state.speedSetPoint.get();
+			_state.status.set("speed");
+		}
+		_currentSpeed = setPoint;
+		_setPumpSpeed(_currentSpeed);
+	} else if (newMode == MODE_TEMPERATURE) {
+		// in temperature mode, pump speed will be adjusted in _runMode() based on temperature difference, so just set it to max for now
+		_currentSpeed = 255;
+		_setPumpSpeed(_currentSpeed);
+		{
+			StateGuard guard(_state);
+			_state.status.set("temperature");
+		}
+		_lastTempAdjMs = millis();
+	} else if (newMode == MODE_STOP) {
+		_setPumpSpeed(0);
+		{
+			StateGuard guard(_state);
+			_state.status.set("stopped");
+		}
 	}
 
 	if (calibrationError) {
@@ -198,11 +227,11 @@ void Controller::_triggerError(const String& cause) {
 		StateGuard guard(_state);
 		_state.error.set(true);
 		_state.status.set("error: " + cause);
+		_state.mode.set(MODE_STOP);
 	}
 	_inError = true;
 	_errorCause = cause;
 	_setPumpSpeed(0);
-	_state.mode.set(MODE_STOP);
 	digitalWrite(RED_LED_PIN, HIGH);
 	Serial.printf("[Controller] ERROR: %s\n", cause.c_str());
 	if (_onTelemetryUpdated) _onTelemetryUpdated();
@@ -385,30 +414,12 @@ void Controller::_runMode() {
 	unsigned long elapsed = (now - _modeStartMs) / 1000;
 
 	if (currentMode == MODE_STOP) {
-		if (_modeJustChanged) {
-			_setPumpSpeed(0);
-			{
-				StateGuard guard(_state);
-				_state.status.set("stopped");
-			}
-			_modeJustChanged = false;
-		}
-
+		// do nothing
 	} else if (currentMode == MODE_SPEED) {
 		uint8_t setPoint;
 		{
 			StateGuard guard(_state);
 			setPoint = _state.speedSetPoint.get();
-		}
-		// init
-		if (_modeJustChanged) {
-			{
-				StateGuard guard(_state);
-				_state.status.set("speed");
-			}
-			_modeJustChanged = false;
-			_currentSpeed = setPoint;
-			_setPumpSpeed(_currentSpeed);
 		}
 		// update speed
 		if (setPoint != _currentSpeed) {
@@ -437,17 +448,6 @@ void Controller::_runMode() {
 			filteredPerSec = _state.flowPulsesFilteredPerSec.get();
 		}
 
-		if (_modeJustChanged) {
-			_currentSpeed = 255;
-			_setPumpSpeed(_currentSpeed);
-			{
-				StateGuard guard(_state);
-				_state.status.set("temperature");
-			}
-			_modeJustChanged = false;
-			_lastTempAdjMs = now;
-		}
-
 		// Every sample: if flow too low, boost speed
 		if (filteredPerSec < minFlow && _currentSpeed < 255) {
 			_currentSpeed = (uint8_t)min((int)_currentSpeed + TEMP_STEP, 255);
@@ -468,26 +468,7 @@ void Controller::_runMode() {
 		}
 
 	} else if (currentMode == MODE_CALIBRATION) {
-		uint8_t setPoint;
-		{
-			StateGuard guard(_state);
-			setPoint = _state.speedSetPoint.get();
-		}
-
-		if (_modeJustChanged) {
-			{
-				StateGuard guard(_state);
-				_calibStartPulses = _state.flowPulsesFiltered.get();
-			}
-			_calibStartMs = now;
-			_setPumpSpeed(setPoint);
-			{
-				StateGuard guard(_state);
-				_state.status.set("calibrating");
-			}
-			_modeJustChanged = false;
-		}
-
+		// start and end are handled in setMode(); here just check that flow started within systemTime, otherwise trigger error
 		if (elapsed >= sysTime) {
 			unsigned int fps;
 			{

@@ -85,7 +85,6 @@ private:
 	uint8_t _currentSpeed;			// track current speed to avoid redundant writes to motor driver and adjust value relative to it in temperature mode
 	uint64_t _calibStartPulses;		// flowPulsesFiltered at calibration start
 	unsigned long _calibStartMs;	// millis at calibration start
-	bool _modeJustChanged;
 
 	// Error state
 	bool _inError;
