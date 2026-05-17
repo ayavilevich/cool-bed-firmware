@@ -19,15 +19,9 @@
 			<h2>Mode</h2>
 
 			<div class="mode-buttons">
+				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Mode</button>
+				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Speed Mode</button>
 				<button class="btn btn-danger" x-show="state.mode !== 'stop'" @click="setMode('stop')">⏹ Stop</button>
-			</div>
-
-			<!-- Speed mode -->
-			<div class="mode-panel">
-				<label>Speed Mode</label>
-				<input type="range" min="1" max="255" x-model.number="speedSetPoint">
-				<span x-text="speedSetPoint"></span>
-				<button class="btn btn-primary" @click="startSpeed()">▶ Start Speed</button>
 			</div>
 
 			<!-- Temperature mode -->
@@ -35,7 +29,13 @@
 				<label>Temperature Mode</label>
 				<input type="range" min="10" max="40" step="0.5" x-model.number="tempSetPoint">
 				<span x-text="tempSetPoint + ' °C'"></span>
-				<button class="btn btn-primary" @click="startTemperature()">▶ Start Temperature</button>
+			</div>
+
+			<!-- Speed mode -->
+			<div class="mode-panel">
+				<label>Speed Mode</label>
+				<input type="range" min="1" max="255" x-model.number="speedSetPoint">
+				<span x-text="speedSetPoint"></span>
 			</div>
 
 			<!-- Calibration mode -->
@@ -45,7 +45,7 @@
 					<label>Volume (ml):</label>
 					<input type="number" min="1" max="5000" x-model.number="calibrationVolume">
 				</div>
-				<button class="btn btn-warning" @click="startCalibration()">▶ Start Calibration</button>
+				<button class="btn btn-warning" x-show="state.mode !== 'calibration'" @click="startCalibration()">▶ Start Pump Calibration</button>
 			</div>
 		</section>
 
