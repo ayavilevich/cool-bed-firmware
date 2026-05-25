@@ -134,6 +134,10 @@ function coolBedApp() {
 			await this._postMode('calibration');
 		},
 
+		startFlowTest() {
+			this._postMode('flowtest');
+		},
+
 		// ---- Chart ----
 		_updateChart() {
 			if (!this._history.length) return;

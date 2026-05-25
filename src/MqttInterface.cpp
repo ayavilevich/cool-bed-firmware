@@ -306,6 +306,7 @@ void MqttInterface::_publishDiscovery() {
 		options.add(MODE_SPEED);
 		options.add(MODE_TEMPERATURE);
 		options.add(MODE_CALIBRATION);
+		options.add(MODE_FLOW_TEST);
 		e["unique_id"] = hostname + "_mode";
 	}
 

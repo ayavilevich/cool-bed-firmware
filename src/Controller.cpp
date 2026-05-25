@@ -28,6 +28,7 @@ Controller::Controller(State& state, Connectivity& connectivity)
 	  _lastLedToggleMs(0),
 	  _builtinLedState(false),
 	  _lastTempAdjMs(0),
+	  _lastFlowTestStepMs(0),
 	  _lastSerialPrintMs(0) {
 }
 
@@ -174,6 +175,7 @@ void Controller::setMode(const String& newMode) {
 	_modeStartMs = millis();
 	_currentSpeed = 255;
 	_lastTempAdjMs = 0;
+	_lastFlowTestStepMs = 0;
 
 	// init new mode
 	if (newMode == MODE_CALIBRATION) { // mark start of calibration process
@@ -209,6 +211,14 @@ void Controller::setMode(const String& newMode) {
 		{
 			StateGuard guard(_state);
 			_state.status.set("stopped");
+		}
+	} else if (newMode == MODE_FLOW_TEST) {
+		_currentSpeed = FLOW_TEST_MAX_SPEED;
+		_setPumpSpeed(_currentSpeed);
+		_lastFlowTestStepMs = millis();
+		{
+			StateGuard guard(_state);
+			_state.status.set("flow test");
 		}
 	}
 
@@ -497,6 +507,30 @@ void Controller::_runMode() {
 			}
 			if (fps < minFlow) {
 				_triggerError("no flow during calibration");
+			}
+		}
+	} else if (currentMode == MODE_FLOW_TEST) {
+		unsigned int filteredPerSec;
+		{
+			StateGuard guard(_state);
+			filteredPerSec = _state.flowPulsesFilteredPerSec.get();
+		}
+
+		// Cycle start / restart: run at max speed until measured flow is above threshold.
+		if (filteredPerSec < minFlow) {
+			if (_currentSpeed != FLOW_TEST_MAX_SPEED) {
+				_currentSpeed = FLOW_TEST_MAX_SPEED;
+				_setPumpSpeed(_currentSpeed);
+			}
+			_lastFlowTestStepMs = now;
+		} else if (filteredPerSec > minFlow) {
+			if (now - _lastFlowTestStepMs >= FLOW_TEST_STEP_INTERVAL_MS) {
+				_lastFlowTestStepMs = now;
+				uint8_t newSpeed = (uint8_t)max((int)_currentSpeed - FLOW_TEST_STEP, 0);
+				if (newSpeed != _currentSpeed) {
+					_currentSpeed = newSpeed;
+					_setPumpSpeed(_currentSpeed);
+				}
 			}
 		}
 	}

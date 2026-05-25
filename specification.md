@@ -220,6 +220,12 @@ Start with "calibrating" status, finish with "calibrated".
 If no pulses or flowPulsesFilteredPerSec < minFlowPulsesPerSec at stop time (calibration end), set an error state.
 If after systemTime of running, flowPulsesFilteredPerSec < minFlowPulsesPerSec then trigger error state.
 
+##### Flow test mode
+
+Run cycles of testing until mode is changed to something else.
+Start each cycle with the pump at max speed. Wait for flowPulsesFilteredPerSec > minFlowPulsesPerSec.
+Then every 5 seconds, drop speed by 10 points. If flowPulsesFilteredPerSec < minFlowPulsesPerSec, restart cycle.
+
 ### Web Interface
 
 Operate a web site for HMI purposes. Assume device is on an internal LAN. Implement no authentication or security for the web interface.

@@ -21,6 +21,7 @@
 			<div class="mode-buttons">
 				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
 				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Fixed Speed Mode</button>
+				<button class="btn btn-primary" x-show="state.mode !== 'flowtest'" @click="startFlowTest()">▶ Start Flow Test Mode</button>
 				<button class="btn btn-danger" x-show="state.mode !== 'stop'" @click="setMode('stop')">⏹ Stop</button>
 			</div>
 
