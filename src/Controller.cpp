@@ -1,6 +1,7 @@
 #include "Controller.h"
 #include "Connectivity.h"
 #include <Wire.h>
+#include <math.h>
 
 #define SERIAL_PRINT_INTERVAL_MS		5000
 
@@ -421,7 +422,19 @@ void Controller::_runMode() {
 	unsigned long elapsed = (now - _modeStartMs) / 1000;
 
 	if (currentMode == MODE_STOP) {
-		// do nothing
+		if (elapsed >= TEMPERATURE_CALIBRATION_EQUILIBRIUM_SECONDS) {
+			float absDelta;
+			String status;
+			{
+				StateGuard guard(_state);
+				absDelta = fabsf(_state.temperatureDelta.get());
+				status = _state.status.get();
+			}
+			if (absDelta > TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C && status != TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT) {
+				StateGuard guard(_state);
+				_state.status.set(TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT);
+			}
+		}
 	} else if (currentMode == MODE_SPEED) {
 		uint8_t setPoint;
 		{

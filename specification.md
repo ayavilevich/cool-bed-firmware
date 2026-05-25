@@ -196,6 +196,8 @@ flowPulsesFiltered is more complex. Implement in a separate class. Maintain a ui
 
 ##### Stop mode
 Pump is stopped. If a user moved us to this mode then a status = "stopped".
+If after 10 minutes (const) of being stopped, absolute deltaTemperature value is over 0.2 deg C (const) then set status to a warning text:
+"Warning: temperature sensors might not be calibrated"
 
 ##### Speed mode
 Operate pump at speedSetPoint. Status = "speed".

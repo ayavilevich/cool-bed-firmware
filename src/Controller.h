@@ -27,6 +27,11 @@ class Connectivity; // can't include Connectivity.h here due to circular depende
 #define WATER_SPECIFIC_HEAT_J_PER_KG_C	4186.0f // how much energy (in joules) it takes to raise 1 kg of water by 1 degree Celsius
 #define SECONDS_PER_MINUTE				60.0f
 
+// Logic to check if temperature sensors might be uncalibrated. Check after some time of flow inactivity when sensors should have equilibrated.
+#define TEMPERATURE_CALIBRATION_EQUILIBRIUM_SECONDS			(10UL * 60UL)
+#define TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C	0.2f
+#define TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT			"Warning: temperature sensors might not be calibrated"
+
 // INA226 settings
 #define INA226_I2C_ADDRESS				0x40
 #define INA226_SHUNT_RESISTANCE			0.1f	// Ohm
