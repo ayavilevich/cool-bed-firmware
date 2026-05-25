@@ -52,6 +52,8 @@ function coolBedApp() {
 			this._history.push({
 				timestamp: now,
 				flow: data.flow ?? 0,
+				temperatureDelta: data.temperatureDelta ?? 0,
+				coolingPower: data.coolingPower ?? 0,
 				outTemperature: data.outTemperature ?? 0,
 				returnTemperature: data.returnTemperature ?? 0,
 				pumpSpeed: data.pumpSpeed ?? 0,
@@ -142,8 +144,10 @@ function coolBedApp() {
 
 			const datasets = [
 				{ label: 'Flow (L/min)',       data: this._history.map(h => h.flow),                      borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },
+				{ label: 'Temp Delta (°C)',    data: this._history.map(h => h.temperatureDelta),          borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y' },
 				{ label: 'Out Temp (°C)',       data: this._history.map(h => h.outTemperature),            borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
 				{ label: 'Return Temp (°C)',    data: this._history.map(h => h.returnTemperature),         borderColor: '#fb923c', tension: 0.3, yAxisID: 'y' },
+				{ label: 'Cooling Power (W)',   data: this._history.map(h => h.coolingPower),              borderColor: '#22c55e', tension: 0.3, yAxisID: 'y2' },
 				{ label: 'Pump Speed',          data: this._history.map(h => h.pumpSpeed),                borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y2' },
 				{ label: 'Current (mA)',        data: this._history.map(h => h.pumpCurrent),              borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y2' },
 				{ label: 'Flow Pulses/s',       data: this._history.map(h => h.flowPulsesFilteredPerSec), borderColor: '#34d399', tension: 0.3, yAxisID: 'y2' },

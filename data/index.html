@@ -89,6 +89,16 @@
 					<span class="value" x-text="(state.returnTemperature || 0).toFixed(1) + ' °C'"></span>
 				</div>
 				<div class="metric">
+					<span class="icon">↕️</span>
+					<span class="label">Temp Delta</span>
+					<span class="value" x-text="(state.temperatureDelta || 0).toFixed(2) + ' °C'"></span>
+				</div>
+				<div class="metric">
+					<span class="icon">❄️</span>
+					<span class="label">Cooling Power</span>
+					<span class="value" x-text="(state.coolingPower || 0).toFixed(1) + ' W'"></span>
+				</div>
+				<div class="metric">
 					<span class="icon">🔌</span>
 					<span class="label">Voltage</span>
 					<span class="value" x-text="(state.pumpVoltage || 0) + ' mV'"></span>

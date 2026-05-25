@@ -1,7 +1,7 @@
 #include "MqttInterface.h"
 
 #define MQTT_RECONNECT_INTERVAL_MS 5000
-#define MQTT_BUFFER_SIZE 6144 // our auto-discovery payload is about 5KB, so need to increase default 256B buffer size
+#define MQTT_BUFFER_SIZE 7168 // our auto-discovery payload is large, so need to increase the default 256B buffer
 // autodiscovery consts
 #define AD_NAME "Cool Bed"
 #define AD_NAME_PREFIX "Cool Bed ("
@@ -256,6 +256,8 @@ void MqttInterface::_publishDiscovery() {
 	addBinarySensor("error", "Error", "problem", "error");
 	addSensor("pump_speed", "Pump Speed", "", "counts", "pumpSpeed");
 	addSensor("flow", "Flow", "volume_flow_rate", "L/min", "flow");
+	addSensor("temperature_delta", "Temperature Delta", "temperature", "°C", "temperatureDelta");
+	addSensor("cooling_power", "Cooling Power", "power", "W", "coolingPower");
 	addSensor("flow_pulses_filtered_per_sec", "Flow Pulses/s (filtered)", "", "p/s", "flowPulsesFilteredPerSec");
 	addSensor("flow_pulses_raw_per_sec", "Flow Pulses/s (raw)", "", "p/s", "flowPulsesRawPerSec");
 	addSensor("out_temperature", "Outgoing Temperature", "temperature", "°C", "outTemperature");

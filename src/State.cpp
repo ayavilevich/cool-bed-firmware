@@ -85,6 +85,8 @@ void State::_telemetryToJson(JsonObject obj) const {
 	flowPulsesRawPerSec.toJson(obj);
 	flowPulsesFilteredPerSec.toJson(obj);
 	flow.toJson(obj);
+	temperatureDelta.toJson(obj);
+	coolingPower.toJson(obj);
 }
 
 // convert state to JSON

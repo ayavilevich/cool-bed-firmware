@@ -291,21 +291,28 @@ void Controller::_calculateDerivedMetrics(uint64_t rawNow, uint64_t filteredNow,
 	unsigned int filteredPerSec = (unsigned int)((filteredDiff * 1000ULL) / dt);
 
 	unsigned int calPulses, calVolume;
+	float outTemp, returnTemp;
 	{
 		StateGuard guard(_state);
 		_state.flowPulsesRawPerSec.set(rawPerSec);
 		_state.flowPulsesFilteredPerSec.set(filteredPerSec);
 		calPulses = _state.calibrationFlowPulses.get();
 		calVolume = _state.calibrationVolume.get();
+		outTemp = _state.outTemperature.get();
+		returnTemp = _state.returnTemperature.get();
 	}
 
 	float flowLpm = 0.0f;
 	if (calPulses > 0) {
 		flowLpm = ((float)filteredPerSec * (float)calVolume * 60.0f) / ((float)calPulses * 1000.0f);
 	}
+	float deltaC = returnTemp - outTemp;
+	float coolingPowerW = deltaC * WATER_SPECIFIC_HEAT_J_PER_KG_C * flowLpm / SECONDS_PER_MINUTE;
 	{
 		StateGuard guard(_state);
 		_state.flow.set(flowLpm);
+		_state.temperatureDelta.set(deltaC);
+		_state.coolingPower.set(coolingPowerW);
 	}
 
 	_prevRawPulses = rawNow;

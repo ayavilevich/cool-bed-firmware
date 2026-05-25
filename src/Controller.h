@@ -24,6 +24,8 @@ class Connectivity; // can't include Connectivity.h here due to circular depende
 #define TEMP_MAX_CELSIUS				40.0f
 #define TEMP_STEP						10
 #define BUTTON_HOLD_MS					5000
+#define WATER_SPECIFIC_HEAT_J_PER_KG_C	4186.0f // how much energy (in joules) it takes to raise 1 kg of water by 1 degree Celsius
+#define SECONDS_PER_MINUTE				60.0f
 
 // INA226 settings
 #define INA226_I2C_ADDRESS				0x40
