@@ -41,7 +41,7 @@ function coolBedApp() {
 				console.error('Failed to fetch state:', e);
 			}
 			try {
-				this._updateChart();
+				// this._updateChart();
 			} catch (e) {
 				console.error('Failed to update chart:', e);
 			}
