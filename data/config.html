@@ -61,14 +61,14 @@
 						<span x-text="cfg.speedSetPoint"></span>
 					</label>
 					<label>Temperature Set Point (°C)
-						<input type="range" min="10" max="40" step="0.5" x-model.number="cfg.temperatureSetPoint">
+						<input type="range" min="10" max="40" step="any" x-model.number="cfg.temperatureSetPoint">
 						<span x-text="cfg.temperatureSetPoint + ' °C'"></span>
 					</label>
 					<label>Outgoing Temperature Offset (°C)
-						<input type="number" x-model.number="cfg.outTemperatureCalibrationOffset" min="-10" max="10" step="0.1">
+						<input type="number" x-model.number="cfg.outTemperatureCalibrationOffset" min="-10" max="10" step="any">
 					</label>
 					<label>Return Temperature Offset (°C)
-						<input type="number" x-model.number="cfg.returnTemperatureCalibrationOffset" min="-10" max="10" step="0.1">
+						<input type="number" x-model.number="cfg.returnTemperatureCalibrationOffset" min="-10" max="10" step="any">
 					</label>
 					<label>System Response Time (s)
 						<input type="number" x-model.number="cfg.systemTime" min="0" max="600">
@@ -90,7 +90,7 @@
 						<input type="number" x-model.number="cfg.calibrationVolume" min="1" max="5000">
 					</label>
 					<label>Flow at Calibration End (L/min)
-						<input type="number" x-model.number="cfg.calibrationFlow" min="0" max="100" step="0.01">
+						<input type="number" x-model.number="cfg.calibrationFlow" min="0" max="100" step="any">
 					</label>
 					<label>Flow Pulses During Calibration
 						<input type="number" x-model.number="cfg.calibrationFlowPulses" min="1" max="10000">
