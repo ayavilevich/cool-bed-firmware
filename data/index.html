@@ -19,8 +19,8 @@
 			<h2>Mode</h2>
 
 			<div class="mode-buttons">
-				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Mode</button>
-				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Speed Mode</button>
+				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
+				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Fixed Speed Mode</button>
 				<button class="btn btn-danger" x-show="state.mode !== 'stop'" @click="setMode('stop')">⏹ Stop</button>
 			</div>
 
@@ -53,7 +53,7 @@
 		<section class="card telemetry">
 			<h2>Status</h2>
 			<div class="telemetry-grid">
-				<div class="metric">
+				<div class="metric wide">
 					<span class="icon">📟</span>
 					<span class="label">Status</span>
 					<span class="value" x-text="state.status || '—'"></span>
@@ -108,11 +108,11 @@
 					<span class="label">Raw Pulses/s</span>
 					<span class="value" x-text="state.flowPulsesRawPerSec || 0"></span>
 				</div>
-				<div class="metric">
+				<!--<div class="metric">
 					<span class="icon">📊</span>
 					<span class="label">Calib. Flow</span>
 					<span class="value" x-text="(state.calibrationFlow || 0).toFixed(2) + ' L/min'"></span>
-				</div>
+				</div>-->
 			</div>
 		</section>
 

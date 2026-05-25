@@ -62,7 +62,7 @@ main {
 /* ---- Telemetry Grid ---- */
 .telemetry-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 	gap: 0.75rem;
 }
 
@@ -78,6 +78,7 @@ main {
 .metric .label { font-size: 0.75rem; color: #64748b; }
 .metric .value { font-size: 1.1rem; font-weight: bold; }
 .metric.error { border: 1px solid #ef4444; background: #450a0a; }
+.metric.wide { grid-column: span 2; }
 
 /* ---- Chart ---- */
 .chart-section canvas { width: 100% !important; }
