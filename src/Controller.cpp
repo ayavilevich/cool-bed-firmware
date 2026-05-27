@@ -89,7 +89,7 @@ void Controller::loop() {
 	if (now - _lastSerialPrintMs >= SERIAL_PRINT_INTERVAL_MS) {
 		_lastSerialPrintMs = now;
 		StateGuard guard(_state);
-		Serial.printf("[State] mode=%-12s status=%-12s speed=%3u outT=%5.1f°C retT=%5.1f°C flow=%5.2fL/min V=%4umV I=%4umA\n",
+		Serial.printf("[State] mode=%-12s status=%-12s speed=%3u outT=%5.1f°C retT=%5.1f°C flow=%5.2fL/min V=%4umV I=%4dmA\n",
 			_state.mode.get().c_str(),
 			_state.status.get().c_str(),
 			_state.pumpSpeed.get(),
@@ -387,20 +387,21 @@ void Controller::_sampleSensors() {
 		return;
 	}
 	float busVoltageV = _ina226.getBusVoltage_V();
-	float currentMaF = _ina226.getCurrent_mA();
+	float currentMaF = _ina226.getCurrent_mA(); // some times returned -1 due to noise or EMF, so important to support negative values for current so not to overflow.
 	unsigned int voltageMs = (unsigned int)(busVoltageV * 1000.0f);
-	unsigned int currentMa = (unsigned int)currentMaF;
+	int currentMa = (int)currentMaF;
 	{
 		StateGuard guard(_state);
 		_state.pumpVoltage.set(voltageMs);
 		_state.pumpCurrent.set(currentMa);
 	}
 
-	unsigned int maxCur, minVolt;
+	int maxCur;
+	unsigned int minVolt;
 	uint8_t spd;
 	{
 		StateGuard guard(_state);
-		maxCur = _state.maxCurrent.get();
+		maxCur = (int)_state.maxCurrent.get();
 		minVolt = _state.minVoltage.get();
 		spd = _state.pumpSpeed.get();
 	}

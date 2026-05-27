@@ -75,7 +75,7 @@ public:
 	Metric<uint64_t>         flowPulsesRaw   { "flowPulsesRaw",   0,                "",     "Raw flow pulse count"        };
 	Metric<uint64_t>         flowPulsesFiltered { "flowPulsesFiltered", 0,          "",     "Filtered flow pulse count"   };
 	Metric<unsigned int>     pumpVoltage     { "pumpVoltage",     0,                "mV",   "Pump voltage"                };
-	Metric<unsigned int>     pumpCurrent     { "pumpCurrent",     0,                "mA",   "Pump current"                };
+	Metric<int>              pumpCurrent     { "pumpCurrent",     0,                "mA",   "Pump current"                };
 	Metric<float>            outTemperature  { "outTemperature",  20.0f,            "°C",   "Outgoing water temperature"  };
 	Metric<float>            returnTemperature { "returnTemperature", 20.0f,        "°C",   "Returning water temperature" };
 

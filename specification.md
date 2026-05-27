@@ -139,7 +139,7 @@ Here are the variables of the state that are metrics from the device which we ne
 | flowPulsesRaw      | uint64 | 0       | flow pulses (absolute, measured by interrupt)   | any integer    | div/span          | Sensor         |
 | flowPulsesFiltered | uint64 | 0       | flow pulses (absolute, measured by sampling)    | any integer    | div/span          | Sensor         |
 | pumpVoltage        | uint   | 0       | pump voltage in mV                              | any integer    | div/span          | Sensor         |
-| pumpCurrent        | uint   | 0       | pump current in mA                              | any integer    | div/span          | Sensor         |
+| pumpCurrent        | int    | 0       | pump current in mA                              | any integer    | div/span          | Sensor         |
 | outTemperature     | float  | 20      | outgoing water temperature in C                 | [-5, 40]       | div/span          | Sensor         |
 | returnTemperature  | float  | 20      | returning water temperature in C                | [-5, 40]       | div/span          | Sensor         |
 
