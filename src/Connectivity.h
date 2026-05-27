@@ -23,7 +23,9 @@ private:
 	State& _state;
 	WiFiManager _wifiManager;
 	bool _connected;
+	bool _otaStarted;
 
 	void _setupMdns();
+	void _setupOta();
 	static void _wifiConnectedCallback(WiFiManager* wm);
 };
