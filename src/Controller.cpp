@@ -4,6 +4,7 @@
 #include <math.h>
 
 #define SERIAL_PRINT_INTERVAL_MS		5000
+// #define SKIP_SPEED_MODE_FLOW_CHECK // for testing
 
 Controller::Controller(State& state, Connectivity& connectivity)
 	: _state(state),
@@ -460,6 +461,7 @@ void Controller::_runMode() {
 			_setPumpSpeed(_currentSpeed);
 		}
 		// check for errors
+#ifndef SKIP_SPEED_MODE_FLOW_CHECK
 		if (elapsed >= sysTime) {
 			unsigned int fps;
 			{
@@ -470,7 +472,7 @@ void Controller::_runMode() {
 				_triggerError("no flow in speed mode");
 			}
 		}
-
+#endif // SKIP_SPEED_MODE_FLOW_CHECK
 	} else if (currentMode == MODE_TEMPERATURE) {
 		float returnTemp, setPoint;
 		unsigned int filteredPerSec;
