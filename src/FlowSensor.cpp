@@ -13,7 +13,7 @@ void FlowSensor::begin() {
 	_instance = this;
 
 	// Configure pin as input
-	pinMode(_pin, INPUT);
+	pinMode(_pin, INPUT); // Assuming the flow sensor has the right pull-up/down resistor inside it.
 
 	// Init history and current state based on current pin level
 	bool initialLevel = (gpio_get_level(_gpioNum) != 0);
