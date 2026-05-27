@@ -414,6 +414,8 @@ void Controller::_sampleSensors() {
 		return;
 	}
 
+	_state.setMetricsValid(true);
+
 	if (_onTelemetryUpdated) _onTelemetryUpdated();
 }
 

@@ -1,6 +1,6 @@
 #include "State.h"
 
-State::State() {
+State::State() : _metricsValid(false) {
 	_mutex = xSemaphoreCreateMutex();
 }
 
@@ -14,6 +14,12 @@ void State::lock() {
 
 void State::unlock() {
 	xSemaphoreGive(_mutex);
+}
+
+void State::setMetricsValid(bool valid) {
+	lock();
+	_metricsValid = valid;
+	unlock();
 }
 
 // load config from preferences to memory. Called at startup.
@@ -94,7 +100,7 @@ void State::toJson(JsonObject obj, bool includeConfig, bool includeTelemetry, bo
 	if (includeConfig) {
 		_configToJson(obj, excludeMqttConfig);
 	}
-	if (includeTelemetry) {
+	if (includeTelemetry && _metricsValid) {
 		_telemetryToJson(obj);
 	}
 }

@@ -45,6 +45,9 @@ public:
 	// Apply a JSON object of config values; returns false if nothing matched
 	bool applyConfigJson(const JsonObjectConst& obj);
 
+	// Mark whether telemetry metrics contain at least one valid sensor sample set
+	void setMetricsValid(bool valid);
+
 	// --------------- Configuration ---------------
 	ConfigVar<String>        hostname        { "hostname",        "cool-bed",       "",     "Hostname / device ID",                           };
 	ConfigVar<bool>          mqtt            { "mqtt",            false,            "",     "Enable MQTT"                                     };
@@ -88,6 +91,7 @@ public:
 
 private:
 	SemaphoreHandle_t _mutex;
+	bool _metricsValid;
 
 	// Helper to write all config vars to JSON
 	void _configToJson(JsonObject obj, bool excludeMqtt) const;
