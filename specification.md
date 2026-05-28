@@ -25,7 +25,7 @@ The goal of the device is to cool the person sleeping on the mattress.
 
 The device is typically powered by a 9V to 12V PSU. The PSU is chosen to match the max voltage of the pump.
 
-Use built-in LED as indicator of Wi-Fi connectivity to an AP. Blink LED slowly when connected. Off when not connected.
+Use built-in LED as indicator of Wi-Fi connectivity to an AP. Blink LED slowly when not connected or connecting. On when connected.
 Use green LED as indicator of pump use. Solid when the pump is running.
 Use red LED for error state as described below.
 
@@ -116,7 +116,7 @@ Here are the variables of the state that are set by the user and we need to pers
 | mqttHADiscoveryTopic|string | homeassistant | match HA configuration for discovery          | any string                            | input.text        | Not available  |
 | mode               | string | stop    | how to operate, enum                                | stop, speed, temperature, calibration | individual buttons| Select         |
 | speedSetPoint      | byte   | 255     | at which speed to operate in mode=speed             | [1, 255]                              | slider            | Number         |
-| temperatureSetPoint| float  | 20      | temperature set point in mode=temperature           | [10, 40]                              | slider            | Number         |
+| temperatureSetPoint| float  | 26      | temperature set point in mode=temperature           | [10, 40]                              | slider            | Number         |
 | calibrationVolume  | uint   | 500     | volume in ml that was used to calibrate flow        | [1, 5000]                             | input.number      | Number         |
 | calibrationFlow    | float  | 1       | end flow in liters/min during calibration           | [0, 100]                              | input.number      | Number         |
 | calibrationFlowPulses| uint | 500     | filtered flow pulses measured while calibrating flow| [1, 10000]                            | input.number      | Number         |

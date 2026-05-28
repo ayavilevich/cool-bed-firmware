@@ -121,15 +121,15 @@ void Controller::checkButton() {
 
 void Controller::updateLeds(bool wifiConnected) {
 	unsigned long now = millis();
-	if (wifiConnected) {
+	if (!wifiConnected) {
 		if (now - _lastLedToggleMs >= (BUILTIN_LED_BLINK_PERIOD_MS / 2)) {
 			_lastLedToggleMs = now;
 			_builtinLedState = !_builtinLedState;
 			digitalWrite(BUILTIN_LED_PIN, _builtinLedState ? HIGH : LOW);
 		}
 	} else {
-		_builtinLedState = false;
-		digitalWrite(BUILTIN_LED_PIN, LOW);
+		_builtinLedState = true;
+		digitalWrite(BUILTIN_LED_PIN, HIGH);
 	}
 
 	uint8_t speed;

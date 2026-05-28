@@ -25,7 +25,7 @@ function coolBedApp() {
 
 		_loadFromState() {
 			this.speedSetPoint = this.state.speedSetPoint ?? 128;
-			this.tempSetPoint = this.state.temperatureSetPoint ?? 20;
+			this.tempSetPoint = this.state.temperatureSetPoint ?? 26;
 			this.calibrationVolume = this.state.calibrationVolume ?? 500;
 		},
 

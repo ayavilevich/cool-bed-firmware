@@ -60,7 +60,7 @@ public:
 	ConfigVar<String>        mqttHADiscoveryTopic { "mqttHADiscoveryTopic", "homeassistant", "", "HA discovery topic prefix",                  {}, {}, "mqttHADiscTopic" };
 	ConfigVar<String>        mode            { "mode",            MODE_STOP,        "",     "Operating mode: stop/speed/temperature/calibration/flowtest" };
 	ConfigVar<uint8_t>       speedSetPoint   { "speedSetPoint",   255,              "",     "Pump speed set point",        1,    255           };
-	ConfigVar<float>         temperatureSetPoint { "temperatureSetPoint", 20.0f,    "°C",   "Temperature set point",       10.0f, 40.0f, "tempSetPoint" };
+	ConfigVar<float>         temperatureSetPoint { "temperatureSetPoint", 26.0f,    "°C",   "Temperature set point",       10.0f, 40.0f, "tempSetPoint" };
 	ConfigVar<float>         outTemperatureCalibrationOffset { "outTemperatureCalibrationOffset", 0.0f, "°C", "Outgoing temperature offset", -10.0f, 10.0f, "outTempCalOff" };
 	ConfigVar<float>         returnTemperatureCalibrationOffset { "returnTemperatureCalibrationOffset", 0.0f, "°C", "Return temperature offset", -10.0f, 10.0f, "retTempCalOff" };
 	ConfigVar<unsigned int>  calibrationVolume { "calibrationVolume", 500,          "ml",   "Calibration volume",          1,    5000,  "calVolume"     };
