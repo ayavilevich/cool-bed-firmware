@@ -27,15 +27,15 @@
 
 			<!-- Temperature mode -->
 			<div class="mode-panel">
-				<label>Temperature Mode</label>
-				<input type="range" min="10" max="40" step="0.5" x-model.number="tempSetPoint">
-				<span x-text="tempSetPoint + ' °C'"></span>
+				<label x-text="labelFor('temperatureSetPoint', 'Temperature Mode')"></label>
+				<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="tempSetPoint">
+				<span x-text="tempSetPoint + (unitsFor('temperatureSetPoint') ? ' ' + unitsFor('temperatureSetPoint') : '')"></span>
 			</div>
 
 			<!-- Speed mode -->
 			<div class="mode-panel">
-				<label>Speed Mode</label>
-				<input type="range" min="1" max="255" x-model.number="speedSetPoint">
+				<label x-text="labelFor('speedSetPoint', 'Speed Mode')"></label>
+				<input type="range" :min="minFor('speedSetPoint')" :max="maxFor('speedSetPoint')" x-model.number="speedSetPoint">
 				<span x-text="speedSetPoint"></span>
 			</div>
 
@@ -43,8 +43,8 @@
 			<div class="mode-panel">
 				<label>Calibration Mode</label>
 				<div class="inline-field">
-					<label>Volume (ml):</label>
-					<input type="number" min="1" max="5000" x-model.number="calibrationVolume">
+					<label x-text="labelFor('calibrationVolume', 'Calibration Volume') + (unitsFor('calibrationVolume') ? ' (' + unitsFor('calibrationVolume') + ')' : '') + ':'"></label>
+					<input type="number" :min="minFor('calibrationVolume')" :max="maxFor('calibrationVolume')" x-model.number="calibrationVolume">
 				</div>
 				<button class="btn btn-warning" x-show="state.mode !== 'calibration'" @click="startCalibration()">▶ Start Pump Calibration</button>
 			</div>
@@ -77,37 +77,37 @@
 				<div class="metric">
 					<span class="icon">💧</span>
 					<span class="label">Flow</span>
-					<span class="value" x-text="(state.flow || 0).toFixed(2) + ' L/min'"></span>
+					<span class="value" x-text="formatTelemetry('flow', 2)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">🌡️</span>
 					<span class="label">Out Temp</span>
-					<span class="value" x-text="(state.outTemperature || 0).toFixed(1) + ' °C'"></span>
+					<span class="value" x-text="formatTelemetry('outTemperature', 1)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">🌡️</span>
 					<span class="label">Return Temp</span>
-					<span class="value" x-text="(state.returnTemperature || 0).toFixed(1) + ' °C'"></span>
+					<span class="value" x-text="formatTelemetry('returnTemperature', 1)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">↕️</span>
 					<span class="label">Temp Delta</span>
-					<span class="value" x-text="(state.temperatureDelta || 0).toFixed(2) + ' °C'"></span>
+					<span class="value" x-text="formatTelemetry('temperatureDelta', 2)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">❄️</span>
 					<span class="label">Cooling Power</span>
-					<span class="value" x-text="(state.coolingPower || 0).toFixed(1) + ' W'"></span>
+					<span class="value" x-text="formatTelemetry('coolingPower', 1)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">🔌</span>
 					<span class="label">Voltage</span>
-					<span class="value" x-text="(state.pumpVoltage || 0) + ' mV'"></span>
+					<span class="value" x-text="formatTelemetry('pumpVoltage', 0)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">⚡</span>
 					<span class="label">Current</span>
-					<span class="value" x-text="(state.pumpCurrent || 0) + ' mA'"></span>
+					<span class="value" x-text="formatTelemetry('pumpCurrent', 0)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">〰️</span>

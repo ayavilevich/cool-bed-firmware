@@ -18,6 +18,7 @@ public:
 	const char* getDescription() const { return _description; }
 	T getMin() const { return _minVal; }
 	T getMax() const { return _maxVal; }
+	T getDefault() const { return _defaultValue; }
 
 	T get() const { return _value; }
 	bool isDefault() const { return _value == _defaultValue; }

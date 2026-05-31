@@ -2,37 +2,71 @@
 function configApp() {
 	return {
 		cfg: {},
+		model: { config: {}, telemetry: {}, modes: [] },
 		notification: null,
 		notificationClass: '',
 		_notifTimer: null,
 
+		_meta(key) {
+			return this.model?.config?.[key] || {};
+		},
+
+		labelFor(key, fallback = '') {
+			return this._meta(key).description || fallback;
+		},
+
+		unitsFor(key) {
+			return this._meta(key).units || '';
+		},
+
+		minFor(key) {
+			const min = this._meta(key).min;
+			return Number.isFinite(min) ? min : null;
+		},
+
+		maxFor(key) {
+			const max = this._meta(key).max;
+			return Number.isFinite(max) ? max : null;
+		},
+
+		defaultFor(key, fallback = null) {
+			const value = this._meta(key).defaultValue;
+			return value !== undefined && value !== null ? value : fallback;
+		},
+
 		async load() {
 			try {
-				const res = await fetch('/api/state');
-				if (!res.ok) return;
-				const data = await res.json();
+				const [modelRes, stateRes] = await Promise.all([
+					fetch('/api/model'),
+					fetch('/api/state'),
+				]);
+				if (!modelRes.ok || !stateRes.ok) return;
+
+				this.model = await modelRes.json();
+				const data = await stateRes.json();
+
 				// Extract only config properties (exclude telemetry)
 				this.cfg = {
-					hostname:               data.hostname ?? 'cool-bed',
-					mqtt:                   data.mqtt ?? false,
-					mqttServer:             data.mqttServer ?? '',
-					mqttPort:               data.mqttPort ?? 1883,
-					mqttUsername:           data.mqttUsername ?? '',
+					hostname:               data.hostname ?? this.defaultFor('hostname', ''),
+					mqtt:                   data.mqtt ?? this.defaultFor('mqtt', false),
+					mqttServer:             data.mqttServer ?? this.defaultFor('mqttServer', ''),
+					mqttPort:               data.mqttPort ?? this.defaultFor('mqttPort', 0),
+					mqttUsername:           data.mqttUsername ?? this.defaultFor('mqttUsername', ''),
 					mqttPassword:           '',  // never pre-fill password
-					mqttRootTopic:          data.mqttRootTopic ?? 'cool-bed',
-					mqttHADiscovery:        data.mqttHADiscovery ?? true,
-					mqttHADiscoveryTopic:   data.mqttHADiscoveryTopic ?? 'homeassistant',
-					speedSetPoint:          data.speedSetPoint ?? 128,
-					temperatureSetPoint:    data.temperatureSetPoint ?? 26,
-					outTemperatureCalibrationOffset: data.outTemperatureCalibrationOffset ?? 0,
-					returnTemperatureCalibrationOffset: data.returnTemperatureCalibrationOffset ?? 0,
-					calibrationVolume:      data.calibrationVolume ?? 500,
-					calibrationFlow:        data.calibrationFlow ?? 1.0,
-					calibrationFlowPulses:  data.calibrationFlowPulses ?? 500,
-					systemTime:             data.systemTime ?? 30,
-					minFlowPulsesPerSec:    data.minFlowPulsesPerSec ?? 5,
-					maxCurrent:             data.maxCurrent ?? 1000,
-					minVoltage:             data.minVoltage ?? 4000,
+					mqttRootTopic:          data.mqttRootTopic ?? this.defaultFor('mqttRootTopic', ''),
+					mqttHADiscovery:        data.mqttHADiscovery ?? this.defaultFor('mqttHADiscovery', true),
+					mqttHADiscoveryTopic:   data.mqttHADiscoveryTopic ?? this.defaultFor('mqttHADiscoveryTopic', ''),
+					speedSetPoint:          data.speedSetPoint ?? this.defaultFor('speedSetPoint', 0),
+					temperatureSetPoint:    data.temperatureSetPoint ?? this.defaultFor('temperatureSetPoint', 0),
+					outTemperatureCalibrationOffset: data.outTemperatureCalibrationOffset ?? this.defaultFor('outTemperatureCalibrationOffset', 0),
+					returnTemperatureCalibrationOffset: data.returnTemperatureCalibrationOffset ?? this.defaultFor('returnTemperatureCalibrationOffset', 0),
+					calibrationVolume:      data.calibrationVolume ?? this.defaultFor('calibrationVolume', 0),
+					calibrationFlow:        data.calibrationFlow ?? this.defaultFor('calibrationFlow', 0),
+					calibrationFlowPulses:  data.calibrationFlowPulses ?? this.defaultFor('calibrationFlowPulses', 0),
+					systemTime:             data.systemTime ?? this.defaultFor('systemTime', 0),
+					minFlowPulsesPerSec:    data.minFlowPulsesPerSec ?? this.defaultFor('minFlowPulsesPerSec', 0),
+					maxCurrent:             data.maxCurrent ?? this.defaultFor('maxCurrent', 0),
+					minVoltage:             data.minVoltage ?? this.defaultFor('minVoltage', 0),
 				};
 			} catch (e) {
 				console.error('Failed to load config:', e);

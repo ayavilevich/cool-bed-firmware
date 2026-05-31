@@ -226,72 +226,69 @@ void MqttInterface::_publishDiscovery() {
 	JsonObject components = root["components"].to<JsonObject>();
 
 	// --- Telemetry sensors ---
-	auto addSensor = [&](const char* id, const char* name, const char* deviceClass,
-	                      const char* unit, const char* valueKey) {
+	auto addSensor = [&](const char* id, const char* deviceClass, const auto& metric) {
 		JsonObject e = components[id].to<JsonObject>();
 		e["platform"] = "sensor";
-		e["name"] = name;
+		e["name"] = metric.getDescription();
 		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
-		if (unit && strlen(unit) > 0) e["unit_of_measurement"] = unit;
+		if (strlen(metric.getUnits()) > 0) e["unit_of_measurement"] = metric.getUnits();
 		e["state_topic"] = stateTopic;
-		e["value_template"] = String("{{ value_json.") + valueKey + " }}";
+		e["value_template"] = String("{{ value_json.") + metric.getName() + " }}";
 		e["unique_id"] = hostname + "_" + id;
 	};
 
-	auto addBinarySensor = [&](const char* id, const char* name, const char* deviceClass,
-	                            const char* valueKey) {
+	auto addBinarySensor = [&](const char* id, const char* deviceClass, const auto& metric) {
 		JsonObject e = components[id].to<JsonObject>();
 		e["platform"] = "binary_sensor";
-		e["name"] = name;
+		e["name"] = metric.getDescription();
 		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
 		e["state_topic"] = stateTopic;
 		// e["value_template"] = String("{{ value_json.") + valueKey + " }}";
-		e["value_template"] = String("{{ 'ON' if value_json.") + valueKey + " else 'OFF' }}"; // AI suggested that Home Assistant expects "ON"/"OFF" strings, so need to convert boolean to string here
+		e["value_template"] = String("{{ 'ON' if value_json.") + metric.getName() + " else 'OFF' }}"; // AI suggested that Home Assistant expects "ON"/"OFF" strings, so need to convert boolean to string here
 		// e["payload_on"] = "ON"; // should be default this way
 		// e["payload_off"] = "OFF"; // should be default this way
 		e["unique_id"] = hostname + "_" + id;
 	};
 
-	addSensor("status", "Status", "", "", "status");
-	addBinarySensor("error", "Error", "problem", "error");
-	addSensor("pump_speed", "Pump Speed", "", "counts", "pumpSpeed");
-	addSensor("flow", "Flow", "volume_flow_rate", "L/min", "flow");
-	addSensor("temperature_delta", "Temperature Delta", "temperature", "°C", "temperatureDelta");
-	addSensor("cooling_power", "Cooling Power", "power", "W", "coolingPower");
-	addSensor("flow_pulses_filtered_per_sec", "Flow Pulses/s (filtered)", "", "p/s", "flowPulsesFilteredPerSec");
-	addSensor("flow_pulses_raw_per_sec", "Flow Pulses/s (raw)", "", "p/s", "flowPulsesRawPerSec");
-	addSensor("out_temperature", "Outgoing Temperature", "temperature", "°C", "outTemperature");
-	addSensor("return_temperature", "Return Temperature", "temperature", "°C", "returnTemperature");
-	addSensor("pump_voltage", "Pump Voltage", "voltage", "mV", "pumpVoltage");
-	addSensor("pump_current", "Pump Current", "current", "mA", "pumpCurrent");
+	addSensor("status", "", _state.status);
+	addBinarySensor("error", "problem", _state.error);
+	addSensor("pump_speed", "", _state.pumpSpeed);
+	addSensor("flow", "volume_flow_rate", _state.flow);
+	addSensor("temperature_delta", "temperature", _state.temperatureDelta);
+	addSensor("cooling_power", "power", _state.coolingPower);
+	addSensor("flow_pulses_filtered_per_sec", "", _state.flowPulsesFilteredPerSec);
+	addSensor("flow_pulses_raw_per_sec", "", _state.flowPulsesRawPerSec);
+	addSensor("out_temperature", "temperature", _state.outTemperature);
+	addSensor("return_temperature", "temperature", _state.returnTemperature);
+	addSensor("pump_voltage", "voltage", _state.pumpVoltage);
+	addSensor("pump_current", "current", _state.pumpCurrent);
 
 	// --- Settable config (number entities) ---
-	auto addNumber = [&](const char* id, const char* name, const char* unit,
-	                      const char* valueKey, float minVal, float maxVal, float step) {
+	auto addNumber = [&](const char* id, const auto& var, float step) {
 		JsonObject e = components[id].to<JsonObject>();
 		e["platform"] = "number";
-		e["name"] = name;
-		if (unit && strlen(unit) > 0) e["unit_of_measurement"] = unit;
+		e["name"] = var.getDescription();
+		if (strlen(var.getUnits()) > 0) e["unit_of_measurement"] = var.getUnits();
 		e["state_topic"] = stateTopic;
-		e["value_template"] = String("{{ value_json.") + valueKey + " }}";
-		e["command_topic"] = rootTopic + "/" + valueKey + "/set";
-		e["min"] = minVal;
-		e["max"] = maxVal;
+		e["value_template"] = String("{{ value_json.") + var.getName() + " }}";
+		e["command_topic"] = rootTopic + "/" + var.getName() + "/set";
+		e["min"] = var.getMin();
+		e["max"] = var.getMax();
 		e["step"] = step;
 		e["unique_id"] = hostname + "_" + id;
 	};
 
-	addNumber("speed_set_point", "Speed Set Point", "counts", "speedSetPoint", 1, 255, 1);
-	addNumber("temperature_set_point", "Temperature Set Point", "°C", "temperatureSetPoint", 10, 40, 0.5);
-	addNumber("out_temp_calibration_offset", "Outgoing Temperature Offset", "°C", "outTemperatureCalibrationOffset", -10, 10, 0.1);
-	addNumber("return_temp_calibration_offset", "Return Temperature Offset", "°C", "returnTemperatureCalibrationOffset", -10, 10, 0.1);
-	addNumber("calibration_volume", "Calibration Volume", "ml", "calibrationVolume", 1, 5000, 1);
-	addNumber("calibration_flow", "Calibration Flow", "L/min", "calibrationFlow", 0, 100, 0.01);
-	addNumber("calibration_flow_pulses", "Calibration Flow Pulses", "", "calibrationFlowPulses", 1, 10000, 1);
-	addNumber("system_time", "System Response Time", "s", "systemTime", 0, 600, 1);
-	addNumber("min_flow_pulses_per_sec", "Min Flow Pulses/s", "p/s", "minFlowPulsesPerSec", 1, 1000, 1);
-	addNumber("max_current", "Max Current", "mA", "maxCurrent", 1, 1200, 1);
-	addNumber("min_voltage", "Min Voltage", "mV", "minVoltage", 0, 40000, 1);
+	addNumber("speed_set_point", _state.speedSetPoint, 1);
+	addNumber("temperature_set_point", _state.temperatureSetPoint, 0.5f);
+	addNumber("out_temp_calibration_offset", _state.outTemperatureCalibrationOffset, 0.1f);
+	addNumber("return_temp_calibration_offset", _state.returnTemperatureCalibrationOffset, 0.1f);
+	addNumber("calibration_volume", _state.calibrationVolume, 1);
+	addNumber("calibration_flow", _state.calibrationFlow, 0.01f);
+	addNumber("calibration_flow_pulses", _state.calibrationFlowPulses, 1);
+	addNumber("system_time", _state.systemTime, 1);
+	addNumber("min_flow_pulses_per_sec", _state.minFlowPulsesPerSec, 1);
+	addNumber("max_current", _state.maxCurrent, 1);
+	addNumber("min_voltage", _state.minVoltage, 1);
 
 	// --- Mode select ---
 	{

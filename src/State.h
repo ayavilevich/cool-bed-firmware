@@ -42,6 +42,10 @@ public:
 	void toJson(JsonObject obj, bool includeConfig = true, bool includeTelemetry = true,
 				bool excludeMqttConfig = false) const;
 
+	// Serialize metric/config model metadata to JSON
+	void toModelJson(JsonObject obj, bool includeConfig = true, bool includeTelemetry = true,
+				     bool excludeMqttConfig = false) const;
+
 	// Apply a JSON object of config values; returns false if nothing matched
 	bool applyConfigJson(const JsonObjectConst& obj);
 
@@ -65,9 +69,9 @@ public:
 	ConfigVar<float>         returnTemperatureCalibrationOffset { "returnTemperatureCalibrationOffset", 0.0f, "°C", "Return temperature offset", -10.0f, 10.0f, "retTempCalOff" };
 	ConfigVar<unsigned int>  calibrationVolume { "calibrationVolume", 500,          "ml",   "Calibration volume",          1,    5000,  "calVolume"     };
 	ConfigVar<float>         calibrationFlow { "calibrationFlow", 1.0f,             "L/min","Calibration end flow",        0.0f, 100.0f,"calFlow"       };
-	ConfigVar<unsigned int>  calibrationFlowPulses { "calibrationFlowPulses", 500,  "",     "Calibration flow pulses",     1,    10000, "calFlowPulses" };
+	ConfigVar<unsigned int>  calibrationFlowPulses { "calibrationFlowPulses", 500,  "pulses","Calibration flow pulses",    1,    10000, "calFlowPulses" };
 	ConfigVar<unsigned int>  systemTime      { "systemTime",      30,               "s",    "System response time",        0,    600          };
-	ConfigVar<unsigned int>  minFlowPulsesPerSec { "minFlowPulsesPerSec", 5,        "p/s",  "Min flow pulses/sec",         1,    1000,  "minFlowPPS"    };
+	ConfigVar<unsigned int>  minFlowPulsesPerSec { "minFlowPulsesPerSec", 5,        "p/s",  "Min flow",                    1,    1000,  "minFlowPPS"    };
 	ConfigVar<unsigned int>  maxCurrent      { "maxCurrent",      1000,             "mA",   "Max pump current",            1,    1200         };
 	ConfigVar<unsigned int>  minVoltage      { "minVoltage",      4000,             "mV",   "Min pump voltage",            0,    40000        };
 
@@ -83,8 +87,8 @@ public:
 	Metric<float>            returnTemperature { "returnTemperature", 20.0f,        "°C",   "Returning water temperature" };
 
 	// --------------- Calculated telemetry ---------------
-	Metric<unsigned int>     flowPulsesRawPerSec     { "flowPulsesRawPerSec",      0, "p/s", "Raw flow pulses/sec"      };
-	Metric<unsigned int>     flowPulsesFilteredPerSec { "flowPulsesFilteredPerSec", 0, "p/s","Filtered flow pulses/sec" };
+	Metric<unsigned int>     flowPulsesRawPerSec     { "flowPulsesRawPerSec",      0, "p/s", "Raw flow"      };
+	Metric<unsigned int>     flowPulsesFilteredPerSec { "flowPulsesFilteredPerSec", 0, "p/s","Filtered flow" };
 	Metric<float>            flow            { "flow",            0.0f,             "L/min", "Water flow rate"          };
 	Metric<float>            temperatureDelta { "temperatureDelta", 0.0f,          "°C",    "Return-out temperature"    };
 	Metric<float>            coolingPower    { "coolingPower",    0.0f,             "W",     "Cooling power"             };
@@ -97,6 +101,10 @@ private:
 	void _configToJson(JsonObject obj, bool excludeMqtt) const;
 	// Helper to write all telemetry vars to JSON
 	void _telemetryToJson(JsonObject obj) const;
+	// Helper to write config metadata model to JSON
+	void _configModelToJson(JsonObject obj, bool excludeMqtt) const;
+	// Helper to write telemetry metadata model to JSON
+	void _telemetryModelToJson(JsonObject obj) const;
 };
 
 // RAII guard for State mutex

@@ -8,9 +8,11 @@ const HISTORY_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 function coolBedApp() {
 	return {
 		state: {},
-		speedSetPoint: 128,
-		tempSetPoint: 20,
-		calibrationVolume: 500,
+		model: { config: {}, telemetry: {}, modes: [] },
+		modelLoaded: false,
+		speedSetPoint: 0,
+		tempSetPoint: 0,
+		calibrationVolume: 0,
 
 		// Polling state
 		_pollTimer: null,
@@ -18,15 +20,69 @@ function coolBedApp() {
 		_history: [], // array of { timestamp, ...metrics }
 		_chart: null,
 
-		init() {
+		async init() {
+			await this._fetchModel();
+			await this._fetchState();
 			this._loadFromState();
 			this._startPolling();
 		},
 
+		async _fetchModel() {
+			try {
+				const res = await fetch('/api/model');
+				if (!res.ok) return;
+				this.model = await res.json();
+				this.modelLoaded = true;
+			} catch (e) {
+				console.error('Failed to fetch model:', e);
+			}
+		},
+
+		_getConfigMeta(key) {
+			return this.model?.config?.[key] || {};
+		},
+
+		_getTelemetryMeta(key) {
+			return this.model?.telemetry?.[key] || {};
+		},
+
+		labelFor(key, fallback = '') {
+			const meta = this._getConfigMeta(key);
+			return meta.description || fallback;
+		},
+
+		unitsFor(key, isConfig = true) {
+			const meta = isConfig ? this._getConfigMeta(key) : this._getTelemetryMeta(key);
+			return meta.units || '';
+		},
+
+		minFor(key) {
+			const min = this._getConfigMeta(key).min;
+			return Number.isFinite(min) ? min : null;
+		},
+
+		maxFor(key) {
+			const max = this._getConfigMeta(key).max;
+			return Number.isFinite(max) ? max : null;
+		},
+
+		defaultFor(key, fallback = 0) {
+			const val = this._getConfigMeta(key).defaultValue;
+			return val !== undefined && val !== null ? val : fallback;
+		},
+
+		formatTelemetry(key, decimals = 0) {
+			const rawValue = this.state[key];
+			const n = Number(rawValue ?? 0);
+			const value = Number.isFinite(n) ? n.toFixed(decimals) : String(rawValue ?? 0);
+			const units = this.unitsFor(key, false);
+			return units ? `${value} ${units}` : value;
+		},
+
 		_loadFromState() {
-			this.speedSetPoint = this.state.speedSetPoint ?? 128;
-			this.tempSetPoint = this.state.temperatureSetPoint ?? 26;
-			this.calibrationVolume = this.state.calibrationVolume ?? 500;
+			this.speedSetPoint = this.state.speedSetPoint ?? this.defaultFor('speedSetPoint', 0);
+			this.tempSetPoint = this.state.temperatureSetPoint ?? this.defaultFor('temperatureSetPoint', 0);
+			this.calibrationVolume = this.state.calibrationVolume ?? this.defaultFor('calibrationVolume', 0);
 		},
 
 		async _fetchState() {

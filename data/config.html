@@ -29,71 +29,71 @@
 				<fieldset>
 					<legend>MQTT</legend>
 					<label class="checkbox-label">
-						<input type="checkbox" x-model="cfg.mqtt"> Enable MQTT
+						<input type="checkbox" x-model="cfg.mqtt"> <span x-text="labelFor('mqtt', 'Enable MQTT')"></span>
 					</label>
-					<label>Server
+					<label><span x-text="labelFor('mqttServer', 'Server')"></span>
 						<input type="text" x-model="cfg.mqttServer">
 					</label>
-					<label>Port
-						<input type="number" x-model.number="cfg.mqttPort" min="1" max="65535">
+					<label><span x-text="labelFor('mqttPort', 'Port')"></span>
+						<input type="number" x-model.number="cfg.mqttPort" :min="minFor('mqttPort')" :max="maxFor('mqttPort')">
 					</label>
-					<label>Username
+					<label><span x-text="labelFor('mqttUsername', 'Username')"></span>
 						<input type="text" x-model="cfg.mqttUsername">
 					</label>
-					<label>Password
+					<label><span x-text="labelFor('mqttPassword', 'Password')"></span>
 						<input type="password" x-model="cfg.mqttPassword" placeholder="(leave blank to keep unchanged)">
 					</label>
-					<label>Root Topic
+					<label><span x-text="labelFor('mqttRootTopic', 'Root Topic')"></span>
 						<input type="text" x-model="cfg.mqttRootTopic">
 					</label>
 					<label class="checkbox-label">
-						<input type="checkbox" x-model="cfg.mqttHADiscovery"> HA MQTT Discovery
+						<input type="checkbox" x-model="cfg.mqttHADiscovery"> <span x-text="labelFor('mqttHADiscovery', 'HA MQTT Discovery')"></span>
 					</label>
-					<label>HA Discovery Topic
+					<label><span x-text="labelFor('mqttHADiscoveryTopic', 'HA Discovery Topic')"></span>
 						<input type="text" x-model="cfg.mqttHADiscoveryTopic">
 					</label>
 				</fieldset>
 
 				<fieldset>
 					<legend>Operation</legend>
-					<label>Speed Set Point (1–255)
-						<input type="range" min="1" max="255" x-model.number="cfg.speedSetPoint">
+					<label><span x-text="labelFor('speedSetPoint', 'Speed Set Point') + (unitsFor('speedSetPoint') ? ' (' + unitsFor('speedSetPoint') + ')' : '')"></span>
+						<input type="range" :min="minFor('speedSetPoint')" :max="maxFor('speedSetPoint')" x-model.number="cfg.speedSetPoint">
 						<span x-text="cfg.speedSetPoint"></span>
 					</label>
-					<label>Temperature Set Point (°C)
-						<input type="range" min="10" max="40" step="any" x-model.number="cfg.temperatureSetPoint">
-						<span x-text="cfg.temperatureSetPoint + ' °C'"></span>
+					<label><span x-text="labelFor('temperatureSetPoint', 'Temperature Set Point') + (unitsFor('temperatureSetPoint') ? ' (' + unitsFor('temperatureSetPoint') + ')' : '')"></span>
+						<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="any" x-model.number="cfg.temperatureSetPoint">
+						<span x-text="cfg.temperatureSetPoint + (unitsFor('temperatureSetPoint') ? ' ' + unitsFor('temperatureSetPoint') : '')"></span>
 					</label>
-					<label>Outgoing Temperature Offset (°C)
-						<input type="number" x-model.number="cfg.outTemperatureCalibrationOffset" min="-10" max="10" step="any">
+					<label><span x-text="labelFor('outTemperatureCalibrationOffset', 'Outgoing Temperature Offset') + (unitsFor('outTemperatureCalibrationOffset') ? ' (' + unitsFor('outTemperatureCalibrationOffset') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.outTemperatureCalibrationOffset" :min="minFor('outTemperatureCalibrationOffset')" :max="maxFor('outTemperatureCalibrationOffset')" step="any">
 					</label>
-					<label>Return Temperature Offset (°C)
-						<input type="number" x-model.number="cfg.returnTemperatureCalibrationOffset" min="-10" max="10" step="any">
+					<label><span x-text="labelFor('returnTemperatureCalibrationOffset', 'Return Temperature Offset') + (unitsFor('returnTemperatureCalibrationOffset') ? ' (' + unitsFor('returnTemperatureCalibrationOffset') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.returnTemperatureCalibrationOffset" :min="minFor('returnTemperatureCalibrationOffset')" :max="maxFor('returnTemperatureCalibrationOffset')" step="any">
 					</label>
-					<label>System Response Time (s)
-						<input type="number" x-model.number="cfg.systemTime" min="0" max="600">
+					<label><span x-text="labelFor('systemTime', 'System Response Time') + (unitsFor('systemTime') ? ' (' + unitsFor('systemTime') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.systemTime" :min="minFor('systemTime')" :max="maxFor('systemTime')">
 					</label>
-					<label>Min Flow Pulses/s
-						<input type="number" x-model.number="cfg.minFlowPulsesPerSec" min="1" max="1000">
+					<label><span x-text="labelFor('minFlowPulsesPerSec', 'Min Flow Pulses/s') + (unitsFor('minFlowPulsesPerSec') ? ' (' + unitsFor('minFlowPulsesPerSec') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.minFlowPulsesPerSec" :min="minFor('minFlowPulsesPerSec')" :max="maxFor('minFlowPulsesPerSec')">
 					</label>
-					<label>Max Current (mA)
-						<input type="number" x-model.number="cfg.maxCurrent" min="1" max="1200">
+					<label><span x-text="labelFor('maxCurrent', 'Max Current') + (unitsFor('maxCurrent') ? ' (' + unitsFor('maxCurrent') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.maxCurrent" :min="minFor('maxCurrent')" :max="maxFor('maxCurrent')">
 					</label>
-					<label>Min Voltage (mV)
-						<input type="number" x-model.number="cfg.minVoltage" min="0" max="40000">
+					<label><span x-text="labelFor('minVoltage', 'Min Voltage') + (unitsFor('minVoltage') ? ' (' + unitsFor('minVoltage') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.minVoltage" :min="minFor('minVoltage')" :max="maxFor('minVoltage')">
 					</label>
 				</fieldset>
 
 				<fieldset>
 					<legend>Calibration</legend>
-					<label>Volume (ml)
-						<input type="number" x-model.number="cfg.calibrationVolume" min="1" max="5000">
+					<label><span x-text="labelFor('calibrationVolume', 'Calibration Volume') + (unitsFor('calibrationVolume') ? ' (' + unitsFor('calibrationVolume') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.calibrationVolume" :min="minFor('calibrationVolume')" :max="maxFor('calibrationVolume')">
 					</label>
-					<label>Flow at Calibration End (L/min)
-						<input type="number" x-model.number="cfg.calibrationFlow" min="0" max="100" step="any">
+					<label><span x-text="labelFor('calibrationFlow', 'Flow at Calibration End') + (unitsFor('calibrationFlow') ? ' (' + unitsFor('calibrationFlow') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.calibrationFlow" :min="minFor('calibrationFlow')" :max="maxFor('calibrationFlow')" step="any">
 					</label>
-					<label>Flow Pulses During Calibration
-						<input type="number" x-model.number="cfg.calibrationFlowPulses" min="1" max="10000">
+					<label><span x-text="labelFor('calibrationFlowPulses', 'Flow Pulses During Calibration')"></span>
+						<input type="number" x-model.number="cfg.calibrationFlowPulses" :min="minFor('calibrationFlowPulses')" :max="maxFor('calibrationFlowPulses')">
 					</label>
 				</fieldset>
 

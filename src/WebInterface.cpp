@@ -24,6 +24,11 @@ void WebInterface::_setupRoutes() {
 		_handleGetState(request);
 	});
 
+	// GET /api/model
+	_server.on("/api/model", HTTP_GET, [this](AsyncWebServerRequest* request) {
+		_handleGetModel(request);
+	});
+
 	// POST /api/config
 	_server.on("/api/config", HTTP_POST,
 		[](AsyncWebServerRequest* request) {},
@@ -56,6 +61,19 @@ void WebInterface::_handleGetState(AsyncWebServerRequest* request) {
 		_state.toJson(obj, true, true, false);
 		// Remove password from response for security
 		// obj.remove("mqttPassword"); // Already excluded by toJson
+	}
+
+	String response;
+	serializeJson(doc, response);
+	request->send(200, "application/json", response);
+}
+
+void WebInterface::_handleGetModel(AsyncWebServerRequest* request) {
+	JsonDocument doc;
+	JsonObject obj = doc.to<JsonObject>();
+	{
+		StateGuard guard(_state);
+		_state.toModelJson(obj, true, true, false);
 	}
 
 	String response;

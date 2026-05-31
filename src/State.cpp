@@ -1,5 +1,17 @@
 #include "State.h"
 
+namespace {
+template<typename T>
+void metricModelToJsonImpl(JsonObject obj, const Metric<T>& metric) {
+	JsonObject entry = obj[metric.getName()].template to<JsonObject>(); // the compiler does not know that "to" is a template method when analyzing the dependent type.
+	entry["defaultValue"] = metric.getDefault();
+	entry["min"] = metric.getMin();
+	entry["max"] = metric.getMax();
+	entry["units"] = metric.getUnits();
+	entry["description"] = metric.getDescription();
+}
+}
+
 State::State() : _metricsValid(false) {
 	_mutex = xSemaphoreCreateMutex();
 }
@@ -95,6 +107,49 @@ void State::_telemetryToJson(JsonObject obj) const {
 	coolingPower.toJson(obj);
 }
 
+void State::_configModelToJson(JsonObject obj, bool excludeMqtt) const {
+	metricModelToJsonImpl(obj, hostname);
+	if (!excludeMqtt) {
+		metricModelToJsonImpl(obj, mqtt);
+		metricModelToJsonImpl(obj, mqttServer);
+		metricModelToJsonImpl(obj, mqttPort);
+		metricModelToJsonImpl(obj, mqttUsername);
+		metricModelToJsonImpl(obj, mqttPassword);
+		metricModelToJsonImpl(obj, mqttRootTopic);
+		metricModelToJsonImpl(obj, mqttHADiscovery);
+		metricModelToJsonImpl(obj, mqttHADiscoveryTopic);
+	}
+	metricModelToJsonImpl(obj, mode);
+	metricModelToJsonImpl(obj, speedSetPoint);
+	metricModelToJsonImpl(obj, temperatureSetPoint);
+	metricModelToJsonImpl(obj, outTemperatureCalibrationOffset);
+	metricModelToJsonImpl(obj, returnTemperatureCalibrationOffset);
+	metricModelToJsonImpl(obj, calibrationVolume);
+	metricModelToJsonImpl(obj, calibrationFlow);
+	metricModelToJsonImpl(obj, calibrationFlowPulses);
+	metricModelToJsonImpl(obj, systemTime);
+	metricModelToJsonImpl(obj, minFlowPulsesPerSec);
+	metricModelToJsonImpl(obj, maxCurrent);
+	metricModelToJsonImpl(obj, minVoltage);
+}
+
+void State::_telemetryModelToJson(JsonObject obj) const {
+	metricModelToJsonImpl(obj, status);
+	metricModelToJsonImpl(obj, error);
+	metricModelToJsonImpl(obj, pumpSpeed);
+	metricModelToJsonImpl(obj, flowPulsesRaw);
+	metricModelToJsonImpl(obj, flowPulsesFiltered);
+	metricModelToJsonImpl(obj, pumpVoltage);
+	metricModelToJsonImpl(obj, pumpCurrent);
+	metricModelToJsonImpl(obj, outTemperature);
+	metricModelToJsonImpl(obj, returnTemperature);
+	metricModelToJsonImpl(obj, flowPulsesRawPerSec);
+	metricModelToJsonImpl(obj, flowPulsesFilteredPerSec);
+	metricModelToJsonImpl(obj, flow);
+	metricModelToJsonImpl(obj, temperatureDelta);
+	metricModelToJsonImpl(obj, coolingPower);
+}
+
 // convert state to JSON
 void State::toJson(JsonObject obj, bool includeConfig, bool includeTelemetry, bool excludeMqttConfig) const {
 	if (includeConfig) {
@@ -103,6 +158,24 @@ void State::toJson(JsonObject obj, bool includeConfig, bool includeTelemetry, bo
 	if (includeTelemetry && _metricsValid) {
 		_telemetryToJson(obj);
 	}
+}
+
+void State::toModelJson(JsonObject obj, bool includeConfig, bool includeTelemetry, bool excludeMqttConfig) const {
+	if (includeConfig) {
+		JsonObject configObj = obj["config"].to<JsonObject>();
+		_configModelToJson(configObj, excludeMqttConfig);
+	}
+	if (includeTelemetry) {
+		JsonObject telemetryObj = obj["telemetry"].to<JsonObject>();
+		_telemetryModelToJson(telemetryObj);
+	}
+
+	JsonArray modes = obj["modes"].to<JsonArray>();
+	modes.add(MODE_STOP);
+	modes.add(MODE_SPEED);
+	modes.add(MODE_TEMPERATURE);
+	modes.add(MODE_CALIBRATION);
+	modes.add(MODE_FLOW_TEST);
 }
 
 // convert JSON with config to State and Preferences
