@@ -20,7 +20,7 @@ Controller::Controller(State& state, Connectivity& connectivity)
 	  _prevFilteredPulses(0),
 	  _prevPulsesMs(0),
 	  _modeStartMs(0),
-	  _currentSpeed(255),
+	  _currentSpeed(PUMP_MAX_SPEED),
 	  _calibStartPulses(0),
 	  _calibStartMs(0),
 	  _inError(false),
@@ -174,7 +174,7 @@ void Controller::setMode(const String& newMode) {
 	}
 	_clearError();
 	_modeStartMs = millis();
-	_currentSpeed = 255;
+	_currentSpeed = PUMP_MAX_SPEED;
 	_lastTempAdjMs = 0;
 	_lastFlowTestStepMs = 0;
 
@@ -200,7 +200,7 @@ void Controller::setMode(const String& newMode) {
 		_setPumpSpeed(_currentSpeed);
 	} else if (newMode == MODE_TEMPERATURE) {
 		// in temperature mode, pump speed will be adjusted in _runMode() based on temperature difference, so just set it to max for now
-		_currentSpeed = 255;
+		_currentSpeed = PUMP_MAX_SPEED;
 		_setPumpSpeed(_currentSpeed);
 		{
 			StateGuard guard(_state);
@@ -484,8 +484,8 @@ void Controller::_runMode() {
 		}
 
 		// Every sample: if flow too low, boost speed
-		if (filteredPerSec < minFlow && _currentSpeed < 255) {
-			_currentSpeed = (uint8_t)min((int)_currentSpeed + TEMP_STEP, 255);
+		if (filteredPerSec < minFlow && _currentSpeed < PUMP_MAX_SPEED) {
+			_currentSpeed = (uint8_t)min((int)_currentSpeed + TEMP_STEP, PUMP_MAX_SPEED);
 			_setPumpSpeed(_currentSpeed);
 		}
 
@@ -496,7 +496,7 @@ void Controller::_runMode() {
 				_currentSpeed = (uint8_t)max((int)_currentSpeed - TEMP_STEP, 0);
 				_setPumpSpeed(_currentSpeed);
 			} else if (returnTemp > setPoint) {
-				_currentSpeed = (uint8_t)min((int)_currentSpeed + TEMP_STEP, 255);
+				_currentSpeed = (uint8_t)min((int)_currentSpeed + TEMP_STEP, PUMP_MAX_SPEED);
 				_setPumpSpeed(_currentSpeed);
 			}
 			// Equal: do nothing
@@ -516,9 +516,11 @@ void Controller::_runMode() {
 		}
 	} else if (currentMode == MODE_FLOW_TEST) {
 		unsigned int filteredPerSec;
+		unsigned int systemTimeSec;
 		{
 			StateGuard guard(_state);
 			filteredPerSec = _state.flowPulsesFilteredPerSec.get();
+			systemTimeSec = _state.systemTime.get();
 		}
 
 		// Cycle start / restart: run at max speed until measured flow is above threshold.
@@ -529,7 +531,8 @@ void Controller::_runMode() {
 			}
 			_lastFlowTestStepMs = now;
 		} else if (filteredPerSec > minFlow) {
-			if (now - _lastFlowTestStepMs >= FLOW_TEST_STEP_INTERVAL_MS) {
+			unsigned long intervalMs = (unsigned long)( (_currentSpeed == FLOW_TEST_MAX_SPEED ? FLOW_TEST_FIRST_STEP_INTERVAL_RATIO : FLOW_TEST_STEP_INTERVAL_RATIO) * (float)systemTimeSec * 1000.0f);
+			if (now - _lastFlowTestStepMs >= intervalMs) {
 				_lastFlowTestStepMs = now;
 				uint8_t newSpeed = (uint8_t)max((int)_currentSpeed - FLOW_TEST_STEP, 0);
 				if (newSpeed != _currentSpeed) {

@@ -18,14 +18,16 @@ class Connectivity; // can't include Connectivity.h here due to circular depende
 #endif
 
 // ---- Constants ----
+#define PUMP_MAX_SPEED					255 // max PWM value for pump speed
 #define SENSOR_SAMPLE_INTERVAL_MS		1000
 #define TEMP_RETRY_COUNT				3
 #define TEMP_MIN_CELSIUS				-5.0f
 #define TEMP_MAX_CELSIUS				40.0f
 #define TEMP_STEP						10
 #define FLOW_TEST_STEP					10
-#define FLOW_TEST_STEP_INTERVAL_MS		5000
-#define FLOW_TEST_MAX_SPEED				255
+#define FLOW_TEST_STEP_INTERVAL_RATIO	0.5 // how long to test each speed in a flow test. ratio of the "system time".
+#define FLOW_TEST_FIRST_STEP_INTERVAL_RATIO	1.0 // ratio of the "system time". first step needs more time to prime from stopped, subsequent steps can be faster.
+#define FLOW_TEST_MAX_SPEED				PUMP_MAX_SPEED
 #define BUTTON_HOLD_MS					5000
 #define WATER_SPECIFIC_HEAT_J_PER_KG_C	4186.0f // how much energy (in joules) it takes to raise 1 kg of water by 1 degree Celsius
 #define SECONDS_PER_MINUTE				60.0f
