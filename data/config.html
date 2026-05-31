@@ -61,7 +61,7 @@
 						<span x-text="cfg.speedSetPoint"></span>
 					</label>
 					<label><span x-text="labelFor('temperatureSetPoint', 'Temperature Set Point') + (unitsFor('temperatureSetPoint') ? ' (' + unitsFor('temperatureSetPoint') + ')' : '')"></span>
-						<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="any" x-model.number="cfg.temperatureSetPoint">
+						<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="cfg.temperatureSetPoint">
 						<span x-text="cfg.temperatureSetPoint + (unitsFor('temperatureSetPoint') ? ' ' + unitsFor('temperatureSetPoint') : '')"></span>
 					</label>
 					<label><span x-text="labelFor('outTemperatureCalibrationOffset', 'Outgoing Temperature Offset') + (unitsFor('outTemperatureCalibrationOffset') ? ' (' + unitsFor('outTemperatureCalibrationOffset') + ')' : '')"></span>
