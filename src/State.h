@@ -63,7 +63,7 @@ public:
 	ConfigVar<bool>          mqttHADiscovery { "mqttHADiscovery", true,             "",     "Enable HA MQTT discovery"                        };
 	ConfigVar<String>        mqttHADiscoveryTopic { "mqttHADiscoveryTopic", "homeassistant", "", "HA discovery topic prefix",                  {}, {}, "mqttHADiscTopic" };
 	ConfigVar<String>        mode            { "mode",            MODE_STOP,        "",     "Operating mode: stop/speed/temperature/calibration/flowtest" };
-	ConfigVar<uint8_t>       speedSetPoint   { "speedSetPoint",   255,              "",     "Pump speed set point",        1,    255           };
+	ConfigVar<uint8_t>       speedSetPoint   { "speedSetPoint",   255,              "counts",     "Pump speed set point",        1,    255           };
 	ConfigVar<float>         temperatureSetPoint { "temperatureSetPoint", 26.0f,    "°C",   "Temperature set point",       10.0f, 40.0f, "tempSetPoint" };
 	ConfigVar<float>         outTemperatureCalibrationOffset { "outTemperatureCalibrationOffset", 0.0f, "°C", "Outgoing temperature offset", -10.0f, 10.0f, "outTempCalOff" };
 	ConfigVar<float>         returnTemperatureCalibrationOffset { "returnTemperatureCalibrationOffset", 0.0f, "°C", "Return temperature offset", -10.0f, 10.0f, "retTempCalOff" };
@@ -78,9 +78,9 @@ public:
 	// --------------- Telemetry ---------------
 	Metric<String>           status          { "status",          "",               "",     "Device status"               };
 	Metric<bool>             error           { "error",           false,            "",     "Error state"                 };
-	Metric<uint8_t>          pumpSpeed       { "pumpSpeed",       0,                "",     "Current pump speed"          };
-	Metric<uint64_t>         flowPulsesRaw   { "flowPulsesRaw",   0,                "",     "Raw flow pulse count"        };
-	Metric<uint64_t>         flowPulsesFiltered { "flowPulsesFiltered", 0,          "",     "Filtered flow pulse count"   };
+	Metric<uint8_t>          pumpSpeed       { "pumpSpeed",       0,                "counts","Current pump speed"          };
+	Metric<uint64_t>         flowPulsesRaw   { "flowPulsesRaw",   0,                "pulses", "Raw flow pulse count"        };
+	Metric<uint64_t>         flowPulsesFiltered { "flowPulsesFiltered", 0,          "pulses", "Filtered flow pulse count"   };
 	Metric<unsigned int>     pumpVoltage     { "pumpVoltage",     0,                "mV",   "Pump voltage"                };
 	Metric<int>              pumpCurrent     { "pumpCurrent",     0,                "mA",   "Pump current"                };
 	Metric<float>            outTemperature  { "outTemperature",  20.0f,            "°C",   "Outgoing water temperature"  };

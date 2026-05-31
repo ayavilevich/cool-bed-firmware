@@ -189,7 +189,7 @@ Valid sensor temperature range is -5 to 40 degrees celsius (consts).
 
 ##### Flow sensor
 
-flowPulsesRaw is the count of RISING interrupts on the pin.
+flowPulsesRaw is the count of RISING interrupts on the pin. Could have noise on some systems.
 flowPulsesFiltered is more complex. Implement in a separate class. Maintain a uint16 pin history state, current bool state and up and down counters. Setup a timer to fire every 50 microseconds (constant). In the timer interrupt, read the level of the pin with gpio_get_level. Push the pin level in the history as a bit (FIFO). This way the history keeps the latest 16 levels of the pin. When history changes to UINT16_MAX or 0 derive new state. If new state different from current state then inc up or down counter and update current state. Init history per gpio_get_level value at init time.
 
 #### Operation modes
@@ -201,10 +201,10 @@ If after 10 minutes (const) of being stopped, absolute deltaTemperature value is
 
 ##### Speed mode
 Operate pump at speedSetPoint. Status = "speed".
-If after systemTime of running, flowPulsesFilteredPerSec < minFlowPulsesPerSec then trigger error state.
+If we operate for systemTime and flowPulsesFilteredPerSec < minFlowPulsesPerSec then trigger error state. This can happen at the start of the mode or later due to speed change or other causes.
 
 ##### Temperature mode
-Maintain currentSpeed variable reflecting current pump speed.
+Maintain current pump speed in currentSpeed variable.
 
 * Start at max speed (255)
 * Every "systemTime" interval, if returnTemperature < temperatureSetPoint and flowPulsesFilteredPerSec > minFlowPulsesPerSec, reduce speed by a step of 10 (const). if returnTemperature > temperatureSetPoint, increase speed by a step of 10 (if we are not at max).
@@ -224,7 +224,7 @@ If after systemTime of running, flowPulsesFilteredPerSec < minFlowPulsesPerSec t
 
 Run cycles of testing until mode is changed to something else.
 Start each cycle with the pump at max speed. Wait for flowPulsesFilteredPerSec > minFlowPulsesPerSec.
-Then every 5 seconds, drop speed by 10 points. If flowPulsesFilteredPerSec < minFlowPulsesPerSec, restart cycle.
+Then every (ratio x systemTime) seconds, drop speed by 10 points. If flowPulsesFilteredPerSec < minFlowPulsesPerSec, restart cycle.
 
 ### Web Interface
 

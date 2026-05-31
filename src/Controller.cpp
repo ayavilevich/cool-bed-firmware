@@ -23,6 +23,7 @@ Controller::Controller(State& state, Connectivity& connectivity)
 	  _currentSpeed(PUMP_MAX_SPEED),
 	  _calibStartPulses(0),
 	  _calibStartMs(0),
+	  _lastValidFlowMs(0),
 	  _inError(false),
 	  _buttonPressMs(0),
 	  _buttonIsPressed(false),
@@ -198,6 +199,7 @@ void Controller::setMode(const String& newMode) {
 		}
 		_currentSpeed = setPoint;
 		_setPumpSpeed(_currentSpeed);
+		_lastValidFlowMs = millis(); // set to "now" to allow the flow to stabilize for a full interval
 	} else if (newMode == MODE_TEMPERATURE) {
 		// in temperature mode, pump speed will be adjusted in _runMode() based on temperature difference, so just set it to max for now
 		_currentSpeed = PUMP_MAX_SPEED;
@@ -451,26 +453,24 @@ void Controller::_runMode() {
 		}
 	} else if (currentMode == MODE_SPEED) {
 		uint8_t setPoint;
+		unsigned int fps;
 		{
 			StateGuard guard(_state);
 			setPoint = _state.speedSetPoint.get();
+			fps = _state.flowPulsesFilteredPerSec.get();
 		}
 		// update speed
 		if (setPoint != _currentSpeed) {
 			_currentSpeed = setPoint;
 			_setPumpSpeed(_currentSpeed);
 		}
-		// check for errors
+		// check for flow errors
 #ifndef SKIP_SPEED_MODE_FLOW_CHECK
-		if (elapsed >= sysTime) {
-			unsigned int fps;
-			{
-				StateGuard guard(_state);
-				fps = _state.flowPulsesFilteredPerSec.get();
-			}
-			if (fps < minFlow) {
-				_triggerError("no flow in speed mode");
-			}
+		if (fps >= minFlow) { // if flow ok
+			_lastValidFlowMs = now; // keep track of last time we had valid flow to detect flow loss after systemTime has elapsed
+		}
+		if ((now - _lastValidFlowMs) / 1000 >= sysTime) { // if we have not had valid flow for at least systemTime seconds
+			_triggerError("no flow in speed mode");
 		}
 #endif // SKIP_SPEED_MODE_FLOW_CHECK
 	} else if (currentMode == MODE_TEMPERATURE) {
