@@ -68,6 +68,7 @@ void Controller::begin() {
 
 	// start with last mode
 	// could cause issues if a person power ups the device and water spills all over
+	// also, we don't persist mode right now on all changes, so it doesn't remember previous mode correctly anyways.
 	/*
 	String mode;
 	{
