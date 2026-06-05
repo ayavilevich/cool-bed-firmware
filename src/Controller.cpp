@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include "Connectivity.h"
+#include "Utils.h"
 #include <Wire.h>
 #include <math.h>
 
@@ -65,13 +66,25 @@ void Controller::begin() {
 	// _ina226.setCorrectionFactor(1.0f);
 	_ina226.waitUntilConversionCompleted(); // if you comment this line the first data might be zero
 
+	// start with last mode
+	// could cause issues if a person power ups the device and water spills all over
+	/*
 	String mode;
 	{
 		StateGuard guard(_state);
 		mode = _state.mode.get();
 	}
-	setMode(mode); // start with last mode
-	// setMode(MODE_STOP); // start with STOP
+	setMode(mode);
+	*/
+
+	// start with STOP
+	setMode(MODE_STOP);
+
+	// set status to reset reason
+	{
+		StateGuard guard(_state);
+		_state.status.set(String("Start: ") + resetReasonToString(esp_reset_reason()));
+	}
 }
 
 void Controller::loop() {
@@ -153,7 +166,7 @@ void Controller::setMode(const String& newMode) {
 			} else {
 				_state.calibrationFlowPulses.set((unsigned int)pulsesDelta);
 				_state.calibrationFlow.set(_state.flow.get());
-				_state.status.set("calibrated");
+				_state.status.set("Calibrated");
 				Serial.printf("[Controller] Calibration complete: %llu pulses, %.2f L/min\n",
 				              pulsesDelta, _state.flow.get());
 
@@ -186,7 +199,7 @@ void Controller::setMode(const String& newMode) {
 			_calibStartPulses = _state.flowPulsesFiltered.get();
 			setPoint = _state.speedSetPoint.get();
 			currentSpeed = _state.pumpSpeed.get();
-			_state.status.set("calibrating");
+			_state.status.set("Calibrating...");
 		}
 		_calibStartMs = millis();
 		_setPumpSpeed(setPoint);
@@ -195,7 +208,7 @@ void Controller::setMode(const String& newMode) {
 		{
 			StateGuard guard(_state);
 			setPoint = _state.speedSetPoint.get();
-			_state.status.set("speed");
+			_state.status.set("Speed mode");
 		}
 		_setPumpSpeed(setPoint);
 		_lastValidFlowMs = millis(); // set to "now" to allow the flow to stabilize for a full interval
@@ -204,21 +217,21 @@ void Controller::setMode(const String& newMode) {
 		_setPumpSpeed(PUMP_MAX_SPEED);
 		{
 			StateGuard guard(_state);
-			_state.status.set("temperature");
+			_state.status.set("Temperature mode");
 		}
 		_lastTempAdjMs = millis();
 	} else if (newMode == MODE_STOP) {
 		_setPumpSpeed(0);
 		{
 			StateGuard guard(_state);
-			_state.status.set("stopped");
+			_state.status.set("Stopped");
 		}
 	} else if (newMode == MODE_FLOW_TEST) {
 		_setPumpSpeed(FLOW_TEST_MAX_SPEED);
 		_lastFlowTestStepMs = millis();
 		{
 			StateGuard guard(_state);
-			_state.status.set("flow test");
+			_state.status.set("Flow test");
 		}
 	}
 
@@ -237,7 +250,7 @@ void Controller::_triggerError(const String& cause) {
 	{
 		StateGuard guard(_state);
 		_state.error.set(true);
-		_state.status.set("error: " + cause);
+		_state.status.set("Error: " + cause);
 		_state.mode.set(MODE_STOP);
 	}
 	_inError = true;
@@ -441,11 +454,12 @@ void Controller::_runMode() {
 			{
 				StateGuard guard(_state);
 				absDelta = fabsf(_state.temperatureDelta.get());
-				status = _state.status.get();
-			}
-			if (absDelta > TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C && status != TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT) {
-				StateGuard guard(_state);
-				_state.status.set(TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT);
+				// show temperature calibration warning if we have a significant temperature difference after the equilibrium time
+				if (absDelta > TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C) {
+					_state.status.set(TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT);
+				} else {
+					_state.status.set("Stopped");
+				}
 			}
 		}
 	} else if (currentMode == MODE_SPEED) {
