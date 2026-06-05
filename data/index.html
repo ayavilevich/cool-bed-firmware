@@ -28,15 +28,15 @@
 			<!-- Temperature mode -->
 			<div class="mode-panel">
 				<label x-text="labelFor('temperatureSetPoint', 'Temperature Mode')"></label>
-				<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="tempSetPoint">
-				<span x-text="tempSetPoint + (unitsFor('temperatureSetPoint') ? ' ' + unitsFor('temperatureSetPoint') : '')"></span>
+				<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="state.temperatureSetPoint" @change="onTemperatureSetPointChanged()">
+				<span x-text="state.temperatureSetPoint + (unitsFor('temperatureSetPoint') ? ' ' + unitsFor('temperatureSetPoint') : '')"></span>
 			</div>
 
 			<!-- Speed mode -->
 			<div class="mode-panel">
 				<label x-text="labelFor('speedSetPoint', 'Speed Mode')"></label>
-				<input type="range" :min="minFor('speedSetPoint')" :max="maxFor('speedSetPoint')" x-model.number="speedSetPoint">
-				<span x-text="speedSetPoint"></span>
+				<input type="range" :min="minFor('speedSetPoint')" :max="maxFor('speedSetPoint')" x-model.number="state.speedSetPoint" @change="onSpeedSetPointChanged()">
+				<span x-text="state.speedSetPoint"></span>
 			</div>
 
 			<!-- Calibration mode -->
@@ -44,7 +44,7 @@
 				<label>Calibration Mode</label>
 				<div class="inline-field">
 					<label x-text="labelFor('calibrationVolume', 'Calibration Volume') + (unitsFor('calibrationVolume') ? ' (' + unitsFor('calibrationVolume') + ')' : '') + ':'"></label>
-					<input type="number" :min="minFor('calibrationVolume')" :max="maxFor('calibrationVolume')" x-model.number="calibrationVolume">
+					<input type="number" :min="minFor('calibrationVolume')" :max="maxFor('calibrationVolume')" x-model.number="state.calibrationVolume" @change="onCalibrationVolumeChanged()">
 				</div>
 				<button class="btn btn-warning" x-show="state.mode !== 'calibration'" @click="startCalibration()">▶ Start Pump Calibration</button>
 			</div>

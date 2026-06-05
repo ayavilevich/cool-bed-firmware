@@ -10,9 +10,6 @@ function coolBedApp() {
 		state: {},
 		model: { config: {}, telemetry: {}, modes: [] },
 		modelLoaded: false,
-		speedSetPoint: 0,
-		tempSetPoint: 0,
-		calibrationVolume: 0,
 
 		// Polling state
 		_pollTimer: null,
@@ -23,7 +20,6 @@ function coolBedApp() {
 		async init() {
 			await this._fetchModel();
 			await this._fetchState();
-			this._loadFromState();
 			this._startPolling();
 		},
 
@@ -79,19 +75,12 @@ function coolBedApp() {
 			return units ? `${value} ${units}` : value;
 		},
 
-		_loadFromState() {
-			this.speedSetPoint = this.state.speedSetPoint ?? this.defaultFor('speedSetPoint', 0);
-			this.tempSetPoint = this.state.temperatureSetPoint ?? this.defaultFor('temperatureSetPoint', 0);
-			this.calibrationVolume = this.state.calibrationVolume ?? this.defaultFor('calibrationVolume', 0);
-		},
-
 		async _fetchState() {
 			try {
 				const res = await fetch('/api/state');
 				if (!res.ok) return;
 				const data = await res.json();
 				this.state = data;
-				this._loadFromState();
 				this._recordHistory(data);
 			} catch (e) {
 				console.error('Failed to fetch state:', e);
@@ -175,19 +164,28 @@ function coolBedApp() {
 			this._postMode(mode);
 		},
 
-		async startSpeed() {
-			await this._postConfig({ speedSetPoint: this.speedSetPoint });
-			await this._postMode('speed');
+		onSpeedSetPointChanged() {
+			this._postConfig({ speedSetPoint: this.state.speedSetPoint });
 		},
 
-		async startTemperature() {
-			await this._postConfig({ temperatureSetPoint: this.tempSetPoint });
-			await this._postMode('temperature');
+		onTemperatureSetPointChanged() {
+			this._postConfig({ temperatureSetPoint: this.state.temperatureSetPoint });
 		},
 
-		async startCalibration() {
-			await this._postConfig({ calibrationVolume: this.calibrationVolume });
-			await this._postMode('calibration');
+		onCalibrationVolumeChanged() {
+			this._postConfig({ calibrationVolume: this.state.calibrationVolume });
+		},
+
+		startSpeed() {
+			this._postMode('speed');
+		},
+
+		startTemperature() {
+			this._postMode('temperature');
+		},
+
+		startCalibration() {
+			this._postMode('calibration');
 		},
 
 		startFlowTest() {
