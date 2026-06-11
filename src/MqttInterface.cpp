@@ -238,6 +238,10 @@ void MqttInterface::_publishDiscovery() {
 		e["stat_t"] = stateTopic; // state_topic
 		e["val_tpl"] = String("{{ value_json.") + metric.getName() + " }}"; // value_template
 		e["unique_id"] = hostname + "_" + id;
+		// if class is volume_flow_rate then set precision to 2 decimal places because the default seems to be 0 and it is too low for our application
+		if (strcmp(deviceClass, "volume_flow_rate") == 0) {
+			e["sug_dsp_prc"] = 2; // suggested_display_precision
+		}
 	};
 
 	auto addBinarySensor = [&](const char* id, const char* deviceClass, const auto& metric) {
