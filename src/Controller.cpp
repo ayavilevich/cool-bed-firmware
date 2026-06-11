@@ -13,8 +13,10 @@ Controller::Controller(State& state, Connectivity& connectivity)
 	  _flowSensor(FLOW_SENSOR_PIN),
 	  _owOut(DALLAS_SENSOR_OUTGOING_PIN),
 	  _owReturn(DALLAS_SENSOR_RETURNING_PIN),
+	  _owCooling(DALLAS_SENSOR_COOLING_PIN),
 	  _tempOut(&_owOut),
 	  _tempReturn(&_owReturn),
+	  _tempCooling(&_owCooling),
 	  _ina226(INA226_I2C_ADDRESS),
 	  _lastSampleMs(0),
 	  _prevRawPulses(0),
@@ -57,6 +59,7 @@ void Controller::begin() {
 	_flowSensor.begin();
 	_tempOut.begin();
 	_tempReturn.begin();
+	_tempCooling.begin();
 
 	Wire.begin(); // SDA=21, SCL=22
 	_ina226.init();
@@ -292,14 +295,19 @@ void Controller::_setPumpSpeed(uint8_t speed) {
 #endif
 }
 
-bool Controller::_readTemperature(DallasTemperature& sensor, float& outVal) {
+bool Controller::readTemperatureOnce(DallasTemperature& sensor, float& outVal) {
+	sensor.requestTemperatures();
+	float val = sensor.getTempCByIndex(0);
+	if (val != DEVICE_DISCONNECTED_C && val >= TEMP_MIN_CELSIUS && val <= TEMP_MAX_CELSIUS) {
+		outVal = val;
+		return true;
+	}
+	return false;
+}
+
+bool Controller::readTemperatureRetry(DallasTemperature& sensor, float& outVal) {
 	for (int attempt = 0; attempt < TEMP_RETRY_COUNT; attempt++) {
-		sensor.requestTemperatures();
-		float val = sensor.getTempCByIndex(0);
-		if (val != DEVICE_DISCONNECTED_C && val >= TEMP_MIN_CELSIUS && val <= TEMP_MAX_CELSIUS) {
-			outVal = val;
-			return true;
-		}
+		if (readTemperatureOnce(sensor, outVal)) return true;
 		delay(50);
 	}
 	return false;
@@ -365,7 +373,7 @@ void Controller::_sampleSensors() {
 	}
 
 	float outTemp = 0.0f;
-	if (!_readTemperature(_tempOut, outTemp)) {
+	if (!readTemperatureRetry(_tempOut, outTemp)) {
 		_triggerError("outgoing temperature sensor failure");
 		return;
 	}
@@ -381,7 +389,7 @@ void Controller::_sampleSensors() {
 	}
 
 	float returnTemp = 0.0f;
-	if (!_readTemperature(_tempReturn, returnTemp)) {
+	if (!readTemperatureRetry(_tempReturn, returnTemp)) {
 		_triggerError("return temperature sensor failure");
 		return;
 	}
@@ -394,6 +402,20 @@ void Controller::_sampleSensors() {
 	{
 		StateGuard guard(_state);
 		_state.returnTemperature.set(returnTemp);
+	}
+
+	float coolingTemp = 0.0f;
+	if (readTemperatureOnce(_tempCooling, coolingTemp)) {
+		float coolingTempOffset = 0.0f;
+		{
+			StateGuard guard(_state);
+			coolingTempOffset = _state.coolingTemperatureCalibrationOffset.get();
+		}
+		coolingTemp += coolingTempOffset;
+		{
+			StateGuard guard(_state);
+			_state.coolingTemperature.set(coolingTemp);
+		}
 	}
 
 	if (_ina226.overflow) {

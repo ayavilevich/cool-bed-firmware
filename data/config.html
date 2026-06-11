@@ -70,6 +70,9 @@
 					<label><span x-text="labelFor('returnTemperatureCalibrationOffset', 'Return Temperature Offset') + (unitsFor('returnTemperatureCalibrationOffset') ? ' (' + unitsFor('returnTemperatureCalibrationOffset') + ')' : '')"></span>
 						<input type="number" x-model.number="cfg.returnTemperatureCalibrationOffset" :min="minFor('returnTemperatureCalibrationOffset')" :max="maxFor('returnTemperatureCalibrationOffset')" step="any">
 					</label>
+					<label><span x-text="labelFor('coolingTemperatureCalibrationOffset', 'Cooling Temperature Offset') + (unitsFor('coolingTemperatureCalibrationOffset') ? ' (' + unitsFor('coolingTemperatureCalibrationOffset') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.coolingTemperatureCalibrationOffset" :min="minFor('coolingTemperatureCalibrationOffset')" :max="maxFor('coolingTemperatureCalibrationOffset')" step="any">
+					</label>
 					<label><span x-text="labelFor('systemTime', 'System Response Time') + (unitsFor('systemTime') ? ' (' + unitsFor('systemTime') + ')' : '')"></span>
 						<input type="number" x-model.number="cfg.systemTime" :min="minFor('systemTime')" :max="maxFor('systemTime')">
 					</label>

@@ -222,29 +222,32 @@ void MqttInterface::_publishDiscovery() {
 	JsonObject origin = root["origin"].to<JsonObject>();
 	origin["name"] = AD_ORIGIN_NAME;
 
+	// note use of abbreviations
+	// https://www.home-assistant.io/integrations/mqtt/#supported-abbreviations-in-mqtt-discovery-messages
+
 	// Components (entities)
 	JsonObject components = root["components"].to<JsonObject>();
 
 	// --- Telemetry sensors ---
 	auto addSensor = [&](const char* id, const char* deviceClass, const auto& metric) {
 		JsonObject e = components[id].to<JsonObject>();
-		e["platform"] = "sensor";
+		e["p"] = "sensor"; // platform
 		e["name"] = metric.getDescription();
 		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
 		if (strlen(metric.getUnits()) > 0) e["unit_of_measurement"] = metric.getUnits();
-		e["state_topic"] = stateTopic;
-		e["value_template"] = String("{{ value_json.") + metric.getName() + " }}";
+		e["stat_t"] = stateTopic; // state_topic
+		e["val_tpl"] = String("{{ value_json.") + metric.getName() + " }}"; // value_template
 		e["unique_id"] = hostname + "_" + id;
 	};
 
 	auto addBinarySensor = [&](const char* id, const char* deviceClass, const auto& metric) {
 		JsonObject e = components[id].to<JsonObject>();
-		e["platform"] = "binary_sensor";
+		e["p"] = "binary_sensor"; // platform
 		e["name"] = metric.getDescription();
 		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
-		e["state_topic"] = stateTopic;
+		e["stat_t"] = stateTopic; // state_topic
 		// e["value_template"] = String("{{ value_json.") + valueKey + " }}";
-		e["value_template"] = String("{{ 'ON' if value_json.") + metric.getName() + " else 'OFF' }}"; // AI suggested that Home Assistant expects "ON"/"OFF" strings, so need to convert boolean to string here
+		e["val_tpl"] = String("{{ 'ON' if value_json.") + metric.getName() + " else 'OFF' }}"; // AI suggested that Home Assistant expects "ON"/"OFF" strings, so need to convert boolean to string here
 		// e["payload_on"] = "ON"; // should be default this way
 		// e["payload_off"] = "OFF"; // should be default this way
 		e["unique_id"] = hostname + "_" + id;
@@ -260,18 +263,19 @@ void MqttInterface::_publishDiscovery() {
 	addSensor("flow_pulses_raw_per_sec", "", _state.flowPulsesRawPerSec);
 	addSensor("out_temperature", "temperature", _state.outTemperature);
 	addSensor("return_temperature", "temperature", _state.returnTemperature);
+	addSensor("cooling_temperature", "temperature", _state.coolingTemperature);
 	addSensor("pump_voltage", "voltage", _state.pumpVoltage);
 	addSensor("pump_current", "current", _state.pumpCurrent);
 
 	// --- Settable config (number entities) ---
 	auto addNumber = [&](const char* id, const auto& var, float step) {
 		JsonObject e = components[id].to<JsonObject>();
-		e["platform"] = "number";
+		e["p"] = "number"; // platform
 		e["name"] = var.getDescription();
 		if (strlen(var.getUnits()) > 0) e["unit_of_measurement"] = var.getUnits();
-		e["state_topic"] = stateTopic;
-		e["value_template"] = String("{{ value_json.") + var.getName() + " }}";
-		e["command_topic"] = rootTopic + "/" + var.getName() + "/set";
+		e["stat_t"] = stateTopic; // state_topic
+		e["val_tpl"] = String("{{ value_json.") + var.getName() + " }}"; // value_template
+		e["cmd_t"] = rootTopic + "/" + var.getName() + "/set"; // command_topic
 		e["min"] = var.getMin();
 		e["max"] = var.getMax();
 		e["step"] = step;
@@ -282,6 +286,7 @@ void MqttInterface::_publishDiscovery() {
 	addNumber("temperature_set_point", _state.temperatureSetPoint, 0.5f);
 	addNumber("out_temp_calibration_offset", _state.outTemperatureCalibrationOffset, 0.1f);
 	addNumber("return_temp_calibration_offset", _state.returnTemperatureCalibrationOffset, 0.1f);
+	addNumber("cooling_temp_calibration_offset", _state.coolingTemperatureCalibrationOffset, 0.1f);
 	addNumber("calibration_volume", _state.calibrationVolume, 1);
 	addNumber("calibration_flow", _state.calibrationFlow, 0.01f);
 	addNumber("calibration_flow_pulses", _state.calibrationFlowPulses, 1);
@@ -293,11 +298,11 @@ void MqttInterface::_publishDiscovery() {
 	// --- Mode select ---
 	{
 		JsonObject e = components["mode"].to<JsonObject>();
-		e["platform"] = "select";
+		e["p"] = "select"; // platform
 		e["name"] = "Mode";
-		e["state_topic"] = stateTopic;
-		e["value_template"] = "{{ value_json.mode }}";
-		e["command_topic"] = rootTopic + "/mode/set";
+		e["stat_t"] = stateTopic; // state_topic
+		e["val_tpl"] = "{{ value_json.mode }}"; // value_template
+		e["cmd_t"] = rootTopic + "/mode/set"; // command_topic
 		JsonArray options = e["options"].to<JsonArray>();
 		options.add(MODE_STOP);
 		options.add(MODE_SPEED);
@@ -307,10 +312,14 @@ void MqttInterface::_publishDiscovery() {
 		e["unique_id"] = hostname + "_mode";
 	}
 
+	String errorTopic = rootTopic + "/error";
 	String payload;
 	serializeJson(doc, payload);
 	if (payload.length() > MQTT_BUFFER_SIZE) {
 		Serial.printf("[MQTT] Error - HA discovery payload size %d exceeds buffer size %d, cannot publish\n", payload.length(), MQTT_BUFFER_SIZE);
+		// report to mqtt the payload length and max buffer size
+		String errorPayload = String("HA discovery payload size ") + payload.length() + " exceeds buffer size " + MQTT_BUFFER_SIZE + ", cannot publish";
+		_mqttClient.publish(errorTopic.c_str(), errorPayload.c_str());
 		return;
 	}
 	// Serial.printf("[MQTT] Publishing HA discovery to: %s\nPayload size: %d\nPayload:\n%s\n", deviceTopic.c_str(), payload.length(), payload.c_str());

@@ -67,6 +67,7 @@ public:
 	ConfigVar<float>         temperatureSetPoint { "temperatureSetPoint", 26.0f,    "°C",   "Temperature set point",       10.0f, 40.0f, "tempSetPoint" };
 	ConfigVar<float>         outTemperatureCalibrationOffset { "outTemperatureCalibrationOffset", 0.0f, "°C", "Outgoing temperature offset", -10.0f, 10.0f, "outTempCalOff" };
 	ConfigVar<float>         returnTemperatureCalibrationOffset { "returnTemperatureCalibrationOffset", 0.0f, "°C", "Return temperature offset", -10.0f, 10.0f, "retTempCalOff" };
+	ConfigVar<float>         coolingTemperatureCalibrationOffset { "coolingTemperatureCalibrationOffset", 0.0f, "°C", "Cooling temperature offset", -10.0f, 10.0f, "coolTempOff" };
 	ConfigVar<unsigned int>  calibrationVolume { "calibrationVolume", 500,          "ml",   "Calibration volume",          1,    5000,  "calVolume"     };
 	ConfigVar<float>         calibrationFlow { "calibrationFlow", 1.0f,             "L/min","Calibration end flow",        0.0f, 100.0f,"calFlow"       };
 	ConfigVar<unsigned int>  calibrationFlowPulses { "calibrationFlowPulses", 500,  "pulses","Calibration flow pulses",    1,    10000, "calFlowPulses" };
@@ -85,6 +86,7 @@ public:
 	Metric<int>              pumpCurrent     { "pumpCurrent",     0,                "mA",   "Pump current"                };
 	Metric<float>            outTemperature  { "outTemperature",  20.0f,            "°C",   "Outgoing water temperature"  };
 	Metric<float>            returnTemperature { "returnTemperature", 20.0f,        "°C",   "Returning water temperature" };
+	Metric<float>            coolingTemperature { "coolingTemperature", 20.0f,  "°C",   "Cooling water temperature" };
 
 	// --------------- Calculated telemetry ---------------
 	Metric<unsigned int>     flowPulsesRawPerSec     { "flowPulsesRawPerSec",      0, "p/s", "Raw flow"      };

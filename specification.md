@@ -13,6 +13,7 @@ The goal of the device is to cool the person sleeping on the mattress.
 * A water flow sensor (that sends digital pulses out) which is installed at the water return point to the tank
 * An outgoing water temperature sensor (Dallas, One Wire based)
 * A returning water temperature sensor (Dallas, One Wire based)
+* An optional cooling water temperature sensor (Dallas, One Wire based)
 * A custom PCB for the project
 * An ESP32 micro-controller to run the device
 * A motor driver, to control speed of the pump (TB6612 or a generic PWM one like a DRV8871)
@@ -39,6 +40,7 @@ To be defined in the relevant env in platformio.ini
 	-D BUTTON_PIN=0
 	-D DALLAS_SENSOR_RETURNING_PIN=5
 	-D DALLAS_SENSOR_OUTGOING_PIN=18
+	-D DALLAS_SENSOR_COOLING_PIN=19
 	-D MOTOR_DRIVER_PWM_PIN=27
 	-D MOTOR_DRIVER_TB6612_AIN1_PIN=12
 	-D MOTOR_DRIVER_TB6612_AIN2_PIN=13
@@ -126,6 +128,7 @@ Here are the variables of the state that are set by the user and we need to pers
 | minVoltage         | uint   | 4000    | mV of pump voltage below which to trigger error     | [0, 40000]                            | input.number      | Number         |
 | outTemperatureCalibrationOffset    | float  | 0       | value to add to out temperature sensor reading    | [-10, 10]               | input.number      | Number         |
 | returnTemperatureCalibrationOffset | float  | 0       | value to add to return temperature sensor reading | [-10, 10]               | input.number      | Number         |
+| coolingTemperatureCalibrationOffset | float  | 0   | value to add to cooling water temperature sensor reading | [-10, 10]        | input.number      | Number         |
 
 Note: calibrationFlow and calibrationFlowPulses are user-editable config but also can be set by the firmware. This is to allow tuning by the user. Assume most of the time they will be automatically calculated.
 
@@ -142,6 +145,7 @@ Here are the variables of the state that are metrics from the device which we ne
 | pumpCurrent        | int    | 0       | pump current in mA                              | any integer    | div/span          | Sensor         |
 | outTemperature     | float  | 20      | outgoing water temperature in C                 | [-5, 40]       | div/span          | Sensor         |
 | returnTemperature  | float  | 20      | returning water temperature in C                | [-5, 40]       | div/span          | Sensor         |
+| coolingTemperature | float  | 20      | cooling water temperature in C                  | [-5, 40]       | div/span          | Sensor         |
 
 Here are some calculated metrics that are based on other metrics (more telemetry)
 
@@ -184,7 +188,8 @@ It can take 30 seconds for the change in pump to affect the returning temperatur
 
 Sample sensors every second.
 See difference in pulses from last sample. Calculate derived telemetry based on difference and calibration settings.
-If error reading from a temperature sensor or if returned value is invalid then retry up to 3 (const) times and trigger an error state.
+If error reading from outgoing or returning temperature sensor, or if returned value is invalid, retry up to 3 (const) times and trigger an error state.
+Cooling water temperature sensor is optional. Retry reads similarly, but do not trigger error state if this sensor is missing or invalid.
 Valid sensor temperature range is -5 to 40 degrees celsius (consts).
 
 ##### Flow sensor

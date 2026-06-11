@@ -52,6 +52,7 @@ void State::loadConfig() {
 	temperatureSetPoint.load(prefs);
 	outTemperatureCalibrationOffset.load(prefs);
 	returnTemperatureCalibrationOffset.load(prefs);
+	coolingTemperatureCalibrationOffset.load(prefs);
 	calibrationVolume.load(prefs);
 	calibrationFlow.load(prefs);
 	calibrationFlowPulses.load(prefs);
@@ -80,6 +81,7 @@ void State::_configToJson(JsonObject obj, bool excludeMqtt) const {
 	temperatureSetPoint.toJson(obj);
 	outTemperatureCalibrationOffset.toJson(obj);
 	returnTemperatureCalibrationOffset.toJson(obj);
+	coolingTemperatureCalibrationOffset.toJson(obj);
 	calibrationVolume.toJson(obj);
 	calibrationFlow.toJson(obj);
 	calibrationFlowPulses.toJson(obj);
@@ -100,6 +102,7 @@ void State::_telemetryToJson(JsonObject obj) const {
 	pumpCurrent.toJson(obj);
 	outTemperature.toJson(obj);
 	returnTemperature.toJson(obj);
+	coolingTemperature.toJson(obj);
 	flowPulsesRawPerSec.toJson(obj);
 	flowPulsesFilteredPerSec.toJson(obj);
 	flow.toJson(obj);
@@ -124,6 +127,7 @@ void State::_configModelToJson(JsonObject obj, bool excludeMqtt) const {
 	metricModelToJsonImpl(obj, temperatureSetPoint);
 	metricModelToJsonImpl(obj, outTemperatureCalibrationOffset);
 	metricModelToJsonImpl(obj, returnTemperatureCalibrationOffset);
+	metricModelToJsonImpl(obj, coolingTemperatureCalibrationOffset);
 	metricModelToJsonImpl(obj, calibrationVolume);
 	metricModelToJsonImpl(obj, calibrationFlow);
 	metricModelToJsonImpl(obj, calibrationFlowPulses);
@@ -143,6 +147,7 @@ void State::_telemetryModelToJson(JsonObject obj) const {
 	metricModelToJsonImpl(obj, pumpCurrent);
 	metricModelToJsonImpl(obj, outTemperature);
 	metricModelToJsonImpl(obj, returnTemperature);
+	metricModelToJsonImpl(obj, coolingTemperature);
 	metricModelToJsonImpl(obj, flowPulsesRawPerSec);
 	metricModelToJsonImpl(obj, flowPulsesFilteredPerSec);
 	metricModelToJsonImpl(obj, flow);
@@ -207,6 +212,7 @@ bool State::applyConfigJson(const JsonObjectConst& obj) {
 	applyAndSave(temperatureSetPoint);
 	applyAndSave(outTemperatureCalibrationOffset);
 	applyAndSave(returnTemperatureCalibrationOffset);
+	applyAndSave(coolingTemperatureCalibrationOffset);
 	applyAndSave(calibrationVolume);
 	applyAndSave(calibrationFlow);
 	applyAndSave(calibrationFlowPulses);

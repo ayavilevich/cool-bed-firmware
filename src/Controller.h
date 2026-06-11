@@ -77,8 +77,10 @@ private:
 
 	OneWire _owOut;
 	OneWire _owReturn;
+	OneWire _owCooling;
 	DallasTemperature _tempOut;
 	DallasTemperature _tempReturn;
+	DallasTemperature _tempCooling;
 
 	INA226_WE _ina226;
 
@@ -126,6 +128,7 @@ private:
 	void _triggerError(const String& cause);
 	void _clearError();
 	void _setPumpSpeed(uint8_t speed);
-	bool _readTemperature(DallasTemperature& sensor, float& outVal);
+	bool readTemperatureOnce(DallasTemperature& sensor, float& outVal);
+	bool readTemperatureRetry(DallasTemperature& sensor, float& outVal);
 	void _calculateDerivedMetrics(uint64_t rawNow, uint64_t filteredNow, unsigned long nowMs);
 };

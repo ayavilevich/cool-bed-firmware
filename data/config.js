@@ -60,6 +60,7 @@ function configApp() {
 					temperatureSetPoint:    data.temperatureSetPoint ?? this.defaultFor('temperatureSetPoint', 0),
 					outTemperatureCalibrationOffset: data.outTemperatureCalibrationOffset ?? this.defaultFor('outTemperatureCalibrationOffset', 0),
 					returnTemperatureCalibrationOffset: data.returnTemperatureCalibrationOffset ?? this.defaultFor('returnTemperatureCalibrationOffset', 0),
+					coolingTemperatureCalibrationOffset: data.coolingTemperatureCalibrationOffset ?? this.defaultFor('coolingTemperatureCalibrationOffset', 0),
 					calibrationVolume:      data.calibrationVolume ?? this.defaultFor('calibrationVolume', 0),
 					calibrationFlow:        data.calibrationFlow ?? this.defaultFor('calibrationFlow', 0),
 					calibrationFlowPulses:  data.calibrationFlowPulses ?? this.defaultFor('calibrationFlowPulses', 0),
