@@ -100,7 +100,7 @@ void WebInterface::_handlePostConfig(AsyncWebServerRequest* request, uint8_t* da
 	if (changed) {
 		_controller.notifyConfigChanged();
 		// If mode changed, apply it through controller
-		if (!obj["mode"].isNull()) {
+		if (!obj["mode"].isNull()) { // normally this should not happen because mode should be changed through /api/mode endpoint, but just in case if mode is included in config JSON, apply it
 			_controller.setMode(obj["mode"].as<String>());
 		}
 		request->send(200, "application/json", "{\"ok\":true}");

@@ -158,10 +158,11 @@ void Controller::updateLeds(bool wifiConnected) {
 }
 
 void Controller::setMode(const String& newMode) {
-	bool calibrationError = false;
-
+	// check calibration end
+	bool calibrationError = false; // flag so we can handle error outside of state guard.
 	{
 		StateGuard guard(_state);
+		Serial.printf("[Controller] Mode change, from %s to %s\n", _state.mode.get().c_str(), newMode.c_str());
 		if (_state.mode.get() == MODE_CALIBRATION && newMode != MODE_CALIBRATION) { // is leaving calibration mode
 			uint64_t pulsesDelta = _state.flowPulsesFiltered.get() - _calibStartPulses;
 			unsigned int fps = _state.flowPulsesFilteredPerSec.get();
@@ -183,6 +184,10 @@ void Controller::setMode(const String& newMode) {
 				prefs.end();
 			}
 		}
+	}
+	if (calibrationError) {
+		_triggerError("Calibration failed: no flow detected");
+		return;
 	}
 
 	{
@@ -237,10 +242,6 @@ void Controller::setMode(const String& newMode) {
 			StateGuard guard(_state);
 			_state.status.set("Flow test");
 		}
-	}
-
-	if (calibrationError) {
-		_triggerError("calibration ended with no flow");
 	}
 
 	Serial.printf("[Controller] Mode changed to: %s\n", newMode.c_str());

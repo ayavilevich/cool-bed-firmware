@@ -151,20 +151,19 @@ void MqttInterface::_onMessage(char* topic, uint8_t* payload, unsigned int lengt
 	Serial.printf("[MQTT] Received %s = %s\n", propName.c_str(), value.c_str());
 
 	// Apply to state
-	JsonDocument doc; // setting values via MQTT is done one by one, so create a JSON document with just one property and pass to State::applyConfigJson
-	doc[propName] = value;
-	JsonObjectConst obj = doc.as<JsonObjectConst>();
-	bool changed;
-	{
-		StateGuard guard(_state);
-		changed = _state.applyConfigJson(obj);
-	}
-
-	if (changed) {
-		// If mode changed, notify controller
-		if (propName == "mode") {
-			_controller.setMode(value);
-		} else {
+	// If mode changed, do a different path
+	if (propName == "mode") {
+		_controller.setMode(value);
+	} else { // this is for other config properties
+		JsonDocument doc; // setting values via MQTT is done one by one, so create a JSON document with just one property and pass to State::applyConfigJson
+		doc[propName] = value;
+		JsonObjectConst obj = doc.as<JsonObjectConst>();
+		bool changed;
+		{
+			StateGuard guard(_state);
+			changed = _state.applyConfigJson(obj);
+		}
+		if (changed) {
 			_controller.notifyConfigChanged();
 		}
 	}
