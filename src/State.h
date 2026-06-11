@@ -69,7 +69,6 @@ public:
 	ConfigVar<float>         returnTemperatureCalibrationOffset { "returnTemperatureCalibrationOffset", 0.0f, "°C", "Return temperature offset", -10.0f, 10.0f, "retTempCalOff" };
 	ConfigVar<float>         coolingTemperatureCalibrationOffset { "coolingTemperatureCalibrationOffset", 0.0f, "°C", "Cooling temperature offset", -10.0f, 10.0f, "coolTempOff" };
 	ConfigVar<unsigned int>  calibrationVolume { "calibrationVolume", 500,          "ml",   "Calibration volume",          1,    5000,  "calVolume"     };
-	ConfigVar<float>         calibrationFlow { "calibrationFlow", 1.0f,             "L/min","Calibration end flow",        0.0f, 100.0f,"calFlow"       };
 	ConfigVar<unsigned int>  calibrationFlowPulses { "calibrationFlowPulses", 500,  "pulses","Calibration flow pulses",    1,    10000, "calFlowPulses" };
 	ConfigVar<unsigned int>  systemTime      { "systemTime",      30,               "s",    "System response time",        0,    600          };
 	ConfigVar<unsigned int>  minFlowPulsesPerSec { "minFlowPulsesPerSec", 5,        "p/s",  "Min flow",                    1,    1000,  "minFlowPPS"    };

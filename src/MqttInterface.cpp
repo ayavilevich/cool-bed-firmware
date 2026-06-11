@@ -291,7 +291,6 @@ void MqttInterface::_publishDiscovery() {
 	addNumber("return_temp_calibration_offset", _state.returnTemperatureCalibrationOffset, 0.1f);
 	addNumber("cooling_temp_calibration_offset", _state.coolingTemperatureCalibrationOffset, 0.1f);
 	addNumber("calibration_volume", _state.calibrationVolume, 1);
-	addNumber("calibration_flow", _state.calibrationFlow, 0.01f);
 	addNumber("calibration_flow_pulses", _state.calibrationFlowPulses, 1);
 	addNumber("system_time", _state.systemTime, 1);
 	addNumber("min_flow_pulses_per_sec", _state.minFlowPulsesPerSec, 1);

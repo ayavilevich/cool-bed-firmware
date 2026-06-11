@@ -120,7 +120,6 @@ Here are the variables of the state that are set by the user and we need to pers
 | speedSetPoint      | byte   | 255     | at which speed to operate in mode=speed             | [1, 255]                              | slider            | Number         |
 | temperatureSetPoint| float  | 26      | temperature set point in mode=temperature           | [10, 40]                              | slider            | Number         |
 | calibrationVolume  | uint   | 500     | volume in ml that was used to calibrate flow        | [1, 5000]                             | input.number      | Number         |
-| calibrationFlow    | float  | 1       | end flow in liters/min during calibration           | [0, 100]                              | input.number      | Number         |
 | calibrationFlowPulses| uint | 500     | filtered flow pulses measured while calibrating flow| [1, 10000]                            | input.number      | Number         |
 | systemTime         | uint   | 30      | seconds to respond to a change in input             | [0, 600]                              | input.number      | Number         |
 | minFlowPulsesPerSec| uint   | 5       | minimum filtered flow pulses per sec to consider flow | [1, 1000]                           | input.number      | Number         |
@@ -130,7 +129,7 @@ Here are the variables of the state that are set by the user and we need to pers
 | returnTemperatureCalibrationOffset | float  | 0       | value to add to return temperature sensor reading | [-10, 10]               | input.number      | Number         |
 | coolingTemperatureCalibrationOffset | float  | 0   | value to add to cooling water temperature sensor reading | [-10, 10]        | input.number      | Number         |
 
-Note: calibrationFlow and calibrationFlowPulses are user-editable config but also can be set by the firmware. This is to allow tuning by the user. Assume most of the time they will be automatically calculated.
+Note: calibrationFlowPulses is user-editable config but also can be set by the firmware. This is to allow tuning by the user. Assume most of the time they will be automatically calculated.
 
 Here are the variables of the state that are metrics from the device which we need to collect and report (telemetry)
 
@@ -220,7 +219,8 @@ Open questions:
 
 ##### Calibration mode
 
-When started, save flowPulsesFiltered. Operate pump at speedSetPoint. When mode is stopped, populate calibrationFlow and calibrationFlowPulses. Set calibrationFlow to the last flow value before the pump is stopped. Set calibrationFlowPulses to the total amount of change to flowPulsesFiltered. Assuming the user measured calibrationVolume amount of water during the operation, the system now has valid calibration info.
+When started, save flowPulsesFiltered. Operate pump at speedSetPoint. When mode is stopped, populate calibrationFlowPulses. Set calibrationFlowPulses to the total amount of change to flowPulsesFiltered. 
+Assuming the user measured calibrationVolume amount of water during the operation, the system now has valid calibration info.
 Start with "calibrating" status, finish with "calibrated".
 If no pulses or flowPulsesFilteredPerSec < minFlowPulsesPerSec at stop time (calibration end), set an error state.
 If after systemTime of running, flowPulsesFilteredPerSec < minFlowPulsesPerSec then trigger error state.

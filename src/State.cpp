@@ -54,7 +54,6 @@ void State::loadConfig() {
 	returnTemperatureCalibrationOffset.load(prefs);
 	coolingTemperatureCalibrationOffset.load(prefs);
 	calibrationVolume.load(prefs);
-	calibrationFlow.load(prefs);
 	calibrationFlowPulses.load(prefs);
 	systemTime.load(prefs);
 	minFlowPulsesPerSec.load(prefs);
@@ -83,7 +82,6 @@ void State::_configToJson(JsonObject obj, bool excludeMqtt) const {
 	returnTemperatureCalibrationOffset.toJson(obj);
 	coolingTemperatureCalibrationOffset.toJson(obj);
 	calibrationVolume.toJson(obj);
-	calibrationFlow.toJson(obj);
 	calibrationFlowPulses.toJson(obj);
 	systemTime.toJson(obj);
 	minFlowPulsesPerSec.toJson(obj);
@@ -129,7 +127,6 @@ void State::_configModelToJson(JsonObject obj, bool excludeMqtt) const {
 	metricModelToJsonImpl(obj, returnTemperatureCalibrationOffset);
 	metricModelToJsonImpl(obj, coolingTemperatureCalibrationOffset);
 	metricModelToJsonImpl(obj, calibrationVolume);
-	metricModelToJsonImpl(obj, calibrationFlow);
 	metricModelToJsonImpl(obj, calibrationFlowPulses);
 	metricModelToJsonImpl(obj, systemTime);
 	metricModelToJsonImpl(obj, minFlowPulsesPerSec);
@@ -214,7 +211,6 @@ bool State::applyConfigJson(const JsonObjectConst& obj) {
 	applyAndSave(returnTemperatureCalibrationOffset);
 	applyAndSave(coolingTemperatureCalibrationOffset);
 	applyAndSave(calibrationVolume);
-	applyAndSave(calibrationFlow);
 	applyAndSave(calibrationFlowPulses);
 	applyAndSave(systemTime);
 	applyAndSave(minFlowPulsesPerSec);

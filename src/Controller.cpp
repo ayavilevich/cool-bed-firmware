@@ -82,7 +82,11 @@ void Controller::begin() {
 	*/
 
 	// start with STOP
-	setMode(MODE_STOP);
+	{
+		StateGuard guard(_state);
+		_state.mode.set(MODE_STOP); // set initial value without triggering mode change logic
+	}
+	// setMode(MODE_STOP); // this might trigger mode change logic, so avoid
 
 	// set status to reset reason
 	{
@@ -169,17 +173,19 @@ void Controller::setMode(const String& newMode) {
 			if (pulsesDelta == 0 || fps < _state.minFlowPulsesPerSec.get()) {
 				calibrationError = true;
 			} else {
+				unsigned long calibDurationMs = millis() - _calibStartMs;
+				unsigned int calVolume = _state.calibrationVolume.get(); // in mL
+				float flowAtEnd = ((float)fps * (float)calVolume * 60.0f) / ((float)pulsesDelta * 1000.0f);
+				float flowAverage = (float)calVolume * 60.0f / calibDurationMs; // ml and ms to L/min
 				_state.calibrationFlowPulses.set((unsigned int)pulsesDelta);
-				_state.calibrationFlow.set(_state.flow.get());
 				_state.status.set("Calibrated");
-				Serial.printf("[Controller] Calibration complete: %llu pulses, %.2f L/min\n",
-				              pulsesDelta, _state.flow.get());
+				Serial.printf("[Controller] Calibration complete: %llu pulses in %lu ms, flow end %.2f L/min, flow average %.2f L/min\n",
+				              pulsesDelta, calibDurationMs, flowAtEnd, flowAverage);
 
 				Preferences prefs;
 				prefs.begin(PREFS_NAMESPACE, false);
 				{
 					_state.calibrationFlowPulses.save(prefs);
-					_state.calibrationFlow.save(prefs);
 				}
 				prefs.end();
 			}

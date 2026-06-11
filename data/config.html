@@ -92,9 +92,6 @@
 					<label><span x-text="labelFor('calibrationVolume', 'Calibration Volume') + (unitsFor('calibrationVolume') ? ' (' + unitsFor('calibrationVolume') + ')' : '')"></span>
 						<input type="number" x-model.number="cfg.calibrationVolume" :min="minFor('calibrationVolume')" :max="maxFor('calibrationVolume')">
 					</label>
-					<label><span x-text="labelFor('calibrationFlow', 'Flow at Calibration End') + (unitsFor('calibrationFlow') ? ' (' + unitsFor('calibrationFlow') + ')' : '')"></span>
-						<input type="number" x-model.number="cfg.calibrationFlow" :min="minFor('calibrationFlow')" :max="maxFor('calibrationFlow')" step="any">
-					</label>
 					<label><span x-text="labelFor('calibrationFlowPulses', 'Flow Pulses During Calibration')"></span>
 						<input type="number" x-model.number="cfg.calibrationFlowPulses" :min="minFor('calibrationFlowPulses')" :max="maxFor('calibrationFlowPulses')">
 					</label>
