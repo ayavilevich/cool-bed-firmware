@@ -6,7 +6,7 @@
 	<title>Cool Bed</title>
 	<link rel="stylesheet" href="/style.css">
 </head>
-<body x-data="coolBedApp()" x-init="init()">
+<body x-data="coolBedApp()">
 
 	<header>
 		<h1>🛏️ Cool Bed</h1>
@@ -147,7 +147,7 @@
 		<!-- Chart -->
 		<section class="card chart-section">
 			<h2>History (last 10 min)</h2>
-			<canvas id="telemetryChart" height="120"></canvas>
+			<canvas x-ref="telemetryChart" height="120"></canvas>
 		</section>
 		</div>
 	</main>

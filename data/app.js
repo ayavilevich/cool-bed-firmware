@@ -26,6 +26,7 @@ function coolBedApp() {
 			await this._fetchModel();
 			await this._fetchState();
 			this._startPolling();
+			this._initChart();
 		},
 
 		_startUiClock() {
@@ -95,15 +96,10 @@ function coolBedApp() {
 				this.state = data;
 				if (this._isStatePayloadValid(data)) {
 					this.lastValidStateAt = Date.now();
-					this._recordHistory(data);
+					this._recordHistory(data); // this will trigger updateChart via _history watcher in next microtask switch
 				}
 			} catch (e) {
 				console.error('Failed to fetch state:', e);
-			}
-			try {
-				// this._updateChart();
-			} catch (e) {
-				console.error('Failed to update chart:', e);
 			}
 		},
 
@@ -234,66 +230,68 @@ function coolBedApp() {
 		},
 
 		// ---- Chart ----
-		_updateChart() {
-			if (!this._history.length) return;
-
-			const labels = this._history.map(h =>
-				new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-			);
-
-			const datasets = [
-				{ label: 'Flow (L/min)',       data: this._history.map(h => h.flow),                      borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Temp Delta (°C)',    data: this._history.map(h => h.temperatureDelta),          borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Out Temp (°C)',       data: this._history.map(h => h.outTemperature),           borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Return Temp (°C)',    data: this._history.map(h => h.returnTemperature),        borderColor: '#fb923c', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Cooling Temp (°C)',   data: this._history.map(h => h.coolingTemperature),       borderColor: '#0ea5e9', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Cooling Power (W)',   data: this._history.map(h => h.coolingPower),             borderColor: '#22c55e', tension: 0.3, yAxisID: 'y2' },
-				{ label: 'Pump Speed',          data: this._history.map(h => h.pumpSpeed),                borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y2' },
-				{ label: 'Current (mA)',        data: this._history.map(h => h.pumpCurrent),              borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y2' },
-				{ label: 'Flow Pulses/s',       data: this._history.map(h => h.flowPulsesFilteredPerSec), borderColor: '#34d399', tension: 0.3, yAxisID: 'y2' },
-			];
-
-			if (!this._chart) {
-				const canvas = document.getElementById('telemetryChart');
-				if (!canvas) return;
-				const ctx = canvas.getContext('2d');
-				if (!ctx) return;
-
-				this._chart = new Chart(ctx, {
-					type: 'line',
-					data: { labels, datasets },
-					options: {
-						animation: false,
-						responsive: true,
-						interaction: { mode: 'index', intersect: false },
-						plugins: {
-							// Work around a legend layout crash seen in some browser/Chart.js combinations.
-							legend: false,
-							// legend: { labels: { color: '#e2e8f0', boxWidth: 12 } },
+		_initChart() {
+			// create object for charts.js and don't store it in state, to avoid reactivity overhead and chart re-creation on every update
+			const canvas = this.$refs.telemetryChart;
+			if (!canvas) return;
+			const ctx = canvas.getContext('2d');
+			if (!ctx) return;
+			const chart = new Chart(ctx, {
+				type: 'line',
+				data: { labels: [], datasets: [] }, // init empty and populate via _history watcher
+				options: {
+					animation: false,
+					responsive: true,
+					interaction: { mode: 'index', intersect: false },
+					plugins: {
+						// Work around a legend layout crash seen in some browser/Chart.js combinations.
+						// legend: false,
+						legend: { labels: { color: '#e2e8f0', boxWidth: 12 } },
+					},
+					scales: {
+						x: {
+							ticks: { color: '#64748b', maxTicksLimit: 8 },
+							grid:  { color: '#1e293b' },
 						},
-						scales: {
-							x: {
-								ticks: { color: '#64748b', maxTicksLimit: 8 },
-								grid:  { color: '#1e293b' },
-							},
-							y: {
-								type: 'linear', position: 'left',
-								ticks: { color: '#64748b' },
-								grid:  { color: '#334155' },
-							},
-							y2: {
-								type: 'linear', position: 'right',
-								ticks: { color: '#64748b' },
-								grid:  { drawOnChartArea: false },
-							},
+						y: {
+							type: 'linear', position: 'left',
+							ticks: { color: '#64748b' },
+							grid:  { color: '#334155' },
+						},
+						y2: {
+							type: 'linear', position: 'right',
+							ticks: { color: '#64748b' },
+							grid:  { drawOnChartArea: false },
 						},
 					},
-				});
-			} else {
-				this._chart.data.labels = labels;
-				this._chart.data.datasets = datasets;
-				this._chart.update('none');
-			}
+				},
+			});
+
+			// setup watch on _history to update chart when new data comes in
+			this.$watch('_history', (history) => {
+				// this will run every time _history changes, which happens on every new state fetch that has valid data. We extract the relevant arrays for the chart and update it.
+				const labels = history.map(h =>
+					new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+				);
+
+				const datasets = [
+					{ label: 'Flow (L/min)',       data: history.map(h => h.flow),                      borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },
+					{ label: 'Temp Delta (°C)',    data: history.map(h => h.temperatureDelta),          borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y' },
+					{ label: 'Out Temp (°C)',       data: history.map(h => h.outTemperature),           borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
+					{ label: 'Return Temp (°C)',    data: history.map(h => h.returnTemperature),        borderColor: '#fb923c', tension: 0.3, yAxisID: 'y' },
+					{ label: 'Cooling Temp (°C)',   data: history.map(h => h.coolingTemperature),       borderColor: '#0ea5e9', tension: 0.3, yAxisID: 'y' },
+					{ label: 'Cooling Power (W)',   data: history.map(h => h.coolingPower),             borderColor: '#22c55e', tension: 0.3, yAxisID: 'y2' },
+					{ label: 'Pump Speed',          data: history.map(h => h.pumpSpeed),                borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y2' },
+					{ label: 'Current (mA)',        data: history.map(h => h.pumpCurrent),              borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y2' },
+					{ label: 'Flow Pulses/s',       data: history.map(h => h.flowPulsesFilteredPerSec), borderColor: '#34d399', tension: 0.3, yAxisID: 'y2' },
+				];
+
+				chart.data.labels = labels;
+				chart.data.datasets = datasets;
+				chart.update('none');
+			}/*, { deep: true }*/); 
+			// we don't need deep watch because we replace the _history array entirely on each update, so shallow watch is sufficient.
+			// if we ever just push to the array without replacing it, we would need deep watch.
 		},
 	};
 }
