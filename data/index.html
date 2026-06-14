@@ -18,11 +18,30 @@
 		<section class="card mode-controls">
 			<h2>Mode</h2>
 
-			<div class="mode-buttons">
+			<!--<div class="mode-buttons">
 				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
 				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Fixed Speed Mode</button>
 				<button class="btn btn-primary" x-show="state.mode !== 'flowtest'" @click="startFlowTest()">▶ Start Flow Test Mode</button>
 				<button class="btn btn-danger" x-show="state.mode !== 'stop'" @click="setMode('stop')">⏹ Stop</button>
+			</div>-->
+
+			<!-- Main telemetry-->
+			<div class="telemetry-grid">
+				<div class="metric wide">
+					<span class="icon">📟</span>
+					<span class="label">Status</span>
+					<span class="value" x-text="state.status || '—'"></span>
+				</div>
+				<div class="metric">
+					<span class="icon">🔄</span>
+					<span class="label">Mode</span>
+					<span class="value" x-text="state.mode || '—'"></span>
+				</div>
+				<div class="metric" :class="{ 'error': state.error }">
+					<span class="icon">🚨</span>
+					<span class="label">Error</span>
+					<span class="value" x-text="state.error ? 'YES' : 'No'"></span>
+				</div>
 			</div>
 
 			<!-- Temperature mode -->
@@ -30,6 +49,8 @@
 				<label x-text="labelFor('temperatureSetPoint', 'Temperature Mode')"></label>
 				<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="state.temperatureSetPoint" @change="onTemperatureSetPointChanged()">
 				<span x-text="state.temperatureSetPoint + (unitsFor('temperatureSetPoint') ? ' ' + unitsFor('temperatureSetPoint') : '')"></span>
+				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'temperature'" @click="setMode('stop')">⏹ Stop Temperature Goal Mode</button>
 			</div>
 
 			<!-- Speed mode -->
@@ -37,6 +58,8 @@
 				<label x-text="labelFor('speedSetPoint', 'Speed Mode')"></label>
 				<input type="range" :min="minFor('speedSetPoint')" :max="maxFor('speedSetPoint')" x-model.number="state.speedSetPoint" @change="onSpeedSetPointChanged()">
 				<span x-text="state.speedSetPoint"></span>
+				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Fixed Speed Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'speed'" @click="setMode('stop')">⏹ Stop Fixed Speed Mode</button>
 			</div>
 
 			<!-- Calibration mode -->
@@ -47,6 +70,9 @@
 					<input type="number" :min="minFor('calibrationVolume')" :max="maxFor('calibrationVolume')" x-model.number="state.calibrationVolume" @change="onCalibrationVolumeChanged()">
 				</div>
 				<button class="btn btn-warning" x-show="state.mode !== 'calibration'" @click="startCalibration()">▶ Start Pump Calibration</button>
+				<button class="btn btn-danger" x-show="state.mode === 'calibration'" @click="setMode('stop')">⏹ Stop Pump Calibration</button>
+				<button class="btn btn-primary" x-show="state.mode !== 'flowtest'" @click="startFlowTest()">▶ Start Flow Test Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'flowtest'" @click="setMode('stop')">⏹ Stop Flow Test Mode</button>
 			</div>
 		</section>
 
@@ -54,21 +80,6 @@
 		<section class="card telemetry">
 			<h2>Status</h2>
 			<div class="telemetry-grid">
-				<div class="metric wide">
-					<span class="icon">📟</span>
-					<span class="label">Status</span>
-					<span class="value" x-text="state.status || '—'"></span>
-				</div>
-				<div class="metric" :class="{ 'error': state.error }">
-					<span class="icon">🚨</span>
-					<span class="label">Error</span>
-					<span class="value" x-text="state.error ? 'YES' : 'No'"></span>
-				</div>
-				<div class="metric">
-					<span class="icon">🔄</span>
-					<span class="label">Mode</span>
-					<span class="value" x-text="state.mode || '—'"></span>
-				</div>
 				<div class="metric">
 					<span class="icon">⚡</span>
 					<span class="label">Pump Speed</span>
@@ -119,11 +130,11 @@
 					<span class="label">Flow Pulses/s</span>
 					<span class="value" x-text="state.flowPulsesFilteredPerSec || 0"></span>
 				</div>
-				<div class="metric">
+				<!--<div class="metric">
 					<span class="icon">🔢</span>
 					<span class="label">Raw Pulses/s</span>
 					<span class="value" x-text="state.flowPulsesRawPerSec || 0"></span>
-				</div>
+				</div>-->
 			</div>
 		</section>
 
