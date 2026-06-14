@@ -1,6 +1,8 @@
 /* ---- Reset & Base ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+[x-cloak] { display: none !important; }
+
 body {
 	font-family: system-ui, -apple-system, sans-serif;
 	background: #0f172a;
@@ -31,6 +33,12 @@ main {
 	gap: 1.25rem;
 }
 
+main > div {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
 /* ---- Card ---- */
 .card {
 	background: #1e293b;
@@ -39,6 +47,11 @@ main {
 	border: 1px solid #334155;
 }
 .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #94a3b8; }
+
+.connection-state p {
+	color: #cbd5e1;
+	font-size: 1rem;
+}
 
 /* ---- Mode Controls ---- */
 .mode-buttons { 

@@ -14,6 +14,12 @@
 	</header>
 
 	<main>
+		<section class="card connection-state" x-show="!isStateFresh()" x-cloak>
+			<h2 x-text="stateStatusTitle()"></h2>
+			<p x-text="stateStatusMessage()"></p>
+		</section>
+
+		<div x-show="isStateFresh()" x-cloak>
 		<!-- Mode Controls -->
 		<section class="card mode-controls">
 			<h2>Mode</h2>
@@ -143,6 +149,7 @@
 			<h2>History (last 10 min)</h2>
 			<canvas id="telemetryChart" height="120"></canvas>
 		</section>
+		</div>
 	</main>
 
 	<script src="/alpine.min.js" defer></script>

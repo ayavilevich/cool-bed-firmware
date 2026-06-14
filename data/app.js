@@ -3,6 +3,7 @@ const NORMAL_INTERVAL_MS = 5000;
 const FAST_INTERVAL_MS = 1000;
 const FAST_POLL_COUNT = 10;
 const HISTORY_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+const STATE_STALE_MS = 60 * 1000; // 1 minute
 
 // ---- Alpine.js app ----
 function coolBedApp() {
@@ -10,17 +11,28 @@ function coolBedApp() {
 		state: {},
 		model: { config: {}, telemetry: {}, modes: [] },
 		modelLoaded: false,
+		lastValidStateAt: 0,
+		nowMs: Date.now(),
 
 		// Polling state
 		_pollTimer: null,
 		_fastPollRemaining: 0,
+		_uiClockTimer: null,
 		_history: [], // array of { timestamp, ...metrics }
 		_chart: null,
 
 		async init() {
+			this._startUiClock();
 			await this._fetchModel();
 			await this._fetchState();
 			this._startPolling();
+		},
+
+		_startUiClock() {
+			if (this._uiClockTimer) clearInterval(this._uiClockTimer);
+			this._uiClockTimer = setInterval(() => {
+				this.nowMs = Date.now();
+			}, 1000);
 		},
 
 		async _fetchModel() {
@@ -81,7 +93,10 @@ function coolBedApp() {
 				if (!res.ok) return;
 				const data = await res.json();
 				this.state = data;
-				this._recordHistory(data);
+				if (this._isStatePayloadValid(data)) {
+					this.lastValidStateAt = Date.now();
+					this._recordHistory(data);
+				}
 			} catch (e) {
 				console.error('Failed to fetch state:', e);
 			}
@@ -90,6 +105,31 @@ function coolBedApp() {
 			} catch (e) {
 				console.error('Failed to update chart:', e);
 			}
+		},
+
+		_isStatePayloadValid(data) {
+			return data && Object.prototype.hasOwnProperty.call(data, 'status');
+		},
+
+		isStateFresh() {
+			if (!this.lastValidStateAt) return false;
+			return (this.nowMs - this.lastValidStateAt) <= STATE_STALE_MS;
+		},
+
+		stateStatusTitle() {
+			return this.lastValidStateAt ? 'Reconnecting' : 'Loading';
+		},
+
+		stateStatusMessage() {
+			if (!this.lastValidStateAt) return 'Waiting for valid state...';
+			return `Reconnecting, last connected ${this._formatElapsed(this.nowMs - this.lastValidStateAt)} ago`;
+		},
+
+		_formatElapsed(ms) {
+			const minutes = Math.floor(ms / 60000);
+			if (minutes <= 0) return 'less than a minute';
+			if (minutes === 1) return '1 minute';
+			return `${minutes} minutes`;
 		},
 
 		_recordHistory(data) {
