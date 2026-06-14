@@ -231,12 +231,7 @@ function coolBedApp() {
 
 		// ---- Chart ----
 		_initChart() {
-			// create object for charts.js and don't store it in state, to avoid reactivity overhead and chart re-creation on every update
-			const canvas = this.$refs.telemetryChart;
-			if (!canvas) return;
-			const ctx = canvas.getContext('2d');
-			if (!ctx) return;
-			const chart = new Chart(ctx, {
+			const chartOptions = {
 				type: 'line',
 				data: { labels: [], datasets: [] }, // init empty and populate via _history watcher
 				options: {
@@ -244,8 +239,6 @@ function coolBedApp() {
 					responsive: true,
 					interaction: { mode: 'index', intersect: false },
 					plugins: {
-						// Work around a legend layout crash seen in some browser/Chart.js combinations.
-						// legend: false,
 						legend: { labels: { color: '#e2e8f0', boxWidth: 12 } },
 					},
 					scales: {
@@ -258,14 +251,22 @@ function coolBedApp() {
 							ticks: { color: '#64748b' },
 							grid:  { color: '#334155' },
 						},
-						y2: {
-							type: 'linear', position: 'right',
-							ticks: { color: '#64748b' },
-							grid:  { drawOnChartArea: false },
-						},
 					},
 				},
-			});
+			};
+			// create objects for charts.js and don't store them in state, to avoid reactivity overhead and chart re-creation on every update
+			const tCtx = this.$refs.temperatureChart?.getContext('2d');
+			if (!tCtx) return console.error('Temperature chart context not found');
+			const tChart = new Chart(tCtx, chartOptions);
+			// flow
+			const fCtx = this.$refs.flowChart?.getContext('2d');
+			if (!fCtx) return console.error('Flow chart context not found');
+			const fChart = new Chart(fCtx, chartOptions);
+			// misc graphs
+			const mCtx = this.$refs.miscChart?.getContext('2d');
+			if (!mCtx) return console.error('Misc chart context not found');
+			const mChart = new Chart(mCtx, chartOptions);
+
 
 			// setup watch on _history to update chart when new data comes in
 			this.$watch('_history', (history) => {
@@ -274,21 +275,31 @@ function coolBedApp() {
 					new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 				);
 
-				const datasets = [
-					{ label: 'Flow (L/min)',       data: history.map(h => h.flow),                      borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },
-					{ label: 'Temp Delta (°C)',    data: history.map(h => h.temperatureDelta),          borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y' },
+				const tDatasets = [
+					// { label: 'Temp Delta (°C)',    data: history.map(h => h.temperatureDelta),          borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y' },
 					{ label: 'Out Temp (°C)',       data: history.map(h => h.outTemperature),           borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
-					{ label: 'Return Temp (°C)',    data: history.map(h => h.returnTemperature),        borderColor: '#fb923c', tension: 0.3, yAxisID: 'y' },
+					{ label: 'Return Temp (°C)',    data: history.map(h => h.returnTemperature),        borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
 					{ label: 'Cooling Temp (°C)',   data: history.map(h => h.coolingTemperature),       borderColor: '#0ea5e9', tension: 0.3, yAxisID: 'y' },
-					{ label: 'Cooling Power (W)',   data: history.map(h => h.coolingPower),             borderColor: '#22c55e', tension: 0.3, yAxisID: 'y2' },
-					{ label: 'Pump Speed',          data: history.map(h => h.pumpSpeed),                borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y2' },
-					{ label: 'Current (mA)',        data: history.map(h => h.pumpCurrent),              borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y2' },
-					{ label: 'Flow Pulses/s',       data: history.map(h => h.flowPulsesFilteredPerSec), borderColor: '#34d399', tension: 0.3, yAxisID: 'y2' },
+				];
+				const fDatasets = [
+					{ label: 'Flow (L/min)',       data: history.map(h => h.flow),                      borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },
+					// { label: 'Flow Pulses/s',       data: history.map(h => h.flowPulsesFilteredPerSec), borderColor: '#34d399', tension: 0.3, yAxisID: 'y2' },
+				];
+				const mDatasets = [
+					{ label: 'Cooling Power (W)',   data: history.map(h => h.coolingPower),             borderColor: '#22c55e', tension: 0.3, yAxisID: 'y' },
+					{ label: 'Pump Speed',          data: history.map(h => h.pumpSpeed),                borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y' },
+					{ label: 'Current (mA)',        data: history.map(h => h.pumpCurrent),              borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
 				];
 
-				chart.data.labels = labels;
-				chart.data.datasets = datasets;
-				chart.update('none');
+				tChart.data.labels = labels;
+				tChart.data.datasets = tDatasets;
+				tChart.update('none');
+				fChart.data.labels = labels;
+				fChart.data.datasets = fDatasets;
+				fChart.update('none');
+				mChart.data.labels = labels;
+				mChart.data.datasets = mDatasets;
+				mChart.update('none');
 			}/*, { deep: true }*/); 
 			// we don't need deep watch because we replace the _history array entirely on each update, so shallow watch is sufficient.
 			// if we ever just push to the array without replacing it, we would need deep watch.
