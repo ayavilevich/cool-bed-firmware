@@ -27,5 +27,6 @@ private:
 
 	void _setupMdns();
 	void _setupOta();
+	void _updateRssiMetric();
 	static void _wifiConnectedCallback(WiFiManager* wm);
 };

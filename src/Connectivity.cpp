@@ -25,6 +25,7 @@ void Connectivity::begin() {
 		_connected = true;
 		Serial.printf("[Connectivity] Connected to Wi-Fi. IP: %s\n",
 		              WiFi.localIP().toString().c_str());
+		_updateRssiMetric();
 		_setupMdns();
 		_setupOta();
 	} else {
@@ -35,9 +36,11 @@ void Connectivity::begin() {
 
 void Connectivity::loop() {
 	if (WiFi.status() == WL_CONNECTED) {
+		_updateRssiMetric();
 		if (!_connected) {
 			_connected = true;
 			Serial.println("[Connectivity] Wi-Fi reconnected");
+			_updateRssiMetric();
 			_setupMdns();
 			_setupOta();
 		}
@@ -55,12 +58,21 @@ void Connectivity::loop() {
 		if (_connected) {
 			_connected = false;
 			_otaStarted = false;
+			{
+				StateGuard guard(_state);
+				_state.rssi.set(_state.rssi.getDefault());
+			}
 			Serial.println("[Connectivity] Wi-Fi disconnected, attempting reconnect...");
 		}
 		// WiFiManager / Arduino WiFi will handle reconnection automatically
 		// but we can explicitly trigger it
 		WiFi.reconnect();
 	}
+}
+
+void Connectivity::_updateRssiMetric() {
+	StateGuard guard(_state);
+	_state.rssi.set((int)WiFi.RSSI());
 }
 
 bool Connectivity::isConnected() const {

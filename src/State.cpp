@@ -93,6 +93,10 @@ void State::_configToJson(JsonObject obj, bool excludeMqtt) const {
 void State::_telemetryToJson(JsonObject obj) const {
 	status.toJson(obj);
 	error.toJson(obj);
+	fwVersion.toJson(obj);
+	rssi.toJson(obj);
+	buildDateTime.toJson(obj);
+	buildTimestamp.toJson(obj);
 	pumpSpeed.toJson(obj);
 	flowPulsesRaw.toJson(obj);
 	flowPulsesFiltered.toJson(obj);
@@ -137,6 +141,10 @@ void State::_configModelToJson(JsonObject obj, bool excludeMqtt) const {
 void State::_telemetryModelToJson(JsonObject obj) const {
 	metricModelToJsonImpl(obj, status);
 	metricModelToJsonImpl(obj, error);
+	metricModelToJsonImpl(obj, fwVersion);
+	metricModelToJsonImpl(obj, rssi);
+	metricModelToJsonImpl(obj, buildDateTime);
+	metricModelToJsonImpl(obj, buildTimestamp);
 	metricModelToJsonImpl(obj, pumpSpeed);
 	metricModelToJsonImpl(obj, flowPulsesRaw);
 	metricModelToJsonImpl(obj, flowPulsesFiltered);

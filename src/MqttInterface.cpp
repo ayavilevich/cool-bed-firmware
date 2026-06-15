@@ -179,10 +179,12 @@ void MqttInterface::_mqttCallback(char* topic, uint8_t* payload, unsigned int le
 void MqttInterface::_addDeviceInfo(JsonObject& obj) {
 	String hostname;
 	bool isHostnameDefault;
+	String fwVersion;
 	{
 		StateGuard guard(_state);
 		hostname = _state.hostname.get();
 		isHostnameDefault = _state.hostname.isDefault();
+		fwVersion = _state.fwVersion.get();
 	}
 	JsonObject device = obj["device"].to<JsonObject>();
 	JsonArray ids = device["identifiers"].to<JsonArray>();
@@ -194,8 +196,10 @@ void MqttInterface::_addDeviceInfo(JsonObject& obj) {
 		device["name"] = AD_NAME_PREFIX + hostname + AD_NAME_SUFFIX;
 		Serial.printf("[MQTT] Hostname is custom (%s), using device name: %s\n", hostname.c_str(), (AD_NAME_PREFIX + hostname + AD_NAME_SUFFIX).c_str());
 	}
-	device["model"] = AD_MODEL;
-	device["manufacturer"] = AD_MANUFACTURER;
+	device["mdl"] = AD_MODEL; // model
+	device["mf"] = AD_MANUFACTURER; // manufacturer
+	// Home Assistant device-level firmware version field.
+	device["sw"] = fwVersion; // sw_version
 }
 
 void MqttInterface::_publishDiscovery() {
@@ -258,6 +262,10 @@ void MqttInterface::_publishDiscovery() {
 
 	addSensor("status", "", _state.status);
 	addBinarySensor("error", "problem", _state.error);
+	addSensor("fw_version", "", _state.fwVersion);
+	addSensor("wifi_rssi", "signal_strength", _state.rssi);
+	addSensor("build_date_time", "", _state.buildDateTime);
+	addSensor("build_timestamp", "", _state.buildTimestamp);
 	addSensor("pump_speed", "", _state.pumpSpeed);
 	addSensor("flow", "volume_flow_rate", _state.flow);
 	addSensor("temperature_delta", "temperature", _state.temperatureDelta);

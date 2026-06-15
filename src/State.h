@@ -17,6 +17,13 @@
 #define MODE_CALIBRATION "calibration"
 #define MODE_FLOW_TEST "flowtest"
 
+#ifndef FW_VERSION
+#define FW_VERSION "unknown"
+#endif
+
+#define BUILD_DATE_TIME __DATE__ " " __TIME__
+#define BUILD_TIMESTAMP __TIMESTAMP__
+
 class State {
 public:
 	State();
@@ -78,6 +85,10 @@ public:
 	// --------------- Telemetry ---------------
 	Metric<String>           status          { "status",          "",               "",     "Device status"               };
 	Metric<bool>             error           { "error",           false,            "",     "Error state"                 };
+	Metric<String>           fwVersion       { "fwVersion",       FW_VERSION,       "",     "Firmware version"            };
+	Metric<int>              rssi            { "rssi",            -127,             "dBm",  "Wi-Fi RSSI"                 };
+	Metric<String>           buildDateTime   { "buildDateTime",   BUILD_DATE_TIME,  "",     "Build date and time"         };
+	Metric<String>           buildTimestamp  { "buildTimestamp",  BUILD_TIMESTAMP,  "",     "Build timestamp"             };
 	Metric<uint8_t>          pumpSpeed       { "pumpSpeed",       0,                "counts","Current pump speed"          };
 	Metric<uint64_t>         flowPulsesRaw   { "flowPulsesRaw",   0,                "pulses", "Raw flow pulse count"        };
 	Metric<uint64_t>         flowPulsesFiltered { "flowPulsesFiltered", 0,          "pulses", "Filtered flow pulse count"   };
