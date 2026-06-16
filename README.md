@@ -1,4 +1,4 @@
-# Cool Bed Firmware
+# AYG Cool Bed - Firmware
 
 ESP32 firmware for a water-cooled bed device. Pumps water from a tank through a mattress, with speed and temperature control, flow/current/voltage monitoring, and a web UI.
 

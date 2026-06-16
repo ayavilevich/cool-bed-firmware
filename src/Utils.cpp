@@ -1,3 +1,9 @@
+// AYG Cool Bed™
+// https://aygarage.com/cool-bed/
+//
+// Copyright (c) 2026 AY Garage Ltd. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 #include "Utils.h"
 
 const char *resetReasonToString(esp_reset_reason_t reason)

@@ -1,3 +1,9 @@
+// AYG Cool Bed™
+// https://aygarage.com/cool-bed/
+//
+// Copyright (c) 2026 AY Garage Ltd. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 #include "Connectivity.h"
 #ifdef OTA_ENABLE
 #include <SPIFFS.h>

@@ -1,3 +1,9 @@
+// AYG Cool Bed™
+// https://aygarage.com/cool-bed/
+//
+// Copyright (c) 2026 AY Garage Ltd. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 #include <Arduino.h>
 #include "State.h"
 #include "Connectivity.h"
