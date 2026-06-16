@@ -16,7 +16,11 @@
 	<main>
 		<section class="card connection-state" x-show="!isStateFresh()" x-cloak>
 			<h2 x-text="stateStatusTitle()"></h2>
-			<p x-text="stateStatusMessage()"></p>
+			<!--<p x-text="stateStatusMessage()"></p>-->
+			<div class="loading-indicator" aria-label="Loading">
+				<span class="spinner" aria-hidden="true"></span>
+				<span x-text="stateStatusMessage()"></span>
+			</div>
 		</section>
 
 		<div x-show="isStateFresh()" x-cloak>

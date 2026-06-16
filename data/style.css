@@ -53,6 +53,28 @@ main > div {
 	font-size: 1rem;
 }
 
+.loading-indicator {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+	margin-top: 0.0rem;
+	color: #94a3b8;
+	font-size: 0.9rem;
+}
+
+.spinner {
+	width: 1rem;
+	height: 1rem;
+	border: 2px solid #334155;
+	border-top-color: #60a5fa;
+	border-radius: 50%;
+	animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
 /* ---- Mode Controls ---- */
 .mode-buttons { 
 	display: flex; 
