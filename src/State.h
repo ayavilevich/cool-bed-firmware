@@ -108,7 +108,7 @@ public:
 	Metric<unsigned int>     flowPulsesRawPerSec     { "flowPulsesRawPerSec",      0, "p/s", "Raw flow"      };
 	Metric<unsigned int>     flowPulsesFilteredPerSec { "flowPulsesFilteredPerSec", 0, "p/s","Filtered flow" };
 	Metric<float>            flow            { "flow",            0.0f,             "L/min", "Water flow rate"          };
-	Metric<float>            temperatureDelta { "temperatureDelta", 0.0f,          "°C",    "Return-out temperature"    };
+	Metric<float>            temperatureDelta { "temperatureDelta", 0.0f,          "°C",    "Return-out temperature delta"    };
 	Metric<float>            coolingPower    { "coolingPower",    0.0f,             "W",     "Cooling power"             };
 
 private:

@@ -234,6 +234,10 @@ void MqttInterface::_publishDiscovery() {
 	// note use of abbreviations
 	// https://www.home-assistant.io/integrations/mqtt/#supported-abbreviations-in-mqtt-discovery-messages
 
+	// device_class
+	// https://www.home-assistant.io/integrations/sensor/#device-class
+	// https://www.home-assistant.io/integrations/binary_sensor/#device-class
+
 	// Components (entities)
 	JsonObject components = root["components"].to<JsonObject>();
 
@@ -242,8 +246,8 @@ void MqttInterface::_publishDiscovery() {
 		JsonObject e = components[id].to<JsonObject>();
 		e["p"] = "sensor"; // platform
 		e["name"] = metric.getDescription();
-		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
-		if (strlen(metric.getUnits()) > 0) e["unit_of_measurement"] = metric.getUnits();
+		if (deviceClass && strlen(deviceClass) > 0) e["dev_cla"] = deviceClass;
+		if (strlen(metric.getUnits()) > 0) e["unit_of_meas"] = metric.getUnits();
 		e["stat_t"] = stateTopic; // state_topic
 		e["val_tpl"] = String("{{ value_json.") + metric.getName() + " }}"; // value_template
 		e["unique_id"] = hostname + "_" + id;
@@ -257,7 +261,7 @@ void MqttInterface::_publishDiscovery() {
 		JsonObject e = components[id].to<JsonObject>();
 		e["p"] = "binary_sensor"; // platform
 		e["name"] = metric.getDescription();
-		if (deviceClass && strlen(deviceClass) > 0) e["device_class"] = deviceClass;
+		if (deviceClass && strlen(deviceClass) > 0) e["dev_cla"] = deviceClass;
 		e["stat_t"] = stateTopic; // state_topic
 		// e["value_template"] = String("{{ value_json.") + valueKey + " }}";
 		e["val_tpl"] = String("{{ 'ON' if value_json.") + metric.getName() + " else 'OFF' }}"; // AI suggested that Home Assistant expects "ON"/"OFF" strings, so need to convert boolean to string here
@@ -274,7 +278,7 @@ void MqttInterface::_publishDiscovery() {
 	addSensor("build_timestamp", "", _state.buildTimestamp);
 	addSensor("pump_speed", "", _state.pumpSpeed);
 	addSensor("flow", "volume_flow_rate", _state.flow);
-	addSensor("temperature_delta", "temperature", _state.temperatureDelta);
+	addSensor("temperature_delta", "temperature_delta", _state.temperatureDelta);
 	addSensor("cooling_power", "power", _state.coolingPower);
 	addSensor("flow_pulses_filtered_per_sec", "", _state.flowPulsesFilteredPerSec);
 	addSensor("flow_pulses_raw_per_sec", "", _state.flowPulsesRawPerSec);
@@ -285,11 +289,13 @@ void MqttInterface::_publishDiscovery() {
 	addSensor("pump_current", "current", _state.pumpCurrent);
 
 	// --- Settable config (number entities) ---
-	auto addNumber = [&](const char* id, const auto& var, float step) {
+	// https://www.home-assistant.io/integrations/number.mqtt/
+	auto addNumber = [&](const char* id, const char* deviceClass, const auto& var, float step) {
 		JsonObject e = components[id].to<JsonObject>();
 		e["p"] = "number"; // platform
 		e["name"] = var.getDescription();
-		if (strlen(var.getUnits()) > 0) e["unit_of_measurement"] = var.getUnits();
+		if (deviceClass && strlen(deviceClass) > 0) e["dev_cla"] = deviceClass;
+		if (strlen(var.getUnits()) > 0) e["unit_of_meas"] = var.getUnits();
 		e["stat_t"] = stateTopic; // state_topic
 		e["val_tpl"] = String("{{ value_json.") + var.getName() + " }}"; // value_template
 		e["cmd_t"] = rootTopic + "/" + var.getName() + "/set"; // command_topic
@@ -299,17 +305,17 @@ void MqttInterface::_publishDiscovery() {
 		e["unique_id"] = hostname + "_" + id;
 	};
 
-	addNumber("speed_set_point", _state.speedSetPoint, 1);
-	addNumber("temperature_set_point", _state.temperatureSetPoint, 0.5f);
-	addNumber("out_temp_calibration_offset", _state.outTemperatureCalibrationOffset, 0.1f);
-	addNumber("return_temp_calibration_offset", _state.returnTemperatureCalibrationOffset, 0.1f);
-	addNumber("cooling_temp_calibration_offset", _state.coolingTemperatureCalibrationOffset, 0.1f);
-	addNumber("calibration_volume", _state.calibrationVolume, 1);
-	addNumber("calibration_flow_pulses", _state.calibrationFlowPulses, 1);
-	addNumber("system_time", _state.systemTime, 1);
-	addNumber("min_flow_pulses_per_sec", _state.minFlowPulsesPerSec, 1);
-	addNumber("max_current", _state.maxCurrent, 1);
-	addNumber("min_voltage", _state.minVoltage, 1);
+	addNumber("speed_set_point", "", _state.speedSetPoint, 1);
+	addNumber("temperature_set_point", "temperature", _state.temperatureSetPoint, 0.5f);
+	addNumber("out_temp_calibration_offset", "temperature_delta", _state.outTemperatureCalibrationOffset, 0.1f);
+	addNumber("return_temp_calibration_offset", "temperature_delta", _state.returnTemperatureCalibrationOffset, 0.1f);
+	addNumber("cooling_temp_calibration_offset", "temperature_delta", _state.coolingTemperatureCalibrationOffset, 0.1f);
+	addNumber("calibration_volume", "volume", _state.calibrationVolume, 1);
+	addNumber("calibration_flow_pulses", "", _state.calibrationFlowPulses, 1);
+	addNumber("system_time", "", _state.systemTime, 1);
+	addNumber("min_flow_pulses_per_sec", "", _state.minFlowPulsesPerSec, 1);
+	addNumber("max_current", "current", _state.maxCurrent, 1);
+	addNumber("min_voltage", "voltage", _state.minVoltage, 1);
 
 	// --- Mode select ---
 	{
