@@ -325,9 +325,9 @@ function coolBedApp() {
 
 		// ---- Chart ----
 		_initChart() {
-			const chartOptions = {
+			const createChartConfig = (datasets) => ({
 				type: 'line',
-				data: { labels: [], datasets: [] }, // init empty and populate via _history watcher
+				data: { labels: [], datasets },
 				options: {
 					animation: false,
 					responsive: true,
@@ -347,54 +347,67 @@ function coolBedApp() {
 						},
 					},
 				},
-			};
+			});
+
+			const tDatasets = [
+				{ label: 'Out Temp', data: [], borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
+				{ label: 'Return Temp', data: [], borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
+				{ label: 'Cooling Temp', data: [], borderColor: '#0ea5e9', tension: 0.3, yAxisID: 'y' },
+			];
+			const fDatasets = [
+				{ label: 'Flow (L/min)', data: [], borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },
+			];
+			const mDatasets = [
+				{ label: 'Cooling Power (W)', data: [], borderColor: '#22c55e', tension: 0.3, yAxisID: 'y' },
+				{ label: 'Pump Speed', data: [], borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y' },
+				{ label: 'Current (mA)', data: [], borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
+			];
 			// create objects for charts.js and don't store them in state, to avoid reactivity overhead and chart re-creation on every update
 			const tCtx = this.$refs.temperatureChart?.getContext('2d');
 			if (!tCtx) return console.error('Temperature chart context not found');
-			const tChart = new Chart(tCtx, chartOptions);
+			const tChart = new Chart(tCtx, createChartConfig(tDatasets));
 			// flow
 			const fCtx = this.$refs.flowChart?.getContext('2d');
 			if (!fCtx) return console.error('Flow chart context not found');
-			const fChart = new Chart(fCtx, chartOptions);
+			const fChart = new Chart(fCtx, createChartConfig(fDatasets));
 			// misc graphs
 			const mCtx = this.$refs.miscChart?.getContext('2d');
 			if (!mCtx) return console.error('Misc chart context not found');
-			const mChart = new Chart(mCtx, chartOptions);
+			const mChart = new Chart(mCtx, createChartConfig(mDatasets));
 
 
 			// setup watch on _history to update chart when new data comes in
 			this.$watch('_history', (history) => {
 				// this will run every time _history changes, which happens on every new state fetch that has valid data. We extract the relevant arrays for the chart and update it.
-				const temperatureUnits = this.temperatureUnitLabel(false);
+				const temperatureUnits = this.temperatureUnitLabel();
 				const labels = history.map(h =>
 					new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 				);
 
-				const tDatasets = [
-					// { label: `Temp Delta (${this.temperatureUnitLabel()})`, data: history.map(h => this.fromCelsius(h.temperatureDelta, true)), borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y' },
-					{ label: `Out Temp (${temperatureUnits})`,    data: history.map(h => this.fromCelsius(h.outTemperature, false)),     borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
-					{ label: `Return Temp (${temperatureUnits})`, data: history.map(h => this.fromCelsius(h.returnTemperature, false)),  borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
-					{ label: `Cooling Temp (${temperatureUnits})`, data: history.map(h => this.fromCelsius(h.coolingTemperature, false)), borderColor: '#0ea5e9', tension: 0.3, yAxisID: 'y' },
-				];
-				const fDatasets = [
-					{ label: 'Flow (L/min)',       data: history.map(h => h.flow),                      borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },
-					// { label: 'Flow Pulses/s',       data: history.map(h => h.flowPulsesFilteredPerSec), borderColor: '#34d399', tension: 0.3, yAxisID: 'y2' },
-				];
-				const mDatasets = [
-					{ label: 'Cooling Power (W)',   data: history.map(h => h.coolingPower),             borderColor: '#22c55e', tension: 0.3, yAxisID: 'y' },
-					{ label: 'Pump Speed',          data: history.map(h => h.pumpSpeed),                borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y' },
-					{ label: 'Current (mA)',        data: history.map(h => h.pumpCurrent),              borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
-				];
+				tDatasets[0].label = `Out Temp (${temperatureUnits})`;
+				tDatasets[1].label = `Return Temp (${temperatureUnits})`;
+				tDatasets[2].label = `Cooling Temp (${temperatureUnits})`;
 
-				tChart.data.labels = labels;
-				tChart.data.datasets = tDatasets;
-				tChart.update('none');
-				fChart.data.labels = labels;
-				fChart.data.datasets = fDatasets;
-				fChart.update('none');
-				mChart.data.labels = labels;
-				mChart.data.datasets = mDatasets;
-				mChart.update('none');
+				tDatasets[0].data = history.map(h => this.fromCelsius(h.outTemperature, false));
+				tDatasets[1].data = history.map(h => this.fromCelsius(h.returnTemperature, false));
+				tDatasets[2].data = history.map(h => this.fromCelsius(h.coolingTemperature, false));
+				fDatasets[0].data = history.map(h => h.flow);
+				mDatasets[0].data = history.map(h => h.coolingPower);
+				mDatasets[1].data = history.map(h => h.pumpSpeed);
+				mDatasets[2].data = history.map(h => h.pumpCurrent);
+
+				const updateSafely = (chart) => {
+					chart.setActiveElements([]);
+					if (chart.tooltip?.setActiveElements) {
+						chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+					}
+					chart.data.labels = labels;
+					chart.update('none');
+				};
+
+				updateSafely(tChart);
+				updateSafely(fChart);
+				updateSafely(mChart);
 			}/*, { deep: true }*/); 
 			// we don't need deep watch because we replace the _history array entirely on each update, so shallow watch is sufficient.
 			// if we ever just push to the array without replacing it, we would need deep watch.
