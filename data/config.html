@@ -17,12 +17,23 @@
 		<section class="card config-form">
 			<h2>Settings</h2>
 
-			<form @submit.prevent="save()">
+			<div class="loading-indicator" x-show="isLoading" x-cloak aria-label="Loading configuration">
+				<span class="spinner" aria-hidden="true"></span>
+				<span>Loading configuration...</span>
+			</div>
+
+			<form x-show="!isLoading" x-cloak @submit.prevent="save()">
 
 				<fieldset>
 					<legend>Device</legend>
 					<label>Hostname
 						<input type="text" x-model="cfg.hostname" pattern="[a-zA-Z0-9_\-]+" required>
+					</label>
+					<label>Temperature Units
+						<select :value="temperatureUnit" @change="changeTemperatureUnit($event.target.value)">
+							<option value="C">Celsius (°C)</option>
+							<option value="F">Fahrenheit (°F)</option>
+						</select>
 					</label>
 				</fieldset>
 
@@ -109,6 +120,7 @@
 	</main>
 
 	<script src="/alpine.min.js" defer></script>
+	<script src="/temperature-units.js"></script>
 	<script src="/config.js"></script>
 </body>
 </html>

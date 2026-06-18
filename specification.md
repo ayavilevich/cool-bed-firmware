@@ -245,9 +245,15 @@ Store js libraries as static files and use relative urls to the local site so th
 
 Reference/tutorial for Alpine and Chart: https://www.raymondcamden.com/2023/03/06/adding-a-chart-to-an-aplinejs-application
 
-The web interface will have two pages; the main page and configuration page. "Pages" don't have to be separate pageviews. Can all be in the same SPA if that is the best practice for Alpine.js . Also, settings can be expandable panel in the main page.
+The web interface will have two pages; the main page and configuration page.
 
 Support just English language in this version.
+
+#### Temperature units
+The firmware and back-end use degree Celsius as the unit of temperature. Allow the user to set the unit of temperature on the client side. The options are Celsius and Fahrenheit. Implement the selection control below the "Hostname" control on the configuration page. Save the setting in local storage.
+Every time you show a temperature value, convert value from °C to °F if needed and show the appropriate units. Abstract the conversions.
+Same thing on the charts. Mind that some temperature values are deltas (like temperatureDelta) and need appropriate conversion.
+For the temperature set point, adjust range as well as value. Convert back to °C if needed before posting to the backend.
 
 #### Main page
 

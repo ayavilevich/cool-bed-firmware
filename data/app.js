@@ -5,6 +5,26 @@ const FAST_POLL_COUNT = 10;
 const HISTORY_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 const STATE_STALE_MS = 60 * 1000; // 1 minute
 
+const TEMP_TELEMETRY_ABSOLUTE_KEYS = new Set([
+	'outTemperature',
+	'returnTemperature',
+	'coolingTemperature',
+]);
+
+const TEMP_TELEMETRY_DELTA_KEYS = new Set([
+	'temperatureDelta',
+]);
+
+const TEMP_CONFIG_ABSOLUTE_KEYS = new Set([
+	'temperatureSetPoint',
+]);
+
+const TEMP_CONFIG_DELTA_KEYS = new Set([
+	'outTemperatureCalibrationOffset',
+	'returnTemperatureCalibrationOffset',
+	'coolingTemperatureCalibrationOffset',
+]);
+
 // ---- Alpine.js app ----
 function coolBedApp() {
 	return {
@@ -13,6 +33,8 @@ function coolBedApp() {
 		modelLoaded: false,
 		lastValidStateAt: 0,
 		nowMs: Date.now(),
+		temperatureUnit: 'C',
+		temperatureSetPointDisplay: 0, // the value of the temperature set point input field. This is in temperatureUnit. The value in state is in Celsius, so we convert it for display and convert back on submit.
 
 		// Polling state
 		_pollTimer: null,
@@ -20,8 +42,10 @@ function coolBedApp() {
 		_uiClockTimer: null,
 		_history: [], // array of { timestamp, ...metrics }
 		_chart: null,
+		_editingTemperatureSetPoint: false,
 
 		async init() {
+			this._loadTemperatureUnitPreference();
 			this._startUiClock();
 			await this._fetchModel();
 			await this._fetchState();
@@ -61,18 +85,32 @@ function coolBedApp() {
 		},
 
 		unitsFor(key, isConfig = true) {
+			if (isConfig && this._isTemperatureConfigKey(key)) {
+				return this.temperatureUnitLabel();
+			}
+			if (!isConfig && this._isTemperatureTelemetryKey(key)) {
+				return this.temperatureUnitLabel();
+			}
 			const meta = isConfig ? this._getConfigMeta(key) : this._getTelemetryMeta(key);
 			return meta.units || '';
 		},
 
 		minFor(key) {
 			const min = this._getConfigMeta(key).min;
-			return Number.isFinite(min) ? min : null;
+			if (!Number.isFinite(min)) return null;
+			if (this._isTemperatureConfigKey(key)) {
+				return this.fromCelsius(min, this._isTemperatureDeltaConfigKey(key));
+			}
+			return min;
 		},
 
 		maxFor(key) {
 			const max = this._getConfigMeta(key).max;
-			return Number.isFinite(max) ? max : null;
+			if (!Number.isFinite(max)) return null;
+			if (this._isTemperatureConfigKey(key)) {
+				return this.fromCelsius(max, this._isTemperatureDeltaConfigKey(key));
+			}
+			return max;
 		},
 
 		defaultFor(key, fallback = 0) {
@@ -82,9 +120,19 @@ function coolBedApp() {
 
 		formatTelemetry(key, decimals = 0) {
 			const rawValue = this.state[key];
-			const n = Number(rawValue ?? 0);
+			const converted = this._isTemperatureTelemetryKey(key)
+				? this.fromCelsius(rawValue, this._isTemperatureDeltaTelemetryKey(key))
+				: rawValue;
+			const n = Number(converted ?? 0);
 			const value = Number.isFinite(n) ? n.toFixed(decimals) : String(rawValue ?? 0);
 			const units = this.unitsFor(key, false);
+			return units ? `${value} ${units}` : value;
+		},
+
+		formatTemperatureSetPointDisplay() {
+			const n = Number(this.temperatureSetPointDisplay ?? 0);
+			const value = Number.isFinite(n) ? n.toFixed(TempUnits.DECIMAL_PLACES) : '0.0';
+			const units = this.unitsFor('temperatureSetPoint');
 			return units ? `${value} ${units}` : value;
 		},
 
@@ -94,6 +142,12 @@ function coolBedApp() {
 				if (!res.ok) return;
 				const data = await res.json();
 				this.state = data;
+				if (!this._editingTemperatureSetPoint) { // if not editing the set point, update the display value to reflect any changes from outside
+					this.temperatureSetPointDisplay = this.fromCelsius(
+						data.temperatureSetPoint ?? this.defaultFor('temperatureSetPoint', 0),
+						false
+					); // update display value to match state, converting from Celsius to display unit
+				}
 				if (this._isStatePayloadValid(data)) {
 					this.lastValidStateAt = Date.now();
 					this._recordHistory(data); // this will trigger updateChart via _history watcher in next microtask switch
@@ -206,7 +260,15 @@ function coolBedApp() {
 		},
 
 		onTemperatureSetPointChanged() {
-			this._postConfig({ temperatureSetPoint: this.state.temperatureSetPoint });
+			const valueC = this.toCelsius(this.temperatureSetPointDisplay, false);
+			this.state.temperatureSetPoint = valueC;
+			this._postConfig({ temperatureSetPoint: valueC });
+			this._editingTemperatureSetPoint = false;
+		},
+
+		onTemperatureSetPointInput(value) {
+			this._editingTemperatureSetPoint = true;
+			this.temperatureSetPointDisplay = Number(value);
 		},
 
 		onCalibrationVolumeChanged() {
@@ -227,6 +289,38 @@ function coolBedApp() {
 
 		startFlowTest() {
 			this._postMode('flowtest');
+		},
+
+		_loadTemperatureUnitPreference() {
+			this.temperatureUnit = TempUnits.getStoredUnit();
+		},
+
+		temperatureUnitLabel() {
+			return TempUnits.unitSymbol(this.temperatureUnit);
+		},
+
+		fromCelsius(value, isDelta = false) {
+			return TempUnits.fromCelsius(value, { unit: this.temperatureUnit, delta: isDelta });
+		},
+
+		toCelsius(value, isDelta = false) {
+			return TempUnits.toCelsius(value, { unit: this.temperatureUnit, delta: isDelta });
+		},
+
+		_isTemperatureConfigKey(key) {
+			return TEMP_CONFIG_ABSOLUTE_KEYS.has(key) || TEMP_CONFIG_DELTA_KEYS.has(key);
+		},
+
+		_isTemperatureDeltaConfigKey(key) {
+			return TEMP_CONFIG_DELTA_KEYS.has(key);
+		},
+
+		_isTemperatureTelemetryKey(key) {
+			return TEMP_TELEMETRY_ABSOLUTE_KEYS.has(key) || TEMP_TELEMETRY_DELTA_KEYS.has(key);
+		},
+
+		_isTemperatureDeltaTelemetryKey(key) {
+			return TEMP_TELEMETRY_DELTA_KEYS.has(key);
 		},
 
 		// ---- Chart ----
@@ -271,15 +365,16 @@ function coolBedApp() {
 			// setup watch on _history to update chart when new data comes in
 			this.$watch('_history', (history) => {
 				// this will run every time _history changes, which happens on every new state fetch that has valid data. We extract the relevant arrays for the chart and update it.
+				const temperatureUnits = this.temperatureUnitLabel(false);
 				const labels = history.map(h =>
 					new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 				);
 
 				const tDatasets = [
-					// { label: 'Temp Delta (°C)',    data: history.map(h => h.temperatureDelta),          borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y' },
-					{ label: 'Out Temp (°C)',       data: history.map(h => h.outTemperature),           borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
-					{ label: 'Return Temp (°C)',    data: history.map(h => h.returnTemperature),        borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
-					{ label: 'Cooling Temp (°C)',   data: history.map(h => h.coolingTemperature),       borderColor: '#0ea5e9', tension: 0.3, yAxisID: 'y' },
+					// { label: `Temp Delta (${this.temperatureUnitLabel()})`, data: history.map(h => this.fromCelsius(h.temperatureDelta, true)), borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y' },
+					{ label: `Out Temp (${temperatureUnits})`,    data: history.map(h => this.fromCelsius(h.outTemperature, false)),     borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
+					{ label: `Return Temp (${temperatureUnits})`, data: history.map(h => this.fromCelsius(h.returnTemperature, false)),  borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
+					{ label: `Cooling Temp (${temperatureUnits})`, data: history.map(h => this.fromCelsius(h.coolingTemperature, false)), borderColor: '#0ea5e9', tension: 0.3, yAxisID: 'y' },
 				];
 				const fDatasets = [
 					{ label: 'Flow (L/min)',       data: history.map(h => h.flow),                      borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },

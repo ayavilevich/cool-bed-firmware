@@ -121,7 +121,10 @@ main > div {
 .metric.wide { grid-column: span 2; }
 
 /* ---- Chart ---- */
-.chart-section canvas { width: 100% !important; }
+.chart-section canvas { 
+	width: 100% !important;
+	margin-bottom: 1rem; 
+}
 
 /* ---- Buttons ---- */
 .btn {
@@ -175,7 +178,8 @@ label.checkbox-label {
 
 input[type="text"],
 input[type="number"],
-input[type="password"] {
+input[type="password"],
+select {
 	background: #0f172a;
 	border: 1px solid #475569;
 	border-radius: 0.4rem;

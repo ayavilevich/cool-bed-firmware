@@ -57,8 +57,8 @@
 			<!-- Temperature mode -->
 			<div class="mode-panel">
 				<label x-text="labelFor('temperatureSetPoint', 'Temperature Mode')"></label>
-				<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="state.temperatureSetPoint" @change="onTemperatureSetPointChanged()">
-				<span x-text="state.temperatureSetPoint + (unitsFor('temperatureSetPoint') ? ' ' + unitsFor('temperatureSetPoint') : '')"></span>
+				<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" :value="temperatureSetPointDisplay" @input="onTemperatureSetPointInput($event.target.value)" @change="onTemperatureSetPointChanged()">
+				<span x-text="formatTemperatureSetPointDisplay()"></span>
 				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
 				<button class="btn btn-danger" x-show="state.mode === 'temperature'" @click="setMode('stop')">⏹ Stop Temperature Goal Mode</button>
 			</div>
@@ -103,22 +103,22 @@
 				<div class="metric">
 					<span class="icon">🌡️</span>
 					<span class="label">Out Temp</span>
-					<span class="value" x-text="formatTelemetry('outTemperature', 1)"></span>
+					<span class="value" x-text="formatTelemetry('outTemperature', TempUnits.DECIMAL_PLACES)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">🌡️</span>
 					<span class="label">Return Temp</span>
-					<span class="value" x-text="formatTelemetry('returnTemperature', 1)"></span>
+					<span class="value" x-text="formatTelemetry('returnTemperature', TempUnits.DECIMAL_PLACES)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">🧊</span>
 					<span class="label">Cooling Temp</span>
-					<span class="value" x-text="formatTelemetry('coolingTemperature', 1)"></span>
+					<span class="value" x-text="formatTelemetry('coolingTemperature', TempUnits.DECIMAL_PLACES)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">↕️</span>
 					<span class="label">Temp Delta</span>
-					<span class="value" x-text="formatTelemetry('temperatureDelta', 2)"></span>
+					<span class="value" x-text="formatTelemetry('temperatureDelta', TempUnits.DECIMAL_PLACES_DELTA)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">❄️</span>
@@ -160,6 +160,7 @@
 
 	<script src="/alpine.min.js" defer></script>
 	<script src="/chart.min.js"></script>
+	<script src="/temperature-units.js"></script>
 	<script src="/app.js"></script>
 </body>
 </html>
