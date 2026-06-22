@@ -62,8 +62,8 @@ public:
 	// Apply a JSON object of config values; returns false if nothing matched
 	bool applyConfigJson(const JsonObjectConst& obj);
 
-	// Mark whether telemetry metrics contain at least one valid sensor sample set
-	void setMetricsValid(bool valid);
+	// Mark whether telemetry metrics contain some data beyond initial values. This is used to determine whether to include telemetry in JSON output.
+	void setMetricsInitialized(bool valid);
 
 	// --------------- Configuration ---------------
 	ConfigVar<String>        hostname        { "hostname",        "cool-bed",       "",     "Hostname / device ID",                           };
@@ -113,7 +113,7 @@ public:
 
 private:
 	SemaphoreHandle_t _mutex;
-	bool _metricsValid;
+	bool _metricsInitialized;
 
 	// Helper to write all config vars to JSON
 	void _configToJson(JsonObject obj, bool excludeMqtt) const;

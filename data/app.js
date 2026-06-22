@@ -139,7 +139,10 @@ function coolBedApp() {
 		async _fetchState() {
 			try {
 				const res = await fetch('/api/state');
-				if (!res.ok) return;
+				if (!res.ok) {
+					console.warn('Fetch not ok, text:', await res.text());
+					return;
+				}
 				const data = await res.json();
 				this.state = data;
 				if (!this._editingTemperatureSetPoint) { // if not editing the set point, update the display value to reflect any changes from outside
@@ -151,6 +154,8 @@ function coolBedApp() {
 				if (this._isStatePayloadValid(data)) {
 					this.lastValidStateAt = Date.now();
 					this._recordHistory(data); // this will trigger updateChart via _history watcher in next microtask switch
+				} else {
+					console.warn('Received invalid state payload:', data);
 				}
 			} catch (e) {
 				console.error('Failed to fetch state:', e);

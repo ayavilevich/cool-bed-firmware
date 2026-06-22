@@ -18,7 +18,7 @@ void metricModelToJsonImpl(JsonObject obj, const Metric<T>& metric) {
 }
 }
 
-State::State() : _metricsValid(false) {
+State::State() : _metricsInitialized(false) {
 	_mutex = xSemaphoreCreateMutex();
 }
 
@@ -34,9 +34,9 @@ void State::unlock() {
 	xSemaphoreGive(_mutex);
 }
 
-void State::setMetricsValid(bool valid) {
+void State::setMetricsInitialized(bool valid) {
 	lock();
-	_metricsValid = valid;
+	_metricsInitialized = valid;
 	unlock();
 }
 
@@ -171,7 +171,7 @@ void State::toJson(JsonObject obj, bool includeConfig, bool includeTelemetry, bo
 	if (includeConfig) {
 		_configToJson(obj, excludeMqttConfig);
 	}
-	if (includeTelemetry && _metricsValid) {
+	if (includeTelemetry && _metricsInitialized) {
 		_telemetryToJson(obj);
 	}
 }

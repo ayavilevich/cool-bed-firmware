@@ -369,6 +369,8 @@ void Controller::_calculateDerivedMetrics(uint64_t rawNow, uint64_t filteredNow,
 void Controller::_sampleSensors() {
 	unsigned long now = millis();
 
+	_state.setMetricsInitialized(true);
+
 	uint64_t rawNow = _flowSensor.getRawPulses();
 	uint64_t filteredNow = _flowSensor.getFilteredPulses();
 	{
@@ -462,8 +464,6 @@ void Controller::_sampleSensors() {
 		_triggerError("pump voltage too low");
 		return;
 	}
-
-	_state.setMetricsValid(true);
 
 	if (_onTelemetryUpdated) _onTelemetryUpdated();
 }
