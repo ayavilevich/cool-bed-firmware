@@ -293,7 +293,7 @@ function coolBedApp() {
 		},
 
 		startFlowTest() {
-			this._postMode('flowtest');
+			this._postMode('flow_test');
 		},
 
 		_loadTemperatureUnitPreference() {

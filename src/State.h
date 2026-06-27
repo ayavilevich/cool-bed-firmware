@@ -21,7 +21,7 @@
 #define MODE_SPEED "speed"
 #define MODE_TEMPERATURE "temperature"
 #define MODE_CALIBRATION "calibration"
-#define MODE_FLOW_TEST "flowtest"
+#define MODE_FLOW_TEST "flow_test"
 
 #ifndef FW_VERSION
 #define FW_VERSION "unknown"
@@ -75,7 +75,7 @@ public:
 	ConfigVar<String>        mqttRootTopic   { "mqttRootTopic",   "cool-bed",       "",     "MQTT root topic"                                 };
 	ConfigVar<bool>          mqttHADiscovery { "mqttHADiscovery", true,             "",     "Enable HA MQTT discovery"                        };
 	ConfigVar<String>        mqttHADiscoveryTopic { "mqttHADiscoveryTopic", "homeassistant", "", "HA discovery topic prefix",                  {}, {}, "mqttHADiscTopic" };
-	ConfigVar<String>        mode            { "mode",            MODE_STOP,        "",     "Operating mode: stop/speed/temperature/calibration/flowtest" };
+	ConfigVar<String>        mode            { "mode",            MODE_STOP,        "",     "Operating mode: stop/speed/temperature/calibration/flow_test" };
 	ConfigVar<uint8_t>       speedSetPoint   { "speedSetPoint",   255,              "counts",     "Pump speed set point",        1,    255           };
 	ConfigVar<float>         temperatureSetPoint { "temperatureSetPoint", 26.0f,    "°C",   "Temperature set point",       10.0f, 40.0f, "tempSetPoint" };
 	ConfigVar<float>         outTemperatureCalibrationOffset { "outTemperatureCalibrationOffset", 0.0f, "°C", "Outgoing temperature offset", -10.0f, 10.0f, "outTempCalOff" };

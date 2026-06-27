@@ -535,7 +535,7 @@ void Controller::_runMode() {
 
 		// Every sample: if flow too low, boost speed
 		if (filteredPerSec < minFlow && currentSpeed < PUMP_MAX_SPEED) {
-			currentSpeed = (uint8_t)min((int)currentSpeed + TEMP_STEP, PUMP_MAX_SPEED);
+			currentSpeed = (uint8_t)min((int)currentSpeed + VARIABLE_SPEED_STEP, PUMP_MAX_SPEED);
 			_setPumpSpeed(currentSpeed);
 		}
 
@@ -543,10 +543,10 @@ void Controller::_runMode() {
 		if (now - _lastTempAdjMs >= (unsigned long)sysTime * 1000UL) {
 			_lastTempAdjMs = now;
 			if (returnTemp < setPoint && filteredPerSec > minFlow) {
-				currentSpeed = (uint8_t)max((int)currentSpeed - TEMP_STEP, 0);
+				currentSpeed = (uint8_t)max((int)currentSpeed - VARIABLE_SPEED_STEP, 0);
 				_setPumpSpeed(currentSpeed);
 			} else if (returnTemp > setPoint) {
-				currentSpeed = (uint8_t)min((int)currentSpeed + TEMP_STEP, PUMP_MAX_SPEED);
+				currentSpeed = (uint8_t)min((int)currentSpeed + VARIABLE_SPEED_STEP, PUMP_MAX_SPEED);
 				_setPumpSpeed(currentSpeed);
 			}
 			// Equal: do nothing

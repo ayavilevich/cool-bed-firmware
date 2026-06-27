@@ -29,7 +29,7 @@ class Connectivity; // can't include Connectivity.h here due to circular depende
 #define TEMP_RETRY_COUNT				3
 #define TEMP_MIN_CELSIUS				-5.0f
 #define TEMP_MAX_CELSIUS				40.0f
-#define TEMP_STEP						10
+#define VARIABLE_SPEED_STEP				10
 #define FLOW_TEST_STEP					10
 #define FLOW_TEST_STEP_INTERVAL_RATIO	0.5 // how long to test each speed in a flow test. ratio of the "system time".
 #define FLOW_TEST_FIRST_STEP_INTERVAL_RATIO	1.0 // ratio of the "system time". first step needs more time to prime from stopped, subsequent steps can be faster.
@@ -46,7 +46,7 @@ class Connectivity; // can't include Connectivity.h here due to circular depende
 // INA226 settings
 #define INA226_I2C_ADDRESS				0x40
 #define INA226_SHUNT_RESISTANCE			0.1f	// Ohm
-#define INA226_MAX_CURRENT_A			1.3f	// A
+#define INA226_MAX_CURRENT_A			1.2f	// A
 
 // Wi-Fi built-in LED blink period when connected
 #define BUILTIN_LED_BLINK_PERIOD_MS		1000
