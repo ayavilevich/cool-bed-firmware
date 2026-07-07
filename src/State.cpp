@@ -294,9 +294,14 @@ void State::_telemetryModelToJson(JsonObject obj) const {
 
 #ifdef DALLAS_SENSOR_RETURNING_PIN
 	metricModelToJsonImpl(obj, returnTemperature);
+	metricModelToJsonImpl(obj, temperatureDelta);
 #endif
 #ifdef DALLAS_SENSOR_COOLING_PIN
 	metricModelToJsonImpl(obj, coolingTemperature);
+#endif
+
+#if defined(DALLAS_SENSOR_RETURNING_PIN) && defined(FLOW_SENSOR_PIN)
+	metricModelToJsonImpl(obj, coolingPower);
 #endif
 
 	metricModelToJsonImpl(obj, flowSensorPresent);
@@ -307,8 +312,6 @@ void State::_telemetryModelToJson(JsonObject obj) const {
 	metricModelToJsonImpl(obj, circIVPresent);
 	metricModelToJsonImpl(obj, coolingIVPresent);
 	metricModelToJsonImpl(obj, heatingIVPresent);
-	metricModelToJsonImpl(obj, temperatureDelta);
-	metricModelToJsonImpl(obj, coolingPower);
 }
 
 // convert state to JSON
