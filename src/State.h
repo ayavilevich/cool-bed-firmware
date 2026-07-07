@@ -102,41 +102,42 @@ public:
 	ConfigVar<unsigned int>  minHeatingVoltage   { "minHeatingVoltage",   4000,            "mV",   "Min heating voltage",                0,    40000, "minHeatVolt"        };
 
 	// --------------- Telemetry ---------------
+	// telemetry min/max range is an expected range for the metric, not a hard limit. Can use this to scale UI, etc. The actual value can exceed the min/max range.
 	Metric<String>           status          { "status",          "",               "",     "Device status"               };
-	Metric<bool>             error           { "error",           false,            "",     "Error state"                 };
+	Metric<bool>             error           { "error",           false,            "",     "Error state",               false, true };
 	Metric<String>           fwVersion       { "fwVersion",       FW_VERSION,       "",     "Firmware version"            };
-	Metric<int>              rssi            { "rssi",            -127,             "dBm",  "Wi-Fi RSSI"                 };
+	Metric<int>              rssi            { "rssi",            -127,             "dBm",  "Wi-Fi RSSI",               -127, 0 };
 	Metric<String>           buildDateTime   { "buildDateTime",   BUILD_DATE_TIME,  "",     "Build date and time"         };
 	Metric<String>           buildTimestamp  { "buildTimestamp",  BUILD_TIMESTAMP,  "",     "Build timestamp"             };
-	Metric<uint8_t>          circSpeed       { "circSpeed",       0,                "counts","Current circulation speed"          };
-	Metric<uint8_t>          coolingSpeed    { "coolingSpeed",    0,                "counts","Current cooling speed"              };
-	Metric<uint8_t>          heatingSpeed    { "heatingSpeed",    0,                "counts","Current heating speed"              };
-	Metric<uint64_t>         flowPulsesRaw   { "flowPulsesRaw",   0,                "pulses", "Raw flow pulse count"        };
-	Metric<uint64_t>         flowPulsesFiltered { "flowPulsesFiltered", 0,          "pulses", "Filtered flow pulse count"   };
-	Metric<unsigned int>     circVoltage     { "circVoltage",     0,                "mV",   "Circulation voltage"          };
-	Metric<int>              circCurrent     { "circCurrent",     0,                "mA",   "Circulation current"          };
-	Metric<unsigned int>     coolingVoltage  { "coolingVoltage",  0,                "mV",   "Cooling voltage"              };
-	Metric<int>              coolingCurrent  { "coolingCurrent",  0,                "mA",   "Cooling current"              };
-	Metric<unsigned int>     heatingVoltage  { "heatingVoltage",  0,                "mV",   "Heating voltage"              };
-	Metric<int>              heatingCurrent  { "heatingCurrent",  0,                "mA",   "Heating current"              };
-	Metric<float>            outTemperature  { "outTemperature",  20.0f,            "°C",   "Outgoing water temperature"  };
-	Metric<float>            returnTemperature { "returnTemperature", 20.0f,        "°C",   "Returning water temperature" };
-	Metric<float>            coolingTemperature { "coolingTemperature", 20.0f,  "°C",   "Cooling water temperature" };
-	Metric<bool>             flowSensorPresent { "flowSensorPresent", false,         "",      "Flow sensor is present"       };
-	Metric<bool>             coolingPresent { "coolingPresent", false,                "",      "Cooling output is present"     };
-	Metric<bool>             heatingPresent { "heatingPresent", false,                "",      "Heating output is present"     };
-	Metric<bool>             coolingTemperaturePresent { "coolingTemperaturePresent", false, "", "Cooling temp sensor is present" };
-	Metric<bool>             returnTemperaturePresent { "returnTemperaturePresent", false, "", "Return temp sensor is present"  };
-	Metric<bool>             circIVPresent   { "circIVPresent", false,                "",      "Circulation IV sensing present" };
-	Metric<bool>             coolingIVPresent { "coolingIVPresent", false,            "",      "Cooling IV sensing present"     };
-	Metric<bool>             heatingIVPresent { "heatingIVPresent", false,            "",      "Heating IV sensing present"     };
+	Metric<uint8_t>          circSpeed       { "circSpeed",       0,                "counts","Current circulation speed",        0, 255 };
+	Metric<uint8_t>          coolingSpeed    { "coolingSpeed",    0,                "counts","Current cooling speed",            0, 255 };
+	Metric<uint8_t>          heatingSpeed    { "heatingSpeed",    0,                "counts","Current heating speed",            0, 255 };
+	Metric<uint64_t>         flowPulsesRaw   { "flowPulsesRaw",   0,                "pulses", "Raw flow pulse count",        0, uint64_t(-1) };
+	Metric<uint64_t>         flowPulsesFiltered { "flowPulsesFiltered", 0,          "pulses", "Filtered flow pulse count",   0, uint64_t(-1) };
+	Metric<unsigned int>     circVoltage     { "circVoltage",     0,                "mV",   "Circulation voltage", 0, 40000 };
+	Metric<int>              circCurrent     { "circCurrent",     0,                "mA",   "Circulation current", 0, 4000 };
+	Metric<unsigned int>     coolingVoltage  { "coolingVoltage",  0,                "mV",   "Cooling voltage", 0, 40000 };
+	Metric<int>              coolingCurrent  { "coolingCurrent",  0,                "mA",   "Cooling current", 0, 4000 };
+	Metric<unsigned int>     heatingVoltage  { "heatingVoltage",  0,                "mV",   "Heating voltage", 0, 40000 };
+	Metric<int>              heatingCurrent  { "heatingCurrent",  0,                "mA",   "Heating current", 0, 4000 };
+	Metric<float>            outTemperature  { "outTemperature",  20.0f,            "°C",   "Outgoing water temperature",  -5.0f, 40.0f };
+	Metric<float>            returnTemperature { "returnTemperature", 20.0f,        "°C",   "Returning water temperature", -5.0f, 40.0f };
+	Metric<float>            coolingTemperature { "coolingTemperature", 20.0f,      "°C",   "Cooling water temperature",   -5.0f, 40.0f };
+	Metric<bool>             flowSensorPresent { "flowSensorPresent", false,         "",      "Flow sensor is present",       false, true };
+	Metric<bool>             coolingPresent { "coolingPresent", false,                "",      "Cooling output is present",     false, true };
+	Metric<bool>             heatingPresent { "heatingPresent", false,                "",      "Heating output is present",     false, true };
+	Metric<bool>             coolingTemperaturePresent { "coolingTemperaturePresent", false, "", "Cooling temp sensor is present", false, true };
+	Metric<bool>             returnTemperaturePresent { "returnTemperaturePresent", false, "", "Return temp sensor is present",  false, true };
+	Metric<bool>             circIVPresent   { "circIVPresent", false,                "",      "Circulation IV sensing present", false, true };
+	Metric<bool>             coolingIVPresent { "coolingIVPresent", false,            "",      "Cooling IV sensing present",     false, true };
+	Metric<bool>             heatingIVPresent { "heatingIVPresent", false,            "",      "Heating IV sensing present",     false, true };
 
 	// --------------- Calculated telemetry ---------------
-	Metric<unsigned int>     flowPulsesRawPerSec     { "flowPulsesRawPerSec",      0, "p/s", "Raw flow"      };
-	Metric<unsigned int>     flowPulsesFilteredPerSec { "flowPulsesFilteredPerSec", 0, "p/s","Filtered flow" };
-	Metric<float>            flow            { "flow",            0.0f,             "L/min", "Water flow rate"          };
-	Metric<float>            temperatureDelta { "temperatureDelta", 0.0f,          "°C",    "Return-out temperature delta"    };
-	Metric<float>            coolingPower    { "coolingPower",    0.0f,             "W",     "Cooling power"             };
+	Metric<unsigned int>     flowPulsesRawPerSec     { "flowPulsesRawPerSec",      0, "p/s", "Raw flow"     , 0, 10000 };
+	Metric<unsigned int>     flowPulsesFilteredPerSec { "flowPulsesFilteredPerSec", 0, "p/s","Filtered flow", 0, 10000 };
+	Metric<float>            flow            { "flow",            0.0f,             "L/min", "Water flow rate",               0.0f, 100.0f };
+	Metric<float>            temperatureDelta { "temperatureDelta", 0.0f,          "°C",    "Return-out temperature delta",  -40.0f, 40.0f };
+	Metric<float>            coolingPower    { "coolingPower",    0.0f,             "W",     "Cooling power", 0.0f, 10000.0f };
 
 private:
 	SemaphoreHandle_t _mutex;

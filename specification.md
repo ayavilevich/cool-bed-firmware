@@ -187,10 +187,10 @@ Some will be missing if the source of the data is not available as set by the va
 | :----              | :----  | :----   | :----                                           | :----          | :----             | :----          |
 | status             | string |         | what the device is currently doing              | any string     | div/span          | Sensor         |
 | error              | bool   | false   | are we in error state right now?                | true/false     | icon              | Binary sensor  |
-| fwVersion          | string | FW_VERSION | firmware version from FW_VERSION build flag in platformio.ini | any string | div/span | Sensor |
-| rssi               | int    | -127    | Wi-Fi signal strength                            | [-127, 0] dBm  | div/span          | Sensor         |
-| buildDateTime      | string | __DATE__ __TIME__ | firmware compile date and time              | any string     | div/span          | Sensor         |
-| buildTimestamp     | string | __TIMESTAMP__ | firmware compile timestamp                    | any string     | div/span          | Sensor         |
+| fwVersion          | string | FW_VERSION | firmware version from FW_VERSION build flag in platformio.ini | any string | div/span | Sensor     |
+| rssi               | int    | -127    | Wi-Fi signal strength                           | [-127, 0] dBm  | div/span          | Sensor         |
+| buildDateTime      | string | __DATE__ __TIME__ | firmware compile date and time        | any string     | div/span          | Sensor         |
+| buildTimestamp     | string | __TIMESTAMP__ | firmware compile timestamp                | any string     | div/span          | Sensor         |
 | circSpeed          | byte   | 0       | at which speed the circ pump is operated now    | [0, 255]       | div/span          | Sensor         |
 | coolingSpeed       | byte   | 0       | at which speed the cooling pump is operated now | [0, 255]       | div/span          | Sensor         |
 | heatingSpeed       | byte   | 0       | at which speed the heating element is operated  | [0, 255]       | div/span          | Sensor         |
