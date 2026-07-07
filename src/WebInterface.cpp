@@ -126,9 +126,12 @@ void WebInterface::_handlePostMode(AsyncWebServerRequest* request, uint8_t* data
 
 	String newMode = doc["mode"].as<String>();
 	// Validate mode value
-	if (newMode != MODE_STOP && newMode != MODE_SPEED && newMode != MODE_TEMPERATURE && newMode != MODE_CALIBRATION && newMode != MODE_FLOW_TEST) {
-		request->send(400, "application/json", "{\"error\":\"Invalid mode\"}");
-		return;
+	{
+		StateGuard guard(_state);
+		if (!_state.isValidMode(newMode)) {
+			request->send(400, "application/json", "{\"error\":\"Invalid mode\"}");
+			return;
+		}
 	}
 
 	_controller.setMode(newMode);

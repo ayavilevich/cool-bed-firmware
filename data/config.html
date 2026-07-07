@@ -68,9 +68,17 @@
 
 				<fieldset>
 					<legend>Operation</legend>
-					<label><span x-text="labelFor('speedSetPoint', 'Speed Set Point') + (unitsFor('speedSetPoint') ? ' (' + unitsFor('speedSetPoint') + ')' : '')"></span>
-						<input type="range" :min="minFor('speedSetPoint')" :max="maxFor('speedSetPoint')" x-model.number="cfg.speedSetPoint">
-						<span x-text="cfg.speedSetPoint"></span>
+					<label><span x-text="labelFor('circSpeedSetPoint', 'Circulation Speed Set Point') + (unitsFor('circSpeedSetPoint') ? ' (' + unitsFor('circSpeedSetPoint') + ')' : '')"></span>
+						<input type="range" :min="minFor('circSpeedSetPoint')" :max="maxFor('circSpeedSetPoint')" x-model.number="cfg.circSpeedSetPoint">
+						<span x-text="cfg.circSpeedSetPoint"></span>
+					</label>
+					<label><span x-text="labelFor('coolingSpeedSetPoint', 'Cooling Speed Set Point') + (unitsFor('coolingSpeedSetPoint') ? ' (' + unitsFor('coolingSpeedSetPoint') + ')' : '')"></span>
+						<input type="range" :min="minFor('coolingSpeedSetPoint')" :max="maxFor('coolingSpeedSetPoint')" x-model.number="cfg.coolingSpeedSetPoint">
+						<span x-text="cfg.coolingSpeedSetPoint"></span>
+					</label>
+					<label><span x-text="labelFor('heatingSpeedSetPoint', 'Heating Speed Set Point') + (unitsFor('heatingSpeedSetPoint') ? ' (' + unitsFor('heatingSpeedSetPoint') + ')' : '')"></span>
+						<input type="range" :min="minFor('heatingSpeedSetPoint')" :max="maxFor('heatingSpeedSetPoint')" x-model.number="cfg.heatingSpeedSetPoint">
+						<span x-text="cfg.heatingSpeedSetPoint"></span>
 					</label>
 					<label><span x-text="labelFor('temperatureSetPoint', 'Temperature Set Point') + (unitsFor('temperatureSetPoint') ? ' (' + unitsFor('temperatureSetPoint') + ')' : '')"></span>
 						<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="cfg.temperatureSetPoint">
@@ -91,11 +99,32 @@
 					<label><span x-text="labelFor('minFlowPulsesPerSec', 'Min Flow Pulses/s') + (unitsFor('minFlowPulsesPerSec') ? ' (' + unitsFor('minFlowPulsesPerSec') + ')' : '')"></span>
 						<input type="number" x-model.number="cfg.minFlowPulsesPerSec" :min="minFor('minFlowPulsesPerSec')" :max="maxFor('minFlowPulsesPerSec')">
 					</label>
-					<label><span x-text="labelFor('maxCurrent', 'Max Current') + (unitsFor('maxCurrent') ? ' (' + unitsFor('maxCurrent') + ')' : '')"></span>
-						<input type="number" x-model.number="cfg.maxCurrent" :min="minFor('maxCurrent')" :max="maxFor('maxCurrent')">
+					<label><span x-text="labelFor('maxCircCurrent', 'Max Circ Current') + (unitsFor('maxCircCurrent') ? ' (' + unitsFor('maxCircCurrent') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.maxCircCurrent" :min="minFor('maxCircCurrent')" :max="maxFor('maxCircCurrent')">
 					</label>
-					<label><span x-text="labelFor('minVoltage', 'Min Voltage') + (unitsFor('minVoltage') ? ' (' + unitsFor('minVoltage') + ')' : '')"></span>
-						<input type="number" x-model.number="cfg.minVoltage" :min="minFor('minVoltage')" :max="maxFor('minVoltage')">
+					<label><span x-text="labelFor('minCircCurrent', 'Min Circ Current') + (unitsFor('minCircCurrent') ? ' (' + unitsFor('minCircCurrent') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.minCircCurrent" :min="minFor('minCircCurrent')" :max="maxFor('minCircCurrent')">
+					</label>
+					<label><span x-text="labelFor('minCircVoltage', 'Min Circ Voltage') + (unitsFor('minCircVoltage') ? ' (' + unitsFor('minCircVoltage') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.minCircVoltage" :min="minFor('minCircVoltage')" :max="maxFor('minCircVoltage')">
+					</label>
+					<label><span x-text="labelFor('maxCoolingCurrent', 'Max Cooling Current') + (unitsFor('maxCoolingCurrent') ? ' (' + unitsFor('maxCoolingCurrent') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.maxCoolingCurrent" :min="minFor('maxCoolingCurrent')" :max="maxFor('maxCoolingCurrent')">
+					</label>
+					<label><span x-text="labelFor('minCoolingCurrent', 'Min Cooling Current') + (unitsFor('minCoolingCurrent') ? ' (' + unitsFor('minCoolingCurrent') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.minCoolingCurrent" :min="minFor('minCoolingCurrent')" :max="maxFor('minCoolingCurrent')">
+					</label>
+					<label><span x-text="labelFor('minCoolingVoltage', 'Min Cooling Voltage') + (unitsFor('minCoolingVoltage') ? ' (' + unitsFor('minCoolingVoltage') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.minCoolingVoltage" :min="minFor('minCoolingVoltage')" :max="maxFor('minCoolingVoltage')">
+					</label>
+					<label><span x-text="labelFor('maxHeatingCurrent', 'Max Heating Current') + (unitsFor('maxHeatingCurrent') ? ' (' + unitsFor('maxHeatingCurrent') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.maxHeatingCurrent" :min="minFor('maxHeatingCurrent')" :max="maxFor('maxHeatingCurrent')">
+					</label>
+					<label><span x-text="labelFor('minHeatingCurrent', 'Min Heating Current') + (unitsFor('minHeatingCurrent') ? ' (' + unitsFor('minHeatingCurrent') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.minHeatingCurrent" :min="minFor('minHeatingCurrent')" :max="maxFor('minHeatingCurrent')">
+					</label>
+					<label><span x-text="labelFor('minHeatingVoltage', 'Min Heating Voltage') + (unitsFor('minHeatingVoltage') ? ' (' + unitsFor('minHeatingVoltage') + ')' : '')"></span>
+						<input type="number" x-model.number="cfg.minHeatingVoltage" :min="minFor('minHeatingVoltage')" :max="maxFor('minHeatingVoltage')">
 					</label>
 				</fieldset>
 

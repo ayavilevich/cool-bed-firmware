@@ -276,7 +276,9 @@ void MqttInterface::_publishDiscovery() {
 	addSensor("wifi_rssi", "signal_strength", _state.rssi);
 	addSensor("build_date_time", "", _state.buildDateTime);
 	addSensor("build_timestamp", "", _state.buildTimestamp);
-	addSensor("pump_speed", "", _state.pumpSpeed);
+	addSensor("circ_speed", "", _state.circSpeed);
+	addSensor("cooling_speed", "", _state.coolingSpeed);
+	addSensor("heating_speed", "", _state.heatingSpeed);
 	addSensor("flow", "volume_flow_rate", _state.flow);
 	addSensor("temperature_delta", "temperature_delta", _state.temperatureDelta);
 	addSensor("cooling_power", "power", _state.coolingPower);
@@ -285,8 +287,20 @@ void MqttInterface::_publishDiscovery() {
 	addSensor("out_temperature", "temperature", _state.outTemperature);
 	addSensor("return_temperature", "temperature", _state.returnTemperature);
 	addSensor("cooling_temperature", "temperature", _state.coolingTemperature);
-	addSensor("pump_voltage", "voltage", _state.pumpVoltage);
-	addSensor("pump_current", "current", _state.pumpCurrent);
+	addSensor("circ_voltage", "voltage", _state.circVoltage);
+	addSensor("circ_current", "current", _state.circCurrent);
+	addSensor("cooling_voltage", "voltage", _state.coolingVoltage);
+	addSensor("cooling_current", "current", _state.coolingCurrent);
+	addSensor("heating_voltage", "voltage", _state.heatingVoltage);
+	addSensor("heating_current", "current", _state.heatingCurrent);
+	addBinarySensor("flow_sensor_present", "connectivity", _state.flowSensorPresent);
+	addBinarySensor("cooling_present", "power", _state.coolingPresent);
+	addBinarySensor("heating_present", "power", _state.heatingPresent);
+	addBinarySensor("cooling_temperature_present", "connectivity", _state.coolingTemperaturePresent);
+	addBinarySensor("return_temperature_present", "connectivity", _state.returnTemperaturePresent);
+	addBinarySensor("circ_iv_present", "connectivity", _state.circIVPresent);
+	addBinarySensor("cooling_iv_present", "connectivity", _state.coolingIVPresent);
+	addBinarySensor("heating_iv_present", "connectivity", _state.heatingIVPresent);
 
 	// --- Settable config (number entities) ---
 	// https://www.home-assistant.io/integrations/number.mqtt/
@@ -305,7 +319,9 @@ void MqttInterface::_publishDiscovery() {
 		e["unique_id"] = hostname + "_" + id;
 	};
 
-	addNumber("speed_set_point", "", _state.speedSetPoint, 1);
+	addNumber("circ_speed_set_point", "", _state.circSpeedSetPoint, 1);
+	addNumber("cooling_speed_set_point", "", _state.coolingSpeedSetPoint, 1);
+	addNumber("heating_speed_set_point", "", _state.heatingSpeedSetPoint, 1);
 	addNumber("temperature_set_point", "temperature", _state.temperatureSetPoint, 0.5f);
 	addNumber("out_temp_calibration_offset", "temperature_delta", _state.outTemperatureCalibrationOffset, 0.1f);
 	addNumber("return_temp_calibration_offset", "temperature_delta", _state.returnTemperatureCalibrationOffset, 0.1f);
@@ -314,8 +330,15 @@ void MqttInterface::_publishDiscovery() {
 	addNumber("calibration_flow_pulses", "", _state.calibrationFlowPulses, 1);
 	addNumber("system_time", "", _state.systemTime, 1);
 	addNumber("min_flow_pulses_per_sec", "", _state.minFlowPulsesPerSec, 1);
-	addNumber("max_current", "current", _state.maxCurrent, 1);
-	addNumber("min_voltage", "voltage", _state.minVoltage, 1);
+	addNumber("max_circ_current", "current", _state.maxCircCurrent, 1);
+	addNumber("min_circ_current", "current", _state.minCircCurrent, 1);
+	addNumber("min_circ_voltage", "voltage", _state.minCircVoltage, 1);
+	addNumber("max_cooling_current", "current", _state.maxCoolingCurrent, 1);
+	addNumber("min_cooling_current", "current", _state.minCoolingCurrent, 1);
+	addNumber("min_cooling_voltage", "voltage", _state.minCoolingVoltage, 1);
+	addNumber("max_heating_current", "current", _state.maxHeatingCurrent, 1);
+	addNumber("min_heating_current", "current", _state.minHeatingCurrent, 1);
+	addNumber("min_heating_voltage", "voltage", _state.minHeatingVoltage, 1);
 
 	// --- Mode select ---
 	{
@@ -326,11 +349,13 @@ void MqttInterface::_publishDiscovery() {
 		e["val_tpl"] = "{{ value_json.mode }}"; // value_template
 		e["cmd_t"] = rootTopic + "/mode/set"; // command_topic
 		JsonArray options = e["options"].to<JsonArray>();
-		options.add(MODE_STOP);
-		options.add(MODE_SPEED);
-		options.add(MODE_TEMPERATURE);
-		options.add(MODE_CALIBRATION);
-		options.add(MODE_FLOW_TEST);
+		if (_state.isModeSupported(MODE_STOP)) options.add(MODE_STOP);
+		if (_state.isModeSupported(MODE_MANUAL_CIRC)) options.add(MODE_MANUAL_CIRC);
+		if (_state.isModeSupported(MODE_TEMPERATURE)) options.add(MODE_TEMPERATURE);
+		if (_state.isModeSupported(MODE_MANUAL_COOL)) options.add(MODE_MANUAL_COOL);
+		if (_state.isModeSupported(MODE_MANUAL_HEAT)) options.add(MODE_MANUAL_HEAT);
+		if (_state.isModeSupported(MODE_FLOW_CALIBRATION)) options.add(MODE_FLOW_CALIBRATION);
+		if (_state.isModeSupported(MODE_FLOW_TEST)) options.add(MODE_FLOW_TEST);
 		e["unique_id"] = hostname + "_mode";
 	}
 

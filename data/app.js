@@ -197,9 +197,9 @@ function coolBedApp() {
 				outTemperature: data.outTemperature ?? 0,
 				returnTemperature: data.returnTemperature ?? 0,
 				coolingTemperature: data.coolingTemperature ?? 0,
-				pumpSpeed: data.pumpSpeed ?? 0,
-				pumpCurrent: data.pumpCurrent ?? 0,
-				pumpVoltage: data.pumpVoltage ?? 0,
+				circSpeed: data.circSpeed ?? 0,
+				circCurrent: data.circCurrent ?? 0,
+				circVoltage: data.circVoltage ?? 0,
 				flowPulsesFilteredPerSec: data.flowPulsesFilteredPerSec ?? 0,
 			});
 			// Trim to 10-minute window
@@ -260,8 +260,8 @@ function coolBedApp() {
 			this._postMode(mode);
 		},
 
-		onSpeedSetPointChanged() {
-			this._postConfig({ speedSetPoint: this.state.speedSetPoint });
+		onCircSpeedSetPointChanged() {
+			this._postConfig({ circSpeedSetPoint: this.state.circSpeedSetPoint });
 		},
 
 		onTemperatureSetPointChanged() {
@@ -280,16 +280,24 @@ function coolBedApp() {
 			this._postConfig({ calibrationVolume: this.state.calibrationVolume });
 		},
 
-		startSpeed() {
-			this._postMode('speed');
+		startManualCirc() {
+			this._postMode('manual_circ');
+		},
+
+		startManualCool() {
+			this._postMode('manual_cool');
+		},
+
+		startManualHeat() {
+			this._postMode('manual_heat');
 		},
 
 		startTemperature() {
 			this._postMode('temperature');
 		},
 
-		startCalibration() {
-			this._postMode('calibration');
+		startFlowCalibration() {
+			this._postMode('flow_calibration');
 		},
 
 		startFlowTest() {
@@ -364,7 +372,7 @@ function coolBedApp() {
 			];
 			const mDatasets = [
 				{ label: 'Cooling Power (W)', data: [], borderColor: '#22c55e', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Pump Speed', data: [], borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y' },
+				{ label: 'Circulation Speed', data: [], borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y' },
 				{ label: 'Current (mA)', data: [], borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
 			];
 			// create objects for charts.js and don't store them in state, to avoid reactivity overhead and chart re-creation on every update
@@ -398,8 +406,8 @@ function coolBedApp() {
 				tDatasets[2].data = history.map(h => this.fromCelsius(h.coolingTemperature, false));
 				fDatasets[0].data = history.map(h => h.flow);
 				mDatasets[0].data = history.map(h => h.coolingPower);
-				mDatasets[1].data = history.map(h => h.pumpSpeed);
-				mDatasets[2].data = history.map(h => h.pumpCurrent);
+				mDatasets[1].data = history.map(h => h.circSpeed);
+				mDatasets[2].data = history.map(h => h.circCurrent);
 
 				const updateSafely = (chart) => {
 					chart.setActiveElements([]);

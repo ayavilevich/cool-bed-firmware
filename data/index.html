@@ -66,11 +66,15 @@
 
 			<!-- Speed mode -->
 			<div class="mode-panel">
-				<label x-text="labelFor('speedSetPoint', 'Speed Mode')"></label>
-				<input type="range" :min="minFor('speedSetPoint')" :max="maxFor('speedSetPoint')" x-model.number="state.speedSetPoint" @change="onSpeedSetPointChanged()">
-				<span x-text="state.speedSetPoint"></span>
-				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Fixed Speed Mode</button>
-				<button class="btn btn-danger" x-show="state.mode === 'speed'" @click="setMode('stop')">⏹ Stop Fixed Speed Mode</button>
+				<label x-text="labelFor('circSpeedSetPoint', 'Manual Circulation Mode')"></label>
+				<input type="range" :min="minFor('circSpeedSetPoint')" :max="maxFor('circSpeedSetPoint')" x-model.number="state.circSpeedSetPoint" @change="onCircSpeedSetPointChanged()">
+				<span x-text="state.circSpeedSetPoint"></span>
+				<button class="btn btn-primary" x-show="state.mode !== 'manual_circ'" @click="startManualCirc()">▶ Start Manual Circulation Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'manual_circ'" @click="setMode('stop')">⏹ Stop Manual Circulation Mode</button>
+				<button class="btn btn-primary" x-show="state.mode !== 'manual_cool'" @click="startManualCool()">▶ Start Manual Cooling Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'manual_cool'" @click="setMode('stop')">⏹ Stop Manual Cooling Mode</button>
+				<button class="btn btn-primary" x-show="state.mode !== 'manual_heat'" @click="startManualHeat()">▶ Start Manual Heating Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'manual_heat'" @click="setMode('stop')">⏹ Stop Manual Heating Mode</button>
 			</div>
 
 			<!-- Calibration mode -->
@@ -80,8 +84,8 @@
 					<label x-text="labelFor('calibrationVolume', 'Calibration Volume') + (unitsFor('calibrationVolume') ? ' (' + unitsFor('calibrationVolume') + ')' : '') + ':'"></label>
 					<input type="number" :min="minFor('calibrationVolume')" :max="maxFor('calibrationVolume')" x-model.number="state.calibrationVolume" @change="onCalibrationVolumeChanged()">
 				</div>
-				<button class="btn btn-warning" x-show="state.mode !== 'calibration'" @click="startCalibration()">▶ Start Pump Calibration</button>
-				<button class="btn btn-danger" x-show="state.mode === 'calibration'" @click="setMode('stop')">⏹ Stop Pump Calibration</button>
+				<button class="btn btn-warning" x-show="state.mode !== 'flow_calibration'" @click="startFlowCalibration()">▶ Start Flow Calibration</button>
+				<button class="btn btn-danger" x-show="state.mode === 'flow_calibration'" @click="setMode('stop')">⏹ Stop Flow Calibration</button>
 				<button class="btn btn-primary" x-show="state.mode !== 'flow_test'" @click="startFlowTest()">▶ Start Flow Test Mode</button>
 				<button class="btn btn-danger" x-show="state.mode === 'flow_test'" @click="setMode('stop')">⏹ Stop Flow Test Mode</button>
 			</div>
@@ -93,8 +97,8 @@
 			<div class="telemetry-grid">
 				<div class="metric">
 					<span class="icon">⚡</span>
-					<span class="label">Pump Speed</span>
-					<span class="value" x-text="state.pumpSpeed"></span>
+					<span class="label">Circulation Speed</span>
+					<span class="value" x-text="state.circSpeed"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">💧</span>
@@ -128,13 +132,13 @@
 				</div>
 				<div class="metric">
 					<span class="icon">🔌</span>
-					<span class="label">Voltage</span>
-					<span class="value" x-text="formatTelemetry('pumpVoltage', 0)"></span>
+					<span class="label">Circ Voltage</span>
+					<span class="value" x-text="formatTelemetry('circVoltage', 0)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">⚡</span>
-					<span class="label">Current</span>
-					<span class="value" x-text="formatTelemetry('pumpCurrent', 0)"></span>
+					<span class="label">Circ Current</span>
+					<span class="value" x-text="formatTelemetry('circCurrent', 0)"></span>
 				</div>
 				<div class="metric">
 					<span class="icon">〰️</span>
