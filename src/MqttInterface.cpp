@@ -350,8 +350,8 @@ void MqttInterface::_publishDiscovery() {
 		e["cmd_t"] = rootTopic + "/mode/set"; // command_topic
 		JsonArray options = e["options"].to<JsonArray>();
 		if (_state.isModeSupported(MODE_STOP)) options.add(MODE_STOP);
-		if (_state.isModeSupported(MODE_MANUAL_CIRC)) options.add(MODE_MANUAL_CIRC);
 		if (_state.isModeSupported(MODE_TEMPERATURE)) options.add(MODE_TEMPERATURE);
+		if (_state.isModeSupported(MODE_MANUAL_CIRC)) options.add(MODE_MANUAL_CIRC);
 		if (_state.isModeSupported(MODE_MANUAL_COOL)) options.add(MODE_MANUAL_COOL);
 		if (_state.isModeSupported(MODE_MANUAL_HEAT)) options.add(MODE_MANUAL_HEAT);
 		if (_state.isModeSupported(MODE_FLOW_CALIBRATION)) options.add(MODE_FLOW_CALIBRATION);
