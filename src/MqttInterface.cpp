@@ -7,7 +7,7 @@
 #include "MqttInterface.h"
 
 #define MQTT_RECONNECT_INTERVAL_MS 5000
-#define MQTT_BUFFER_SIZE 7168 // our auto-discovery payload is large, so need to increase the default 256B buffer
+#define MQTT_BUFFER_SIZE (15*1024) // our auto-discovery payload is very large, so need to increase the default 256B buffer
 // autodiscovery consts
 #define AD_NAME "Cool Bed"
 #define AD_NAME_PREFIX "Cool Bed ("
