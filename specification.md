@@ -277,21 +277,21 @@ The flow meter sensor is optional.
 #### Operation modes
 
 ##### Stop mode (stop)
-Outputs are stopped. If a user moved us to this mode then a status = "stopped".
+Outputs are stopped. If a user moved us to this mode then a status = "Stopped".
 If returnTemperature sensor is present and after 10 minutes (const) of being stopped, absolute deltaTemperature value is over 0.2 deg C (const) then set status to a warning text:
 "Warning: temperature sensors might not be calibrated"
 
 ##### Manual circulation mode (manual_circ)
-Operate circulation pump at circSpeedSetPoint. Status = "circulating".
+Operate circulation pump at circSpeedSetPoint. Status = "Circulating".
 If a flow meter sensor is present: If we operate for systemTime and flowPulsesFilteredPerSec < minFlowPulsesPerSec then trigger error state. This can happen at the start of the mode or later due to speed change or other causes.
 
 ##### Manual cooling mode (manual_cool)
 In addition to the logic in "manual_circ", run the cooling pump at coolingSpeedSetPoint.
-Status = "cooling".
+Status = "Cooling".
 
 ##### Manual heating mode (manual_heat)
 In addition to the logic in "manual_circ", run the heating element at heatingSpeedSetPoint.
-Status = "heating".
+Status = "Heating".
 
 ##### Temperature mode (temperature)
 
@@ -311,7 +311,7 @@ these should be defined such that there is a gap between heating and cooling. Ru
 * If heating element in running and outTemperature > temperatureSetPoint + HEATING_HYSTERESIS_STOP, stop heating element
 * If cooling pump is running and outTemperature < temperatureSetPoint + COOLING_HYSTERESIS_STOP, stop cooling pump.
 
-Update Status according to operation: "circulating", "heating", "cooling"
+Update Status according to operation: "Circulating", "Heating", "Cooling"
 
 ###### Variable speed method
 
@@ -334,7 +334,7 @@ When a flow sensor is not present, assume circSpeedSetPoint has been set as the 
 Only valid if a flow meter sensor is present.
 When started, save flowPulsesFiltered. Operate circulation pump at circSpeedSetPoint. When mode is stopped, populate calibrationFlowPulses. Set calibrationFlowPulses to the total amount of change to flowPulsesFiltered. 
 Assuming the user measured calibrationVolume amount of water during the operation, the system now has valid flow calibration info.
-Start with "calibrating" status, finish with "calibrated".
+Start with "Calibrating" status, finish with "Calibrated".
 If no pulses or flowPulsesFilteredPerSec < minFlowPulsesPerSec at stop time (calibration end), set an error state.
 If after systemTime of running, flowPulsesFilteredPerSec < minFlowPulsesPerSec then trigger error state.
 

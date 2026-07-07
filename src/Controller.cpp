@@ -250,7 +250,7 @@ void Controller::updateLeds(bool wifiConnected) {
 
 void Controller::setMode(const String& newMode) {
 	if (!_state.isValidMode(newMode)) {
-		_triggerError("invalid mode: " + newMode);
+		_triggerError("Invalid mode: " + newMode);
 		return;
 	}
 
@@ -263,7 +263,7 @@ void Controller::setMode(const String& newMode) {
 				calibrationError = true;
 			} else {
 				_state.calibrationFlowPulses.set((unsigned int)pulsesDelta);
-				_state.status.set("calibrated");
+				_state.status.set("Calibrated");
 				Preferences prefs;
 				prefs.begin(PREFS_NAMESPACE, false);
 				_state.calibrationFlowPulses.save(prefs);
@@ -272,7 +272,7 @@ void Controller::setMode(const String& newMode) {
 		}
 	}
 	if (calibrationError) {
-		_triggerError("calibration failed: no flow");
+		_triggerError("Calibration failed: no flow");
 		return;
 	}
 
@@ -288,13 +288,13 @@ void Controller::setMode(const String& newMode) {
 	if (newMode == MODE_STOP) {
 		_stopAllOutputs();
 		StateGuard guard(_state);
-		_state.status.set("stopped");
+		_state.status.set("Stopped");
 	} else if (newMode == MODE_MANUAL_CIRC) {
 		uint8_t sp;
 		{
 			StateGuard guard(_state);
 			sp = _state.circSpeedSetPoint.get();
-			_state.status.set("circulating");
+			_state.status.set("Circulating");
 		}
 		_setCoolingSpeed(0);
 		_setHeatingSpeed(0);
@@ -306,7 +306,7 @@ void Controller::setMode(const String& newMode) {
 			StateGuard guard(_state);
 			circSp = _state.circSpeedSetPoint.get();
 			coolSp = _state.coolingSpeedSetPoint.get();
-			_state.status.set("cooling");
+			_state.status.set("Cooling");
 		}
 		_setHeatingSpeed(0);
 		_setCircSpeed(circSp);
@@ -318,7 +318,7 @@ void Controller::setMode(const String& newMode) {
 			StateGuard guard(_state);
 			circSp = _state.circSpeedSetPoint.get();
 			heatSp = _state.heatingSpeedSetPoint.get();
-			_state.status.set("heating");
+			_state.status.set("Heating");
 		}
 		_setCoolingSpeed(0);
 		_setCircSpeed(circSp);
@@ -339,7 +339,7 @@ void Controller::setMode(const String& newMode) {
 		_setHeatingSpeed(0);
 		{
 			StateGuard guard(_state);
-			_state.status.set("circulating");
+			_state.status.set("Circulating");
 		}
 		_lastTempAdjMs = millis();
 		_lastValidFlowMs = millis();
@@ -349,7 +349,7 @@ void Controller::setMode(const String& newMode) {
 			StateGuard guard(_state);
 			_calibStartPulses = _state.flowPulsesFiltered.get();
 			circSp = _state.circSpeedSetPoint.get();
-			_state.status.set("calibrating");
+			_state.status.set("Calibrating");
 		}
 		_calibStartMs = millis();
 		_setCoolingSpeed(0);
@@ -361,7 +361,7 @@ void Controller::setMode(const String& newMode) {
 		_setCircSpeed(FLOW_TEST_MAX_SPEED);
 		_lastFlowTestStepMs = millis();
 		StateGuard guard(_state);
-		_state.status.set("flow_test");
+		_state.status.set("Flow Test");
 	}
 
 	Serial.printf("[Controller] Mode changed to: %s\n", newMode.c_str());
@@ -572,45 +572,45 @@ void Controller::_checkIvLimitsAndFaults(unsigned long now) {
 
 	if (circIvPresent) {
 		if (circCurrent > (int)maxCircCurrent) {
-			_triggerError("circ current exceeded");
+			_triggerError("Circulation current exceeded");
 			return;
 		}
 		if (circSpd > 0 && circVoltage < minCircVoltage) {
-			_triggerError("circ voltage too low");
+			_triggerError("Circulation voltage too low");
 			return;
 		}
 		if (circSpd > 0 && _circActiveSinceMs > 0 && (now - _circActiveSinceMs) >= OUTPUT_RAMP_UP_MS && circCurrent < (int)minCircCurrent) {
-			_triggerError("circ current too low");
+			_triggerError("Circulation current too low");
 			return;
 		}
 	}
 
 	if (coolingIvPresent) {
 		if (coolCurrent > (int)maxCoolingCurrent) {
-			_triggerError("cooling current exceeded");
+			_triggerError("Cooling current exceeded");
 			return;
 		}
 		if (coolSpd > 0 && coolVoltage < minCoolingVoltage) {
-			_triggerError("cooling voltage too low");
+			_triggerError("Cooling voltage too low");
 			return;
 		}
 		if (coolSpd > 0 && _coolingActiveSinceMs > 0 && (now - _coolingActiveSinceMs) >= OUTPUT_RAMP_UP_MS && coolCurrent < (int)minCoolingCurrent) {
-			_triggerError("cooling current too low");
+			_triggerError("Cooling current too low");
 			return;
 		}
 	}
 
 	if (heatingIvPresent) {
 		if (heatCurrent > (int)maxHeatingCurrent) {
-			_triggerError("heating current exceeded");
+			_triggerError("Heating current exceeded");
 			return;
 		}
 		if (heatSpd > 0 && heatVoltage < minHeatingVoltage) {
-			_triggerError("heating voltage too low");
+			_triggerError("Heating voltage too low");
 			return;
 		}
 		if (heatSpd > 0 && _heatingActiveSinceMs > 0 && (now - _heatingActiveSinceMs) >= OUTPUT_RAMP_UP_MS && heatCurrent < (int)minHeatingCurrent) {
-			_triggerError("heating current too low");
+			_triggerError("Heating current too low");
 			return;
 		}
 	}
@@ -643,7 +643,7 @@ void Controller::_sampleSensors() {
 #ifdef DALLAS_SENSOR_OUTGOING_PIN
 	float outTemp = 0.0f;
 	if (!readTemperatureRetry(_tempOut, outTemp)) {
-		_triggerError("outgoing temperature sensor failure");
+		_triggerError("Outgoing temperature sensor failure");
 		return;
 	}
 	{
@@ -652,7 +652,7 @@ void Controller::_sampleSensors() {
 		_state.outTemperature.set(outTemp);
 	}
 #else
-	_triggerError("outgoing temperature sensor missing");
+	_triggerError("Outgoing temperature sensor missing");
 	return;
 #endif
 
@@ -671,7 +671,7 @@ void Controller::_sampleSensors() {
 		_state.returnTemperature.set(returnTemp);
 	} else {
 #ifdef METHOD_VARIABLE_CIRCULATION_SPEED
-		_triggerError("return temperature sensor failure");
+		_triggerError("Return temperature sensor failure");
 		return;
 #else
 		StateGuard guard(_state);
@@ -680,7 +680,7 @@ void Controller::_sampleSensors() {
 	}
 #else
 #ifdef METHOD_VARIABLE_CIRCULATION_SPEED
-	_triggerError("return temperature sensor missing");
+	_triggerError("Return temperature sensor missing");
 	return;
 #endif
 #endif
@@ -776,7 +776,7 @@ void Controller::_runMode() {
 			_lastValidFlowMs = now;
 		}
 		if ((now - _lastValidFlowMs) / 1000 >= sysTime) {
-			_triggerError("no flow");
+			_triggerError("No flow");
 			return false;
 		}
 #endif
@@ -793,7 +793,7 @@ void Controller::_runMode() {
 				if (absDelta > TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C) {
 					_state.status.set(TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT);
 				} else {
-					_state.status.set("stopped");
+					_state.status.set("Stopped");
 				}
 			}
 		}
@@ -803,21 +803,21 @@ void Controller::_runMode() {
 		if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
 		if (!flowGuardCheck()) return;
 		StateGuard guard(_state);
-		_state.status.set("circulating");
+		_state.status.set("Circulating");
 	} else if (currentMode == MODE_MANUAL_COOL) {
 		if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
 		if (coolSpd != coolSetPoint) _setCoolingSpeed(coolSetPoint);
 		_setHeatingSpeed(0);
 		if (!flowGuardCheck()) return;
 		StateGuard guard(_state);
-		_state.status.set("cooling");
+		_state.status.set("Cooling");
 	} else if (currentMode == MODE_MANUAL_HEAT) {
 		if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
 		if (heatSpd != heatSetPoint) _setHeatingSpeed(heatSetPoint);
 		_setCoolingSpeed(0);
 		if (!flowGuardCheck()) return;
 		StateGuard guard(_state);
-		_state.status.set("heating");
+		_state.status.set("Heating");
 	} else if (currentMode == MODE_TEMPERATURE) {
 #ifdef METHOD_VARIABLE_CIRCULATION_SPEED
 		if (filteredPerSec < minFlow && circSpd < PUMP_MAX_SPEED) {
@@ -861,14 +861,14 @@ void Controller::_runMode() {
 
 		{
 			StateGuard guard(_state);
-			if (_state.coolingSpeed.get() > 0) _state.status.set("cooling");
-			else if (_state.heatingSpeed.get() > 0) _state.status.set("heating");
-			else _state.status.set("circulating");
+			if (_state.coolingSpeed.get() > 0) _state.status.set("Cooling");
+			else if (_state.heatingSpeed.get() > 0) _state.status.set("Heating");
+			else _state.status.set("Circulating");
 		}
 		if (!flowGuardCheck()) return;
 	} else if (currentMode == MODE_FLOW_CALIBRATION) {
 		if (elapsed >= sysTime && filteredPerSec < minFlow) {
-			_triggerError("no flow during calibration");
+			_triggerError("No flow during calibration");
 		}
 	} else if (currentMode == MODE_FLOW_TEST) {
 		if (filteredPerSec < minFlow) {
