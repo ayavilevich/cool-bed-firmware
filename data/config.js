@@ -24,6 +24,14 @@ function configApp() {
 			return this.model?.config?.[key] || {};
 		},
 
+		hasConfigKey(key) {
+			return Object.prototype.hasOwnProperty.call(this.model?.config || {}, key);
+		},
+
+		hasAnyConfig(keys) {
+			return keys.some((key) => this.hasConfigKey(key));
+		},
+
 		labelFor(key, fallback = '') {
 			return this._meta(key).description || fallback;
 		},
@@ -117,8 +125,15 @@ function configApp() {
 
 			// process and send server side config
 			try {
+				// Only send keys that exist in the current model (hardware dependent config can be absent).
+				const payload = {};
+				for (const key of Object.keys(this.model?.config || {})) {
+					if (Object.prototype.hasOwnProperty.call(this.cfg, key)) {
+						payload[key] = this.cfg[key];
+					}
+				}
+
 				// Don't send empty password (means "keep unchanged")
-				const payload = { ...this.cfg };
 				if (!payload.mqttPassword) delete payload.mqttPassword;
 
 				// convert temperature values back to Celsius before sending to the server
