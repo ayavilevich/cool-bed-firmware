@@ -79,6 +79,22 @@ function coolBedApp() {
 			return this.model?.telemetry?.[key] || {};
 		},
 
+		hasConfigKey(key) {
+			return Object.prototype.hasOwnProperty.call(this.model?.config || {}, key);
+		},
+
+		hasTelemetryKey(key) {
+			return Object.prototype.hasOwnProperty.call(this.model?.telemetry || {}, key);
+		},
+
+		hasMode(mode) {
+			return Array.isArray(this.model?.modes) && this.model.modes.includes(mode);
+		},
+
+		hasAnyTelemetry(keys) {
+			return keys.some((key) => this.hasTelemetryKey(key));
+		},
+
 		labelFor(key, fallback = '') {
 			const meta = this._getConfigMeta(key);
 			return meta.description || fallback;
@@ -362,31 +378,40 @@ function coolBedApp() {
 				},
 			});
 
-			const tDatasets = [
-				{ label: 'Out Temp', data: [], borderColor: '#f97316', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Return Temp', data: [], borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Cooling Temp', data: [], borderColor: '#0ea5e9', tension: 0.3, yAxisID: 'y' },
-			];
-			const fDatasets = [
-				{ label: 'Flow (L/min)', data: [], borderColor: '#60a5fa', tension: 0.3, yAxisID: 'y' },
-			];
-			const mDatasets = [
-				{ label: 'Cooling Power (W)', data: [], borderColor: '#22c55e', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Circulation Speed', data: [], borderColor: '#a78bfa', tension: 0.3, yAxisID: 'y' },
-				{ label: 'Current (mA)', data: [], borderColor: '#f43f5e', tension: 0.3, yAxisID: 'y' },
-			];
+			const tSeries = [];
+			if (this.hasTelemetryKey('outTemperature')) tSeries.push({ key: 'outTemperature', labelBase: 'Out Temp', color: '#f97316', isTemp: true });
+			if (this.hasTelemetryKey('returnTemperature')) tSeries.push({ key: 'returnTemperature', labelBase: 'Return Temp', color: '#f43f5e', isTemp: true });
+			if (this.hasTelemetryKey('coolingTemperature')) tSeries.push({ key: 'coolingTemperature', labelBase: 'Cooling Temp', color: '#0ea5e9', isTemp: true });
+			const tDatasets = tSeries.map((s) => ({ label: s.labelBase, data: [], borderColor: s.color, tension: 0.3, yAxisID: 'y' }));
+
+			const fSeries = [];
+			if (this.hasTelemetryKey('flow')) fSeries.push({ key: 'flow', labelBase: 'Flow (L/min)', color: '#60a5fa', isTemp: false });
+			const fDatasets = fSeries.map((s) => ({ label: s.labelBase, data: [], borderColor: s.color, tension: 0.3, yAxisID: 'y' }));
+
+			const mSeries = [];
+			if (this.hasTelemetryKey('coolingPower')) mSeries.push({ key: 'coolingPower', labelBase: 'Cooling Power (W)', color: '#22c55e', isTemp: false });
+			if (this.hasTelemetryKey('circSpeed')) mSeries.push({ key: 'circSpeed', labelBase: 'Circulation Speed', color: '#a78bfa', isTemp: false });
+			if (this.hasTelemetryKey('circCurrent')) mSeries.push({ key: 'circCurrent', labelBase: 'Current (mA)', color: '#f43f5e', isTemp: false });
+			const mDatasets = mSeries.map((s) => ({ label: s.labelBase, data: [], borderColor: s.color, tension: 0.3, yAxisID: 'y' }));
+
 			// create objects for charts.js and don't store them in state, to avoid reactivity overhead and chart re-creation on every update
-			const tCtx = this.$refs.temperatureChart?.getContext('2d');
-			if (!tCtx) return console.error('Temperature chart context not found');
-			const tChart = new Chart(tCtx, createChartConfig(tDatasets));
+			let tChart = null;
+			if (tDatasets.length > 0) {
+				const tCtx = this.$refs.temperatureChart?.getContext('2d');
+				if (tCtx) tChart = new Chart(tCtx, createChartConfig(tDatasets));
+			}
 			// flow
-			const fCtx = this.$refs.flowChart?.getContext('2d');
-			if (!fCtx) return console.error('Flow chart context not found');
-			const fChart = new Chart(fCtx, createChartConfig(fDatasets));
+			let fChart = null;
+			if (fDatasets.length > 0) {
+				const fCtx = this.$refs.flowChart?.getContext('2d');
+				if (fCtx) fChart = new Chart(fCtx, createChartConfig(fDatasets));
+			}
 			// misc graphs
-			const mCtx = this.$refs.miscChart?.getContext('2d');
-			if (!mCtx) return console.error('Misc chart context not found');
-			const mChart = new Chart(mCtx, createChartConfig(mDatasets));
+			let mChart = null;
+			if (mDatasets.length > 0) {
+				const mCtx = this.$refs.miscChart?.getContext('2d');
+				if (mCtx) mChart = new Chart(mCtx, createChartConfig(mDatasets));
+			}
 
 
 			// setup watch on _history to update chart when new data comes in
@@ -397,17 +422,18 @@ function coolBedApp() {
 					new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 				);
 
-				tDatasets[0].label = `Out Temp (${temperatureUnits})`;
-				tDatasets[1].label = `Return Temp (${temperatureUnits})`;
-				tDatasets[2].label = `Cooling Temp (${temperatureUnits})`;
-
-				tDatasets[0].data = history.map(h => this.fromCelsius(h.outTemperature, false));
-				tDatasets[1].data = history.map(h => this.fromCelsius(h.returnTemperature, false));
-				tDatasets[2].data = history.map(h => this.fromCelsius(h.coolingTemperature, false));
-				fDatasets[0].data = history.map(h => h.flow);
-				mDatasets[0].data = history.map(h => h.coolingPower);
-				mDatasets[1].data = history.map(h => h.circSpeed);
-				mDatasets[2].data = history.map(h => h.circCurrent);
+				tSeries.forEach((series, idx) => {
+					tDatasets[idx].label = `${series.labelBase} (${temperatureUnits})`;
+					tDatasets[idx].data = history.map((h) => this.fromCelsius(h[series.key], false));
+				});
+				fSeries.forEach((series, idx) => {
+					fDatasets[idx].label = series.labelBase;
+					fDatasets[idx].data = history.map((h) => h[series.key]);
+				});
+				mSeries.forEach((series, idx) => {
+					mDatasets[idx].label = series.labelBase;
+					mDatasets[idx].data = history.map((h) => h[series.key]);
+				});
 
 				const updateSafely = (chart) => {
 					chart.setActiveElements([]);
@@ -418,9 +444,9 @@ function coolBedApp() {
 					chart.update('none');
 				};
 
-				updateSafely(tChart);
-				updateSafely(fChart);
-				updateSafely(mChart);
+				if (tChart) updateSafely(tChart);
+				if (fChart) updateSafely(fChart);
+				if (mChart) updateSafely(mChart);
 			}/*, { deep: true }*/); 
 			// we don't need deep watch because we replace the _history array entirely on each update, so shallow watch is sufficient.
 			// if we ever just push to the array without replacing it, we would need deep watch.
