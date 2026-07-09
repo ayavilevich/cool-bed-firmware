@@ -107,8 +107,10 @@ void Controller::begin() {
 	pinMode(GREEN_LED_PIN, OUTPUT);
 	digitalWrite(GREEN_LED_PIN, LOW);
 #endif
+#ifdef BUILTIN_LED_PIN
 	pinMode(BUILTIN_LED_PIN, OUTPUT);
 	digitalWrite(BUILTIN_LED_PIN, LOW);
+#endif
 
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
@@ -264,7 +266,7 @@ void Controller::loop() {
 #endif
 
 #ifdef FLOW_SENSOR_PIN
-		Serial.printf(" flow=%5.2fL/min", _state.flow.get());
+		Serial.printf(" flow=%5.2fL/min RSSI=%d", _state.flow.get(), _state.rssi.get());
 #endif
 
 		Serial.println();
@@ -289,6 +291,7 @@ void Controller::checkButton() {
 }
 
 void Controller::updateLeds(bool wifiConnected) {
+#ifdef BUILTIN_LED_PIN
 	unsigned long now = millis();
 	if (!wifiConnected) {
 		if (now - _lastLedToggleMs >= WIFI_LED_TOGGLE_INTERVAL_MS) {
@@ -300,6 +303,7 @@ void Controller::updateLeds(bool wifiConnected) {
 		_builtinLedState = true;
 		digitalWrite(BUILTIN_LED_PIN, HIGH);
 	}
+#endif
 }
 
 void Controller::setMode(const String& newMode) {
