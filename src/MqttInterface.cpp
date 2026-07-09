@@ -44,6 +44,7 @@ void MqttInterface::loop() {
 	if (!_mqttClient.connected()) {
 		unsigned long now = millis();
 		if (now - _lastReconnectMs >= MQTT_RECONNECT_INTERVAL_MS) {
+			Serial.println("[MQTT] Disconnected, attempting to reconnect...");
 			_lastReconnectMs = now;
 			_connect();
 		}
@@ -417,7 +418,7 @@ void MqttInterface::_publishDiscovery() {
 		return;
 	}
 	// Serial.printf("[MQTT] Publishing HA discovery to: %s\nPayload size: %d\nPayload:\n%s\n", deviceTopic.c_str(), payload.length(), payload.c_str());
-	Serial.printf("[MQTT] Publishing HA discovery to: %s\nPayload size: %d\n", deviceTopic.c_str(), payload.length());
+	Serial.printf("[MQTT] Publishing HA discovery to: %s, Payload size: %d\n", deviceTopic.c_str(), payload.length());
 	_mqttClient.publish(deviceTopic.c_str(), payload.c_str(), true /* retained */);
 	Serial.printf("[MQTT] Published HA discovery to: %s\n", deviceTopic.c_str());
 }
