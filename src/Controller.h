@@ -23,42 +23,6 @@ class Connectivity; // can't include Connectivity.h here due to circular depende
 #include <SparkFun_TB6612.h>
 #endif
 
-// ---- Constants ----
-#define PUMP_MAX_SPEED					255 // max PWM value for pump speed
-#define SENSOR_SAMPLE_INTERVAL_MS		1000
-#define TEMP_RETRY_COUNT				3
-#define TEMP_MIN_CELSIUS				-5.0f
-#define TEMP_MAX_CELSIUS				40.0f
-#define VARIABLE_SPEED_STEP				10
-#define OUTPUT_RAMP_UP_MS				1000
-#define FLOW_TEST_STEP					10
-#define FLOW_TEST_STEP_INTERVAL_RATIO	0.5 // how long to test each speed in a flow test. ratio of the "system time".
-#define FLOW_TEST_FIRST_STEP_INTERVAL_RATIO	1.0 // ratio of the "system time". first step needs more time to prime from stopped, subsequent steps can be faster.
-#define FLOW_TEST_MAX_SPEED				PUMP_MAX_SPEED
-#define BUTTON_HOLD_MS					5000
-#define WATER_SPECIFIC_HEAT_J_PER_KG_C	4186.0f // how much energy (in joules) it takes to raise 1 kg of water by 1 degree Celsius
-#define SECONDS_PER_MINUTE				60.0f
-#define COOLING_HYSTERESIS_START		1.0f
-#define COOLING_HYSTERESIS_STOP			0.0f
-#define HEATING_HYSTERESIS_STOP			-1.0f
-#define HEATING_HYSTERESIS_START		-2.0f
-
-// Logic to check if temperature sensors might be uncalibrated. Check after some time of flow inactivity when sensors should have equilibrated.
-#define TEMPERATURE_CALIBRATION_EQUILIBRIUM_SECONDS			(10UL * 60UL)
-#define TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C	0.2f
-#define TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT			"Warning: temperature sensors might not be calibrated"
-
-// INA226 settings
-#define INA_CIRC_SHUNT_RESISTANCE			0.1f	// Ohm
-#define INA_CIRC_MAX_CURRENT_A				1.2f	// A
-#define INA_COOLING_SHUNT_RESISTANCE		0.1f	// Ohm
-#define INA_COOLING_MAX_CURRENT_A			1.2f	// A
-#define INA_HEATING_SHUNT_RESISTANCE		0.02f	// Ohm, have a smaller shunt for the heater output to support higher currents
-#define INA_HEATING_MAX_CURRENT_A			6f		// A
-
-// Wi-Fi built-in LED blink period when connected
-#define BUILTIN_LED_BLINK_PERIOD_MS		1000
-
 using EventCallback = std::function<void()>;
 
 class Controller {
@@ -166,8 +130,8 @@ private:
 	void _setHeatingSpeed(uint8_t speed);
 	void _stopAllOutputs();
 	void _updateOutputLedIndicators();
-	bool readTemperatureOnce(DallasTemperature& sensor, float& outVal);
-	bool readTemperatureRetry(DallasTemperature& sensor, float& outVal);
+	bool _readTemperatureOnce(DallasTemperature& sensor, float& outVal);
+	bool _readTemperatureRetry(DallasTemperature& sensor, float& outVal);
 	void _calculateDerivedMetrics(uint64_t rawNow, uint64_t filteredNow, unsigned long nowMs);
 	void _checkIvLimitsAndFaults(unsigned long now);
 };
