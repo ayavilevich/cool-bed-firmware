@@ -49,11 +49,12 @@ class Connectivity; // can't include Connectivity.h here due to circular depende
 #define TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT			"Warning: temperature sensors might not be calibrated"
 
 // INA226 settings
-#ifndef INA226_CIRCULATION_ADDRESS
-#define INA226_CIRCULATION_ADDRESS		0x40
-#endif
-#define INA226_SHUNT_RESISTANCE			0.1f	// Ohm
-#define INA226_MAX_CURRENT_A			1.2f	// A
+#define INA_CIRC_SHUNT_RESISTANCE			0.1f	// Ohm
+#define INA_CIRC_MAX_CURRENT_A				1.2f	// A
+#define INA_COOLING_SHUNT_RESISTANCE		0.1f	// Ohm
+#define INA_COOLING_MAX_CURRENT_A			1.2f	// A
+#define INA_HEATING_SHUNT_RESISTANCE		0.02f	// Ohm, have a smaller shunt for the heater output to support higher currents
+#define INA_HEATING_MAX_CURRENT_A			6f		// A
 
 // Wi-Fi built-in LED blink period when connected
 #define BUILTIN_LED_BLINK_PERIOD_MS		1000

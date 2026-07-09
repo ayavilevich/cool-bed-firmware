@@ -176,9 +176,14 @@ void State::_telemetryToJson(JsonObject obj) const {
 
 #ifdef DALLAS_SENSOR_RETURNING_PIN
 	returnTemperature.toJson(obj);
+	temperatureDelta.toJson(obj);
 #endif
 #ifdef DALLAS_SENSOR_COOLING_PIN
 	coolingTemperature.toJson(obj);
+#endif
+
+#if defined(DALLAS_SENSOR_RETURNING_PIN) && defined(FLOW_SENSOR_PIN)
+	coolingPower.toJson(obj);
 #endif
 
 	flowSensorPresent.toJson(obj);
@@ -189,11 +194,6 @@ void State::_telemetryToJson(JsonObject obj) const {
 	circIVPresent.toJson(obj);
 	coolingIVPresent.toJson(obj);
 	heatingIVPresent.toJson(obj);
-
-
-
-	temperatureDelta.toJson(obj);
-	coolingPower.toJson(obj);
 }
 
 void State::_configModelToJson(JsonObject obj, bool excludeMqtt) const {

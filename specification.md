@@ -17,8 +17,8 @@ The variable speed method requires a pump that can be driven well with a PWM pow
 * A water container with ambient temperature water. Called the circulation container.
 * An ice box with cold water and ice packs. Called the cooling container.
 * A submerged circulation water pump (like one used in an aquarium).
-* A submerged cooling water pump.
-* A submerged water heating element (like one used in an aquarium).
+* An optional submerged cooling water pump.
+* An optional submerged water heating element (like one used in an aquarium).
 * An outgoing water temperature sensor (Dallas, One Wire based) that monitors temperature in the circulation container.
 * An optional returning water temperature sensor (Dallas, One Wire based) that monitors temperature of water returning from the mattress.
 * An optional cooling water temperature sensor (Dallas, One Wire based) that monitors temperature of water in the cooling container.
@@ -27,8 +27,8 @@ The variable speed method requires a pump that can be driven well with a PWM pow
 * An ESP32 micro-controller to run the device.
 * MOSFET modules to drive the pumps and the heating element. Prototype uses TB6612, DRV8871 and an isolated MOSFET.
 * An optional current and voltage measuring IC (INA226) for each output. Later add support for INA3221.
-* A red error LED.
-* A green indicator LED.
+* An optional red error LED.
+* An optional green indicator LED.
 * A built-in ESP32 LED (IO2).
 * A built-in ESP32 button (IO0).
 * (not relevant for firmware) a buck converter to convert input DC voltage to 5V for electronics.
@@ -449,3 +449,21 @@ If we can control where the returning water goes, then we can send it to either 
 Add heating safety mechanisms, like max continuous on time limit, etc.
 
 Use hot water container and cycle hot water for heating similar to how it is done for cooling. Mind that simple aquarium pumps are typically good up to 60 deg C.
+
+## Hardware setups
+
+### Full
+
+3 output drivers for 2 pumps and 1 heating element
+3 temperature sensors
+1 flow sensor
+3 leds
+1 button
+3 INA226 or 1 INA3221
+
+### Minimal
+
+2 output drivers for 2 pumps
+1 temperature sensor
+1 led (built-in)
+1 button (built-in)

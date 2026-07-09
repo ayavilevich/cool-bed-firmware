@@ -11,6 +11,7 @@
 #include <math.h>
 
 #define SERIAL_PRINT_INTERVAL_MS		5000
+#define LED_TOGGLE_INTERVAL_MS			350
 
 Controller::Controller(State& state, Connectivity& connectivity)
 	: _state(state),
@@ -64,11 +65,15 @@ Controller::Controller(State& state, Connectivity& connectivity)
 }
 
 void Controller::begin() {
+#ifdef RED_LED_PIN
 	pinMode(RED_LED_PIN, OUTPUT);
-	pinMode(GREEN_LED_PIN, OUTPUT);
-	pinMode(BUILTIN_LED_PIN, OUTPUT);
 	digitalWrite(RED_LED_PIN, LOW);
+#endif
+#ifdef GREEN_LED_PIN
+	pinMode(GREEN_LED_PIN, OUTPUT);
 	digitalWrite(GREEN_LED_PIN, LOW);
+#endif
+	pinMode(BUILTIN_LED_PIN, OUTPUT);
 	digitalWrite(BUILTIN_LED_PIN, LOW);
 
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -106,21 +111,21 @@ void Controller::begin() {
 	Wire.begin();
 #ifdef INA226_CIRCULATION_ADDRESS
 	_inaCirc.init();
-	_inaCirc.setResistorRange(INA226_SHUNT_RESISTANCE, INA226_MAX_CURRENT_A);
+	_inaCirc.setResistorRange(INA_CIRC_SHUNT_RESISTANCE, INA_CIRC_MAX_CURRENT_A);
 	_inaCirc.setAverage(INA226_AVERAGE_128);
 	_inaCirc.setConversionTime(INA226_CONV_TIME_204);
 	_inaCirc.waitUntilConversionCompleted();
 #endif
 #ifdef INA226_COOLING_ADDRESS
 	_inaCooling.init();
-	_inaCooling.setResistorRange(INA226_SHUNT_RESISTANCE, INA226_MAX_CURRENT_A);
+	_inaCooling.setResistorRange(INA_COOLING_SHUNT_RESISTANCE, INA_COOLING_MAX_CURRENT_A);
 	_inaCooling.setAverage(INA226_AVERAGE_128);
 	_inaCooling.setConversionTime(INA226_CONV_TIME_204);
 	_inaCooling.waitUntilConversionCompleted();
 #endif
 #ifdef INA226_HEATING_ADDRESS
 	_inaHeating.init();
-	_inaHeating.setResistorRange(0.02f, 6.0f);
+	_inaHeating.setResistorRange(INA_HEATING_SHUNT_RESISTANCE, INA_HEATING_MAX_CURRENT_A);
 	_inaHeating.setAverage(INA226_AVERAGE_128);
 	_inaHeating.setConversionTime(INA226_CONV_TIME_204);
 	_inaHeating.waitUntilConversionCompleted();
@@ -205,15 +210,30 @@ void Controller::loop() {
 	if (now - _lastSerialPrintMs >= SERIAL_PRINT_INTERVAL_MS) {
 		_lastSerialPrintMs = now;
 		StateGuard guard(_state);
-		Serial.printf("[State] mode=%-16s status=%-14s circ=%3u cool=%3u heat=%3u outT=%5.1fC retT=%5.1fC flow=%5.2fL/min\n",
+		Serial.printf("[State] mode=%-16s status=%-14s circ=%3u",
 			_state.mode.get().c_str(),
 			_state.status.get().c_str(),
-			_state.circSpeed.get(),
-			_state.coolingSpeed.get(),
-			_state.heatingSpeed.get(),
-			_state.outTemperature.get(),
-			_state.returnTemperature.get(),
-			_state.flow.get());
+			_state.circSpeed.get());
+
+#ifdef COOLING_PWM_PIN
+		Serial.printf(" cool=%3u", _state.coolingSpeed.get());
+#endif
+
+#ifdef HEATING_PWM_PIN
+		Serial.printf(" heat=%3u", _state.heatingSpeed.get());
+#endif
+
+		Serial.printf(" outT=%5.1fC", _state.outTemperature.get());
+
+#ifdef DALLAS_SENSOR_RETURNING_PIN
+		Serial.printf(" retT=%5.1fC", _state.returnTemperature.get());
+#endif
+
+#ifdef FLOW_SENSOR_PIN
+		Serial.printf(" flow=%5.2fL/min", _state.flow.get());
+#endif
+
+		Serial.println();
 	}
 }
 
@@ -381,7 +401,9 @@ void Controller::_triggerError(const String& cause) {
 	_inError = true;
 	_errorCause = cause;
 	_stopAllOutputs();
+#ifdef RED_LED_PIN
 	digitalWrite(RED_LED_PIN, HIGH);
+#endif
 	Serial.printf("[Controller] ERROR: %s\n", cause.c_str());
 	if (_onTelemetryUpdated) _onTelemetryUpdated();
 }
@@ -393,7 +415,10 @@ void Controller::_clearError() {
 		StateGuard guard(_state);
 		_state.error.set(false);
 	}
+#ifdef RED_LED_PIN
 	digitalWrite(RED_LED_PIN, LOW);
+#endif
+	if (_onTelemetryUpdated) _onTelemetryUpdated();
 }
 
 void Controller::_setCircSpeed(uint8_t speed) {
@@ -455,10 +480,11 @@ void Controller::_updateOutputLedIndicators() {
 		heatSpd = _state.heatingSpeed.get();
 	}
 
+#ifdef GREEN_LED_PIN
 	if (circSpd > 0) {
 		if (coolSpd > 0) {
 			unsigned long now = millis();
-			if (now - _lastLedToggleMs >= 350) {
+			if (now - _lastLedToggleMs >= LED_TOGGLE_INTERVAL_MS) {
 				_lastLedToggleMs = now;
 				digitalWrite(GREEN_LED_PIN, digitalRead(GREEN_LED_PIN) ? LOW : HIGH);
 			}
@@ -468,14 +494,17 @@ void Controller::_updateOutputLedIndicators() {
 	} else {
 		digitalWrite(GREEN_LED_PIN, LOW);
 	}
+#endif
 
+#ifdef RED_LED_PIN
 	if (!_inError && heatSpd > 0) {
 		unsigned long now = millis();
-		if (now - _lastLedToggleMs >= 350) {
+		if (now - _lastLedToggleMs >= LED_TOGGLE_INTERVAL_MS) {
 			_lastLedToggleMs = now;
 			digitalWrite(RED_LED_PIN, digitalRead(RED_LED_PIN) ? LOW : HIGH);
 		}
 	}
+#endif
 }
 
 bool Controller::readTemperatureOnce(DallasTemperature& sensor, float& outVal) {
