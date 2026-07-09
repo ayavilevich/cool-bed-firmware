@@ -17,7 +17,7 @@ The variable speed method requires a pump that can be driven well with a PWM pow
 * A water container with ambient temperature water. Called the circulation container.
 * An ice box with cold water and ice packs. Called the cooling container.
 * A submerged circulation water pump (like one used in an aquarium).
-* An optional submerged cooling water pump.
+* A submerged cooling water pump.
 * An optional submerged water heating element (like one used in an aquarium).
 * An outgoing water temperature sensor (Dallas, One Wire based) that monitors temperature in the circulation container.
 * An optional returning water temperature sensor (Dallas, One Wire based) that monitors temperature of water returning from the mattress.
@@ -67,7 +67,7 @@ Here are the values for Cool Bed Prototype V1 board:
 
 CIRCULATION_TB6612_\* defines are to be present if TB6612 is to be used. Otherwise CIRCULATION_PWM_PIN is used for a generic PWM (motor) driver.
 
-Some parts are optional and the device should work except for the functionality provided by that part. Optional parts include: cooling pump, heating element, returning temperature sensor, cooling temperature sensor, flow sensor, current/voltage measurement.
+Some parts are optional and the device should work except for the functionality provided by that part. Optional parts include: heating element, returning temperature sensor, cooling temperature sensor, flow sensor, current/voltage measurement. The cooling pump is technically optional but in practice key to proper cooling performance.
 
 If some mandatory sensor is not defined using defines or a particular combination of defines is against the logic, then cause a compile error.
 If some mandatory sensor is defined but fails during run time, then that would cause an error state. See logic below for retrying temperature sensors, etc.
