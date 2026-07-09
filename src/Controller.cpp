@@ -29,6 +29,7 @@
 #define COOLING_HYSTERESIS_STOP			0.0f
 #define HEATING_HYSTERESIS_STOP			-1.0f
 #define HEATING_HYSTERESIS_START		-2.0f
+#define INEFFECTIVE_COOLING_WARNING_DELTA_C 8.0f
 
 // Logic to check if temperature sensors might be uncalibrated. Check after some time of flow inactivity when sensors should have equilibrated.
 #define TEMPERATURE_CALIBRATION_EQUILIBRIUM_SECONDS			(10UL * 60UL)
@@ -935,9 +936,20 @@ void Controller::_runMode() {
 
 		{
 			StateGuard guard(_state);
-			if (_state.coolingSpeed.get() > 0) _state.status.set("Cooling");
-			else if (_state.heatingSpeed.get() > 0) _state.status.set("Heating");
-			else _state.status.set("Circulating");
+			if (_state.coolingSpeed.get() > 0) {
+				// check if cooling water is colder than the set point, if not, warn the user that cooling is not effective
+				if (_state.coolingTemperaturePresent.get() && _state.coolingTemperature.get() > setPoint - INEFFECTIVE_COOLING_WARNING_DELTA_C) {
+					_state.status.set("Cooling (ineffective)");
+				} else {
+					_state.status.set("Cooling");
+				}
+			}
+			else if (_state.heatingSpeed.get() > 0) {
+				_state.status.set("Heating");
+			}
+			else {
+				_state.status.set("Circulating");
+			}
 		}
 		if (!flowGuardCheck()) return;
 	} else if (currentMode == MODE_TEMPERATURE_PREPARE) {
