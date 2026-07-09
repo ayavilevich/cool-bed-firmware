@@ -19,6 +19,7 @@
 // Operating mode values
 #define MODE_STOP "stop"
 #define MODE_TEMPERATURE "temperature"
+#define MODE_TEMPERATURE_PREPARE "temperature_prepare"
 #define MODE_MANUAL_CIRC "manual_circ"
 #define MODE_MANUAL_COOL "manual_cool"
 #define MODE_MANUAL_HEAT "manual_heat"

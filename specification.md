@@ -176,7 +176,7 @@ Here are the variables of the state that are set by the user and we need to pers
 | returnTemperatureCalibrationOffset | float  | 0       | value to add to return temperature sensor reading  | [-10, 10]               | input.number      | Number         |
 | coolingTemperatureCalibrationOffset| float  | 0       | value to add to cooling water temperature sensor reading  | [-10, 10]        | input.number      | Number         |
 
-Mode enum options: stop, temperature, manual_circ, manual_cool, manual_heat, flow_calibration, flow_test. Only show options and allow to set them if the required optional hardware is present. See explanations of the modes below.
+Mode enum options: stop, temperature, temperature_prepare, manual_circ, manual_cool, manual_heat, flow_calibration, flow_test. Only show options and allow to set them if the required optional hardware is present. See explanations of the modes below.
 
 Note: calibrationFlowPulses is user-editable config but also can be set by the firmware. This is to allow tuning by the user. Assume most of the time they will be automatically calculated.
 
@@ -308,7 +308,7 @@ these should be defined such that there is a gap between heating and cooling. Ru
 * If outTemperature > temperatureSetPoint + COOLING_HYSTERESIS_START, run cooling pump at coolingSpeedSetPoint.
 * Else if outTemperature < temperatureSetPoint + HEATING_HYSTERESIS_START, run heating element at heatingSpeedSetPoint.
 * Else keep circulating.
-* If heating element in running and outTemperature > temperatureSetPoint + HEATING_HYSTERESIS_STOP, stop heating element
+* If heating element in running and outTemperature > temperatureSetPoint + HEATING_HYSTERESIS_STOP, stop heating element.
 * If cooling pump is running and outTemperature < temperatureSetPoint + COOLING_HYSTERESIS_STOP, stop cooling pump.
 
 Update Status according to operation: "Circulating", "Heating", "Cooling"
@@ -328,6 +328,16 @@ When a flow sensor is not present, assume circSpeedSetPoint has been set as the 
 
 * Start at max speed (255)
 * Every "systemTime" interval, if returnTemperature < temperatureSetPoint and circSpeed > circSpeedSetPoint, reduce speed by a step of 10 (const, VARIABLE_SPEED_STEP) up to min. if returnTemperature > temperatureSetPoint, increase speed by a step of 10 (up to max).
+
+##### Temperature prepare mode (temperature_prepare)
+
+The goal of this mode is to heat the circulation water by performing natural circulation through ambient air. Effective when the water is colder than ambient air.
+Then when you want to engage the main "temperature" mode you start with water that is closer to the set point.
+This process is done without wasting cooling capacity and without wasting power on heating.
+
+* If outTemperature < temperatureSetPoint + HEATING_HYSTERESIS_START, run circulation pump at circSpeedSetPoint.
+* If circulation in running and outTemperature > temperatureSetPoint + HEATING_HYSTERESIS_STOP, stop circulation.
+* Else make no change.
 
 ##### Flow Calibration mode (flow_calibration)
 

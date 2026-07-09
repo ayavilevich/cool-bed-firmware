@@ -401,6 +401,13 @@ void Controller::setMode(const String& newMode) {
 		}
 		_lastTempAdjMs = millis();
 		_lastValidFlowMs = millis();
+	} else if (newMode == MODE_TEMPERATURE_PREPARE) {
+		_setCoolingSpeed(0);
+		_setHeatingSpeed(0);
+		{
+			StateGuard guard(_state);
+			_state.status.set("Preparing");
+		}
 	} else if (newMode == MODE_FLOW_CALIBRATION) {
 		uint8_t circSp;
 		{
@@ -933,6 +940,20 @@ void Controller::_runMode() {
 			else _state.status.set("Circulating");
 		}
 		if (!flowGuardCheck()) return;
+	} else if (currentMode == MODE_TEMPERATURE_PREPARE) {
+		_setCoolingSpeed(0);
+		_setHeatingSpeed(0);
+		if (outTemp < setPoint + HEATING_HYSTERESIS_START) {
+			if (circSpd != circSetPoint) {
+				_setCircSpeed(circSetPoint);
+			}
+			StateGuard guard(_state);
+			_state.status.set("Preparing");
+		} else if (circSpd > 0 && outTemp > setPoint + HEATING_HYSTERESIS_STOP) {
+			_setCircSpeed(0);
+			StateGuard guard(_state);
+			_state.status.set("Idle");
+		}
 	} else if (currentMode == MODE_FLOW_CALIBRATION) {
 		if (elapsed >= sysTime && filteredPerSec < minFlow) {
 			_triggerError("No flow during calibration");

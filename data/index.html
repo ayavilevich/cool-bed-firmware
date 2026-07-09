@@ -56,12 +56,14 @@
 			</div>
 
 			<!-- Temperature mode -->
-			<div class="mode-panel" x-show="hasMode('temperature') && hasConfigKey('temperatureSetPoint')">
+			<div class="mode-panel" x-show="(hasMode('temperature') || hasMode('temperature_prepare')) && hasConfigKey('temperatureSetPoint')">
 				<label x-text="labelFor('temperatureSetPoint', 'Temperature Mode')"></label>
 				<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" :value="temperatureSetPointDisplay" @input="onTemperatureSetPointInput($event.target.value)" @change="onTemperatureSetPointChanged()">
 				<span x-text="formatTemperatureSetPointDisplay()"></span>
-				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
+				<button class="btn btn-primary" x-show="hasMode('temperature') && state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
 				<button class="btn btn-danger" x-show="state.mode === 'temperature'" @click="setMode('stop')">⏹ Stop Temperature Goal Mode</button>
+				<button class="btn btn-primary" x-show="hasMode('temperature_prepare') && state.mode !== 'temperature_prepare'" @click="startTemperaturePrepare()">▶ Start Temperature Prepare Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'temperature_prepare'" @click="setMode('stop')">⏹ Stop Temperature Prepare Mode</button>
 			</div>
 
 			<!-- Speed mode -->

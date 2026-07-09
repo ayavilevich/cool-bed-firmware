@@ -399,6 +399,7 @@ void MqttInterface::_publishDiscovery() {
 		JsonArray options = e["options"].to<JsonArray>();
 		if (_state.isModeSupported(MODE_STOP)) options.add(MODE_STOP);
 		if (_state.isModeSupported(MODE_TEMPERATURE)) options.add(MODE_TEMPERATURE);
+		if (_state.isModeSupported(MODE_TEMPERATURE_PREPARE)) options.add(MODE_TEMPERATURE_PREPARE);
 		if (_state.isModeSupported(MODE_MANUAL_CIRC)) options.add(MODE_MANUAL_CIRC);
 		if (_state.isModeSupported(MODE_MANUAL_COOL)) options.add(MODE_MANUAL_COOL);
 		if (_state.isModeSupported(MODE_MANUAL_HEAT)) options.add(MODE_MANUAL_HEAT);

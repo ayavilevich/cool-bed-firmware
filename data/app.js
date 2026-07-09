@@ -312,6 +312,10 @@ function coolBedApp() {
 			this._postMode('temperature');
 		},
 
+		startTemperaturePrepare() {
+			this._postMode('temperature_prepare');
+		},
+
 		startFlowCalibration() {
 			this._postMode('flow_calibration');
 		},
