@@ -132,6 +132,24 @@ void Controller::begin() {
 	analogWrite(HEATING_PWM_PIN, 0);
 #endif
 
+// misc pins used to power other low current devices. for sake of convenience when we need to adapt to specific pin layout of off-the-shelf boards
+#ifdef MISC_HIGH_1_PIN
+	pinMode(MISC_HIGH_1_PIN, OUTPUT);
+	digitalWrite(MISC_HIGH_1_PIN, HIGH);
+#endif
+#ifdef MISC_HIGH_2_PIN
+	pinMode(MISC_HIGH_2_PIN, OUTPUT);
+	digitalWrite(MISC_HIGH_2_PIN, HIGH);
+#endif
+#ifdef MISC_LOW_1_PIN
+	pinMode(MISC_LOW_1_PIN, OUTPUT);
+	digitalWrite(MISC_LOW_1_PIN, LOW);
+#endif
+#ifdef MISC_LOW_2_PIN
+	pinMode(MISC_LOW_2_PIN, OUTPUT);
+	digitalWrite(MISC_LOW_2_PIN, LOW);
+#endif
+
 #ifdef FLOW_SENSOR_PIN
 	_flowSensor.begin();
 #endif
@@ -264,6 +282,10 @@ void Controller::loop() {
 
 #ifdef DALLAS_SENSOR_RETURNING_PIN
 		Serial.printf(" retT=%5.1fC", _state.returnTemperature.get());
+#endif
+
+#ifdef DALLAS_SENSOR_COOLING_PIN
+		Serial.printf(" coolT=%5.1fC", _state.coolingTemperature.get());
 #endif
 
 #ifdef FLOW_SENSOR_PIN
