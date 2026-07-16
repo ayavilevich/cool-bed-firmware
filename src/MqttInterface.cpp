@@ -7,7 +7,7 @@
 #include "MqttInterface.h"
 
 #define MQTT_RECONNECT_INTERVAL_MS 5000
-#define MQTT_BUFFER_SIZE 7168 // our auto-discovery payload is large, so need to increase the default 256B buffer
+#define MQTT_BUFFER_SIZE (15*1024) // our auto-discovery payload is very large, so need to increase the default 256B buffer
 // autodiscovery consts
 #define AD_NAME "Cool Bed"
 #define AD_NAME_PREFIX "Cool Bed ("
@@ -44,6 +44,7 @@ void MqttInterface::loop() {
 	if (!_mqttClient.connected()) {
 		unsigned long now = millis();
 		if (now - _lastReconnectMs >= MQTT_RECONNECT_INTERVAL_MS) {
+			Serial.println("[MQTT] Disconnected, attempting to reconnect...");
 			_lastReconnectMs = now;
 			_connect();
 		}
@@ -276,17 +277,56 @@ void MqttInterface::_publishDiscovery() {
 	addSensor("wifi_rssi", "signal_strength", _state.rssi);
 	addSensor("build_date_time", "", _state.buildDateTime);
 	addSensor("build_timestamp", "", _state.buildTimestamp);
-	addSensor("pump_speed", "", _state.pumpSpeed);
+	addSensor("circ_speed", "", _state.circSpeed);
+
+#ifdef COOLING_PWM_PIN
+	addSensor("cooling_speed", "", _state.coolingSpeed);
+#endif
+#ifdef HEATING_PWM_PIN
+	addSensor("heating_speed", "", _state.heatingSpeed);
+#endif
+
+#ifdef FLOW_SENSOR_PIN
 	addSensor("flow", "volume_flow_rate", _state.flow);
-	addSensor("temperature_delta", "temperature_delta", _state.temperatureDelta);
-	addSensor("cooling_power", "power", _state.coolingPower);
 	addSensor("flow_pulses_filtered_per_sec", "", _state.flowPulsesFilteredPerSec);
 	addSensor("flow_pulses_raw_per_sec", "", _state.flowPulsesRawPerSec);
+#endif
+
 	addSensor("out_temperature", "temperature", _state.outTemperature);
+
+#ifdef DALLAS_SENSOR_RETURNING_PIN
 	addSensor("return_temperature", "temperature", _state.returnTemperature);
+	addSensor("temperature_delta", "temperature_delta", _state.temperatureDelta);
+#endif
+#ifdef DALLAS_SENSOR_COOLING_PIN
 	addSensor("cooling_temperature", "temperature", _state.coolingTemperature);
-	addSensor("pump_voltage", "voltage", _state.pumpVoltage);
-	addSensor("pump_current", "current", _state.pumpCurrent);
+#endif
+
+#if defined(DALLAS_SENSOR_RETURNING_PIN) && defined(FLOW_SENSOR_PIN)
+	addSensor("cooling_power", "power", _state.coolingPower);
+#endif
+
+#ifdef INA226_CIRCULATION_ADDRESS
+	addSensor("circ_voltage", "voltage", _state.circVoltage);
+	addSensor("circ_current", "current", _state.circCurrent);
+#endif
+#ifdef INA226_COOLING_ADDRESS
+	addSensor("cooling_voltage", "voltage", _state.coolingVoltage);
+	addSensor("cooling_current", "current", _state.coolingCurrent);
+#endif
+#ifdef INA226_HEATING_ADDRESS
+	addSensor("heating_voltage", "voltage", _state.heatingVoltage);
+	addSensor("heating_current", "current", _state.heatingCurrent);
+#endif
+
+	addBinarySensor("flow_sensor_present", "connectivity", _state.flowSensorPresent);
+	addBinarySensor("cooling_present", "power", _state.coolingPresent);
+	addBinarySensor("heating_present", "power", _state.heatingPresent);
+	addBinarySensor("cooling_temperature_present", "connectivity", _state.coolingTemperaturePresent);
+	addBinarySensor("return_temperature_present", "connectivity", _state.returnTemperaturePresent);
+	addBinarySensor("circ_iv_present", "connectivity", _state.circIVPresent);
+	addBinarySensor("cooling_iv_present", "connectivity", _state.coolingIVPresent);
+	addBinarySensor("heating_iv_present", "connectivity", _state.heatingIVPresent);
 
 	// --- Settable config (number entities) ---
 	// https://www.home-assistant.io/integrations/number.mqtt/
@@ -305,17 +345,48 @@ void MqttInterface::_publishDiscovery() {
 		e["unique_id"] = hostname + "_" + id;
 	};
 
-	addNumber("speed_set_point", "", _state.speedSetPoint, 1);
+	addNumber("circ_speed_set_point", "", _state.circSpeedSetPoint, 1);
+
+#ifdef COOLING_PWM_PIN
+	addNumber("cooling_speed_set_point", "", _state.coolingSpeedSetPoint, 1);
+#endif
+#ifdef HEATING_PWM_PIN
+	addNumber("heating_speed_set_point", "", _state.heatingSpeedSetPoint, 1);
+#endif
+
 	addNumber("temperature_set_point", "temperature", _state.temperatureSetPoint, 0.5f);
 	addNumber("out_temp_calibration_offset", "temperature_delta", _state.outTemperatureCalibrationOffset, 0.1f);
+
+#ifdef DALLAS_SENSOR_RETURNING_PIN
 	addNumber("return_temp_calibration_offset", "temperature_delta", _state.returnTemperatureCalibrationOffset, 0.1f);
+#endif
+#ifdef DALLAS_SENSOR_COOLING_PIN
 	addNumber("cooling_temp_calibration_offset", "temperature_delta", _state.coolingTemperatureCalibrationOffset, 0.1f);
+#endif
+
+#ifdef FLOW_SENSOR_PIN
 	addNumber("calibration_volume", "volume", _state.calibrationVolume, 1);
 	addNumber("calibration_flow_pulses", "", _state.calibrationFlowPulses, 1);
-	addNumber("system_time", "", _state.systemTime, 1);
 	addNumber("min_flow_pulses_per_sec", "", _state.minFlowPulsesPerSec, 1);
-	addNumber("max_current", "current", _state.maxCurrent, 1);
-	addNumber("min_voltage", "voltage", _state.minVoltage, 1);
+#endif
+
+	addNumber("system_time", "", _state.systemTime, 1);
+
+#ifdef INA226_CIRCULATION_ADDRESS
+	addNumber("max_circ_current", "current", _state.maxCircCurrent, 1);
+	addNumber("min_circ_current", "current", _state.minCircCurrent, 1);
+	addNumber("min_circ_voltage", "voltage", _state.minCircVoltage, 1);
+#endif
+#ifdef INA226_COOLING_ADDRESS
+	addNumber("max_cooling_current", "current", _state.maxCoolingCurrent, 1);
+	addNumber("min_cooling_current", "current", _state.minCoolingCurrent, 1);
+	addNumber("min_cooling_voltage", "voltage", _state.minCoolingVoltage, 1);
+#endif
+#ifdef INA226_HEATING_ADDRESS
+	addNumber("max_heating_current", "current", _state.maxHeatingCurrent, 1);
+	addNumber("min_heating_current", "current", _state.minHeatingCurrent, 1);
+	addNumber("min_heating_voltage", "voltage", _state.minHeatingVoltage, 1);
+#endif
 
 	// --- Mode select ---
 	{
@@ -326,11 +397,14 @@ void MqttInterface::_publishDiscovery() {
 		e["val_tpl"] = "{{ value_json.mode }}"; // value_template
 		e["cmd_t"] = rootTopic + "/mode/set"; // command_topic
 		JsonArray options = e["options"].to<JsonArray>();
-		options.add(MODE_STOP);
-		options.add(MODE_SPEED);
-		options.add(MODE_TEMPERATURE);
-		options.add(MODE_CALIBRATION);
-		options.add(MODE_FLOW_TEST);
+		if (_state.isModeSupported(MODE_STOP)) options.add(MODE_STOP);
+		if (_state.isModeSupported(MODE_TEMPERATURE)) options.add(MODE_TEMPERATURE);
+		if (_state.isModeSupported(MODE_TEMPERATURE_PREPARE)) options.add(MODE_TEMPERATURE_PREPARE);
+		if (_state.isModeSupported(MODE_MANUAL_CIRC)) options.add(MODE_MANUAL_CIRC);
+		if (_state.isModeSupported(MODE_MANUAL_COOL)) options.add(MODE_MANUAL_COOL);
+		if (_state.isModeSupported(MODE_MANUAL_HEAT)) options.add(MODE_MANUAL_HEAT);
+		if (_state.isModeSupported(MODE_FLOW_CALIBRATION)) options.add(MODE_FLOW_CALIBRATION);
+		if (_state.isModeSupported(MODE_FLOW_TEST)) options.add(MODE_FLOW_TEST);
 		e["unique_id"] = hostname + "_mode";
 	}
 
@@ -345,7 +419,7 @@ void MqttInterface::_publishDiscovery() {
 		return;
 	}
 	// Serial.printf("[MQTT] Publishing HA discovery to: %s\nPayload size: %d\nPayload:\n%s\n", deviceTopic.c_str(), payload.length(), payload.c_str());
-	Serial.printf("[MQTT] Publishing HA discovery to: %s\nPayload size: %d\n", deviceTopic.c_str(), payload.length());
+	Serial.printf("[MQTT] Publishing HA discovery to: %s, Payload size: %d\n", deviceTopic.c_str(), payload.length());
 	_mqttClient.publish(deviceTopic.c_str(), payload.c_str(), true /* retained */);
 	Serial.printf("[MQTT] Published HA discovery to: %s\n", deviceTopic.c_str());
 }

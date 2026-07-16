@@ -24,6 +24,14 @@ function configApp() {
 			return this.model?.config?.[key] || {};
 		},
 
+		hasConfigKey(key) {
+			return Object.prototype.hasOwnProperty.call(this.model?.config || {}, key);
+		},
+
+		hasAnyConfig(keys) {
+			return keys.some((key) => this.hasConfigKey(key));
+		},
+
 		labelFor(key, fallback = '') {
 			return this._meta(key).description || fallback;
 		},
@@ -84,7 +92,9 @@ function configApp() {
 					mqttRootTopic:          data.mqttRootTopic ?? this.defaultFor('mqttRootTopic', ''),
 					mqttHADiscovery:        data.mqttHADiscovery ?? this.defaultFor('mqttHADiscovery', true),
 					mqttHADiscoveryTopic:   data.mqttHADiscoveryTopic ?? this.defaultFor('mqttHADiscoveryTopic', ''),
-					speedSetPoint:          data.speedSetPoint ?? this.defaultFor('speedSetPoint', 0),
+					circSpeedSetPoint:      data.circSpeedSetPoint ?? this.defaultFor('circSpeedSetPoint', 0),
+					coolingSpeedSetPoint:   data.coolingSpeedSetPoint ?? this.defaultFor('coolingSpeedSetPoint', 0),
+					heatingSpeedSetPoint:   data.heatingSpeedSetPoint ?? this.defaultFor('heatingSpeedSetPoint', 0),
 					temperatureSetPoint:    this._displayConfigValue('temperatureSetPoint', data.temperatureSetPoint ?? this.defaultFor('temperatureSetPoint', 0)),
 					outTemperatureCalibrationOffset: this._displayConfigValue('outTemperatureCalibrationOffset', data.outTemperatureCalibrationOffset ?? this.defaultFor('outTemperatureCalibrationOffset', 0)),
 					returnTemperatureCalibrationOffset: this._displayConfigValue('returnTemperatureCalibrationOffset', data.returnTemperatureCalibrationOffset ?? this.defaultFor('returnTemperatureCalibrationOffset', 0)),
@@ -93,8 +103,15 @@ function configApp() {
 					calibrationFlowPulses:  data.calibrationFlowPulses ?? this.defaultFor('calibrationFlowPulses', 0),
 					systemTime:             data.systemTime ?? this.defaultFor('systemTime', 0),
 					minFlowPulsesPerSec:    data.minFlowPulsesPerSec ?? this.defaultFor('minFlowPulsesPerSec', 0),
-					maxCurrent:             data.maxCurrent ?? this.defaultFor('maxCurrent', 0),
-					minVoltage:             data.minVoltage ?? this.defaultFor('minVoltage', 0),
+					maxCircCurrent:         data.maxCircCurrent ?? this.defaultFor('maxCircCurrent', 0),
+					minCircCurrent:         data.minCircCurrent ?? this.defaultFor('minCircCurrent', 0),
+					minCircVoltage:         data.minCircVoltage ?? this.defaultFor('minCircVoltage', 0),
+					maxCoolingCurrent:      data.maxCoolingCurrent ?? this.defaultFor('maxCoolingCurrent', 0),
+					minCoolingCurrent:      data.minCoolingCurrent ?? this.defaultFor('minCoolingCurrent', 0),
+					minCoolingVoltage:      data.minCoolingVoltage ?? this.defaultFor('minCoolingVoltage', 0),
+					maxHeatingCurrent:      data.maxHeatingCurrent ?? this.defaultFor('maxHeatingCurrent', 0),
+					minHeatingCurrent:      data.minHeatingCurrent ?? this.defaultFor('minHeatingCurrent', 0),
+					minHeatingVoltage:      data.minHeatingVoltage ?? this.defaultFor('minHeatingVoltage', 0),
 				};
 			} catch (e) {
 				console.error('Failed to load config:', e);
@@ -108,8 +125,15 @@ function configApp() {
 
 			// process and send server side config
 			try {
+				// Only send keys that exist in the current model (hardware dependent config can be absent).
+				const payload = {};
+				for (const key of Object.keys(this.model?.config || {})) {
+					if (Object.prototype.hasOwnProperty.call(this.cfg, key)) {
+						payload[key] = this.cfg[key];
+					}
+				}
+
 				// Don't send empty password (means "keep unchanged")
-				const payload = { ...this.cfg };
 				if (!payload.mqttPassword) delete payload.mqttPassword;
 
 				// convert temperature values back to Celsius before sending to the server

@@ -26,13 +26,13 @@
 
 		<div x-show="isStateFresh()" x-cloak>
 		<!-- Mode Controls -->
-		<section class="card mode-controls">
+		<section class="card mode-controls" x-show="modelLoaded && hasAnyTelemetry(['status','mode','error'])">
 			<h2>Mode</h2>
 
 			<!--<div class="mode-buttons">
 				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
 				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Fixed Speed Mode</button>
-				<button class="btn btn-primary" x-show="state.mode !== 'flowtest'" @click="startFlowTest()">▶ Start Flow Test Mode</button>
+				<button class="btn btn-primary" x-show="state.mode !== 'flow_test'" @click="startFlowTest()">▶ Start Flow Test Mode</button>
 				<button class="btn btn-danger" x-show="state.mode !== 'stop'" @click="setMode('stop')">⏹ Stop</button>
 			</div>-->
 
@@ -56,34 +56,40 @@
 			</div>
 
 			<!-- Temperature mode -->
-			<div class="mode-panel">
+			<div class="mode-panel" x-show="(hasMode('temperature') || hasMode('temperature_prepare')) && hasConfigKey('temperatureSetPoint')">
 				<label x-text="labelFor('temperatureSetPoint', 'Temperature Mode')"></label>
 				<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" :value="temperatureSetPointDisplay" @input="onTemperatureSetPointInput($event.target.value)" @change="onTemperatureSetPointChanged()">
 				<span x-text="formatTemperatureSetPointDisplay()"></span>
-				<button class="btn btn-primary" x-show="state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
+				<button class="btn btn-primary" x-show="hasMode('temperature') && state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
 				<button class="btn btn-danger" x-show="state.mode === 'temperature'" @click="setMode('stop')">⏹ Stop Temperature Goal Mode</button>
+				<button class="btn btn-primary" x-show="hasMode('temperature_prepare') && state.mode !== 'temperature_prepare'" @click="startTemperaturePrepare()">▶ Start Temperature Prepare Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'temperature_prepare'" @click="setMode('stop')">⏹ Stop Temperature Prepare Mode</button>
 			</div>
 
 			<!-- Speed mode -->
-			<div class="mode-panel">
-				<label x-text="labelFor('speedSetPoint', 'Speed Mode')"></label>
-				<input type="range" :min="minFor('speedSetPoint')" :max="maxFor('speedSetPoint')" x-model.number="state.speedSetPoint" @change="onSpeedSetPointChanged()">
-				<span x-text="state.speedSetPoint"></span>
-				<button class="btn btn-primary" x-show="state.mode !== 'speed'" @click="startSpeed()">▶ Start Fixed Speed Mode</button>
-				<button class="btn btn-danger" x-show="state.mode === 'speed'" @click="setMode('stop')">⏹ Stop Fixed Speed Mode</button>
+			<div class="mode-panel" x-show="hasMode('manual_circ') || hasMode('manual_cool') || hasMode('manual_heat')">
+				<label x-text="labelFor('circSpeedSetPoint', 'Manual Circulation Mode')"></label>
+				<input type="range" :min="minFor('circSpeedSetPoint')" :max="maxFor('circSpeedSetPoint')" x-model.number="state.circSpeedSetPoint" @change="onCircSpeedSetPointChanged()" x-show="hasConfigKey('circSpeedSetPoint')">
+				<span x-text="state.circSpeedSetPoint"></span>
+				<button class="btn btn-primary" x-show="hasMode('manual_circ') && state.mode !== 'manual_circ'" @click="startManualCirc()">▶ Start Manual Circulation Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'manual_circ'" @click="setMode('stop')">⏹ Stop Manual Circulation Mode</button>
+				<button class="btn btn-primary" x-show="hasMode('manual_cool') && state.mode !== 'manual_cool'" @click="startManualCool()">▶ Start Manual Cooling Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'manual_cool'" @click="setMode('stop')">⏹ Stop Manual Cooling Mode</button>
+				<button class="btn btn-primary" x-show="hasMode('manual_heat') && state.mode !== 'manual_heat'" @click="startManualHeat()">▶ Start Manual Heating Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'manual_heat'" @click="setMode('stop')">⏹ Stop Manual Heating Mode</button>
 			</div>
 
 			<!-- Calibration mode -->
-			<div class="mode-panel">
+			<div class="mode-panel" x-show="hasMode('flow_calibration') || hasMode('flow_test')">
 				<label>Calibration Mode</label>
-				<div class="inline-field">
+				<div class="inline-field" x-show="hasConfigKey('calibrationVolume')">
 					<label x-text="labelFor('calibrationVolume', 'Calibration Volume') + (unitsFor('calibrationVolume') ? ' (' + unitsFor('calibrationVolume') + ')' : '') + ':'"></label>
 					<input type="number" :min="minFor('calibrationVolume')" :max="maxFor('calibrationVolume')" x-model.number="state.calibrationVolume" @change="onCalibrationVolumeChanged()">
 				</div>
-				<button class="btn btn-warning" x-show="state.mode !== 'calibration'" @click="startCalibration()">▶ Start Pump Calibration</button>
-				<button class="btn btn-danger" x-show="state.mode === 'calibration'" @click="setMode('stop')">⏹ Stop Pump Calibration</button>
-				<button class="btn btn-primary" x-show="state.mode !== 'flowtest'" @click="startFlowTest()">▶ Start Flow Test Mode</button>
-				<button class="btn btn-danger" x-show="state.mode === 'flowtest'" @click="setMode('stop')">⏹ Stop Flow Test Mode</button>
+				<button class="btn btn-warning" x-show="hasMode('flow_calibration') && state.mode !== 'flow_calibration'" @click="startFlowCalibration()">▶ Start Flow Calibration</button>
+				<button class="btn btn-danger" x-show="state.mode === 'flow_calibration'" @click="setMode('stop')">⏹ Stop Flow Calibration</button>
+				<button class="btn btn-primary" x-show="hasMode('flow_test') && state.mode !== 'flow_test'" @click="startFlowTest()">▶ Start Flow Test Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'flow_test'" @click="setMode('stop')">⏹ Stop Flow Test Mode</button>
 			</div>
 		</section>
 
@@ -91,70 +97,85 @@
 		<section class="card telemetry">
 			<h2>Status</h2>
 			<div class="telemetry-grid">
-				<div class="metric">
+				<div class="metric" x-show="hasTelemetryKey('circSpeed')">
 					<span class="icon">⚡</span>
-					<span class="label">Pump Speed</span>
-					<span class="value" x-text="state.pumpSpeed"></span>
+					<span class="label">Circulation Speed</span>
+					<span class="value" x-text="state.circSpeed"></span>
 				</div>
-				<div class="metric">
+				<div class="metric" x-show="hasTelemetryKey('flow')">
 					<span class="icon">💧</span>
 					<span class="label">Flow</span>
 					<span class="value" x-text="formatTelemetry('flow', 2)"></span>
 				</div>
-				<div class="metric">
+				<div class="metric" x-show="hasTelemetryKey('outTemperature')">
 					<span class="icon">🌡️</span>
 					<span class="label">Out Temp</span>
 					<span class="value" x-text="formatTelemetry('outTemperature', TempUnits.DECIMAL_PLACES)"></span>
 				</div>
-				<div class="metric">
+				<div class="metric" x-show="hasTelemetryKey('returnTemperature')">
 					<span class="icon">🌡️</span>
 					<span class="label">Return Temp</span>
 					<span class="value" x-text="formatTelemetry('returnTemperature', TempUnits.DECIMAL_PLACES)"></span>
 				</div>
-				<div class="metric">
+				<div class="metric" x-show="hasTelemetryKey('coolingTemperature')">
 					<span class="icon">🧊</span>
 					<span class="label">Cooling Temp</span>
 					<span class="value" x-text="formatTelemetry('coolingTemperature', TempUnits.DECIMAL_PLACES)"></span>
 				</div>
-				<div class="metric">
+				<div class="metric" x-show="hasTelemetryKey('temperatureDelta')">
 					<span class="icon">↕️</span>
 					<span class="label">Temp Delta</span>
 					<span class="value" x-text="formatTelemetry('temperatureDelta', TempUnits.DECIMAL_PLACES_DELTA)"></span>
 				</div>
-				<div class="metric">
+				<div class="metric" x-show="hasTelemetryKey('coolingPower')">
 					<span class="icon">❄️</span>
 					<span class="label">Cooling Power</span>
 					<span class="value" x-text="formatTelemetry('coolingPower', 1)"></span>
 				</div>
-				<div class="metric">
-					<span class="icon">🔌</span>
-					<span class="label">Voltage</span>
-					<span class="value" x-text="formatTelemetry('pumpVoltage', 0)"></span>
-				</div>
-				<div class="metric">
-					<span class="icon">⚡</span>
-					<span class="label">Current</span>
-					<span class="value" x-text="formatTelemetry('pumpCurrent', 0)"></span>
-				</div>
-				<div class="metric">
+				<div class="metric" x-show="hasTelemetryKey('flowPulsesFilteredPerSec')">
 					<span class="icon">〰️</span>
 					<span class="label">Flow Pulses/s</span>
 					<span class="value" x-text="state.flowPulsesFilteredPerSec || 0"></span>
 				</div>
-				<!--<div class="metric">
-					<span class="icon">🔢</span>
-					<span class="label">Raw Pulses/s</span>
-					<span class="value" x-text="state.flowPulsesRawPerSec || 0"></span>
-				</div>-->
+				<div class="metric" x-show="hasTelemetryKey('circVoltage')">
+					<span class="icon">🔌</span>
+					<span class="label">Circulation Voltage</span>
+					<span class="value" x-text="formatTelemetry('circVoltage', 0)"></span>
+				</div>
+				<div class="metric" x-show="hasTelemetryKey('circCurrent')">
+					<span class="icon">⚡</span>
+					<span class="label">Circulation Current</span>
+					<span class="value" x-text="formatTelemetry('circCurrent', 0)"></span>
+				</div>
+				<div class="metric" x-show="hasTelemetryKey('coolingVoltage')">
+					<span class="icon">🔌</span>
+					<span class="label">Cooling Voltage</span>
+					<span class="value" x-text="formatTelemetry('coolingVoltage', 0)"></span>
+				</div>
+				<div class="metric" x-show="hasTelemetryKey('coolingCurrent')">
+					<span class="icon">⚡</span>
+					<span class="label">Cooling Current</span>
+					<span class="value" x-text="formatTelemetry('coolingCurrent', 0)"></span>
+				</div>
+				<div class="metric" x-show="hasTelemetryKey('heatingVoltage')">
+					<span class="icon">🔌</span>
+					<span class="label">Heating Voltage</span>
+					<span class="value" x-text="formatTelemetry('heatingVoltage', 0)"></span>
+				</div>
+				<div class="metric" x-show="hasTelemetryKey('heatingCurrent')">
+					<span class="icon">⚡</span>
+					<span class="label">Heating Current</span>
+					<span class="value" x-text="formatTelemetry('heatingCurrent', 0)"></span>
+				</div>
 			</div>
 		</section>
 
 		<!-- Chart -->
 		<section class="card chart-section">
 			<h2>History (last 10 min)</h2>
-			<canvas x-ref="temperatureChart" height="240"></canvas>
-			<canvas x-ref="flowChart" height="240"></canvas>
-			<canvas x-ref="miscChart" height="240"></canvas>
+			<canvas x-show="hasAnyTelemetry(['outTemperature','returnTemperature','coolingTemperature'])" x-ref="temperatureChart" height="240"></canvas>
+			<canvas x-show="hasAnyTelemetry(['flow'])" x-ref="flowChart" height="240"></canvas>
+			<canvas x-show="hasAnyTelemetry(['coolingPower','circSpeed','circCurrent'])" x-ref="miscChart" height="240"></canvas>
 		</section>
 		</div>
 	</main>

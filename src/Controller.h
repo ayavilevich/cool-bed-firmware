@@ -19,37 +19,9 @@ class Connectivity; // can't include Connectivity.h here due to circular depende
 #include <DallasTemperature.h>
 
 // Motor driver: conditionally include TB6612 library
-#ifdef MOTOR_DRIVER_TB6612_AIN1_PIN
+#ifdef CIRCULATION_TB6612_AIN1_PIN
 #include <SparkFun_TB6612.h>
 #endif
-
-// ---- Constants ----
-#define PUMP_MAX_SPEED					255 // max PWM value for pump speed
-#define SENSOR_SAMPLE_INTERVAL_MS		1000
-#define TEMP_RETRY_COUNT				3
-#define TEMP_MIN_CELSIUS				-5.0f
-#define TEMP_MAX_CELSIUS				40.0f
-#define TEMP_STEP						10
-#define FLOW_TEST_STEP					10
-#define FLOW_TEST_STEP_INTERVAL_RATIO	0.5 // how long to test each speed in a flow test. ratio of the "system time".
-#define FLOW_TEST_FIRST_STEP_INTERVAL_RATIO	1.0 // ratio of the "system time". first step needs more time to prime from stopped, subsequent steps can be faster.
-#define FLOW_TEST_MAX_SPEED				PUMP_MAX_SPEED
-#define BUTTON_HOLD_MS					5000
-#define WATER_SPECIFIC_HEAT_J_PER_KG_C	4186.0f // how much energy (in joules) it takes to raise 1 kg of water by 1 degree Celsius
-#define SECONDS_PER_MINUTE				60.0f
-
-// Logic to check if temperature sensors might be uncalibrated. Check after some time of flow inactivity when sensors should have equilibrated.
-#define TEMPERATURE_CALIBRATION_EQUILIBRIUM_SECONDS			(10UL * 60UL)
-#define TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C	0.2f
-#define TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT			"Warning: temperature sensors might not be calibrated"
-
-// INA226 settings
-#define INA226_I2C_ADDRESS				0x40
-#define INA226_SHUNT_RESISTANCE			0.1f	// Ohm
-#define INA226_MAX_CURRENT_A			1.3f	// A
-
-// Wi-Fi built-in LED blink period when connected
-#define BUILTIN_LED_BLINK_PERIOD_MS		1000
 
 using EventCallback = std::function<void()>;
 
@@ -79,19 +51,36 @@ public:
 private:
 	State& _state;
 	Connectivity& _connectivity;
+
+#ifdef FLOW_SENSOR_PIN
 	FlowSensor _flowSensor;
+#endif
 
+#ifdef DALLAS_SENSOR_OUTGOING_PIN
 	OneWire _owOut;
-	OneWire _owReturn;
-	OneWire _owCooling;
 	DallasTemperature _tempOut;
+#endif
+#ifdef DALLAS_SENSOR_RETURNING_PIN
+	OneWire _owReturn;
 	DallasTemperature _tempReturn;
+#endif
+#ifdef DALLAS_SENSOR_COOLING_PIN
+	OneWire _owCooling;
 	DallasTemperature _tempCooling;
+#endif
 
-	INA226_WE _ina226;
+#ifdef INA226_CIRCULATION_ADDRESS
+	INA226_WE _inaCirc;
+#endif
+#ifdef INA226_COOLING_ADDRESS
+	INA226_WE _inaCooling;
+#endif
+#ifdef INA226_HEATING_ADDRESS
+	INA226_WE _inaHeating;
+#endif
 
-#ifdef MOTOR_DRIVER_TB6612_AIN1_PIN
-	Motor* _motor;
+#ifdef CIRCULATION_TB6612_AIN1_PIN
+	Motor* _circMotor;
 #endif
 
 	// Sampling state
@@ -125,6 +114,9 @@ private:
 	unsigned long _lastTempAdjMs;
 	// Flow test mode timing
 	unsigned long _lastFlowTestStepMs;
+	unsigned long _circActiveSinceMs;
+	unsigned long _coolingActiveSinceMs;
+	unsigned long _heatingActiveSinceMs;
 
 	// Serial state summary
 	unsigned long _lastSerialPrintMs;
@@ -133,8 +125,13 @@ private:
 	void _runMode();
 	void _triggerError(const String& cause);
 	void _clearError();
-	void _setPumpSpeed(uint8_t speed);
-	bool readTemperatureOnce(DallasTemperature& sensor, float& outVal);
-	bool readTemperatureRetry(DallasTemperature& sensor, float& outVal);
+	void _setCircSpeed(uint8_t speed);
+	void _setCoolingSpeed(uint8_t speed);
+	void _setHeatingSpeed(uint8_t speed);
+	void _stopAllOutputs();
+	void _updateOutputLedIndicators();
+	bool _readTemperatureOnce(DallasTemperature& sensor, float& outVal);
+	bool _readTemperatureRetry(DallasTemperature& sensor, float& outVal);
 	void _calculateDerivedMetrics(uint64_t rawNow, uint64_t filteredNow, unsigned long nowMs);
+	void _checkIvLimitsAndFaults(unsigned long now);
 };
