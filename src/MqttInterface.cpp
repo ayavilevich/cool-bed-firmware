@@ -403,6 +403,7 @@ void MqttInterface::_publishDiscovery() {
 		if (_state.isModeSupported(MODE_MANUAL_CIRC)) options.add(MODE_MANUAL_CIRC);
 		if (_state.isModeSupported(MODE_MANUAL_COOL)) options.add(MODE_MANUAL_COOL);
 		if (_state.isModeSupported(MODE_MANUAL_HEAT)) options.add(MODE_MANUAL_HEAT);
+		if (_state.isModeSupported(MODE_PRIME_CIRC)) options.add(MODE_PRIME_CIRC);
 		if (_state.isModeSupported(MODE_FLOW_CALIBRATION)) options.add(MODE_FLOW_CALIBRATION);
 		if (_state.isModeSupported(MODE_FLOW_TEST)) options.add(MODE_FLOW_TEST);
 		e["unique_id"] = hostname + "_mode";

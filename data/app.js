@@ -308,6 +308,10 @@ function coolBedApp() {
 			this._postMode('manual_heat');
 		},
 
+		startPrimeCirc() {
+			this._postMode('prime_circ');
+		},
+
 		startTemperature() {
 			this._postMode('temperature');
 		},

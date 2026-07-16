@@ -176,7 +176,7 @@ Here are the variables of the state that are set by the user and we need to pers
 | returnTemperatureCalibrationOffset | float  | 0       | value to add to return temperature sensor reading  | [-10, 10]               | input.number      | Number         |
 | coolingTemperatureCalibrationOffset| float  | 0       | value to add to cooling water temperature sensor reading  | [-10, 10]        | input.number      | Number         |
 
-Mode enum options: stop, temperature, temperature_prepare, manual_circ, manual_cool, manual_heat, flow_calibration, flow_test. Only show options and allow to set them if the required optional hardware is present. See explanations of the modes below.
+Mode enum options: stop, temperature, temperature_prepare, manual_circ, manual_cool, manual_heat, prime_circ, flow_calibration, flow_test. Only show options and allow to set them if the required optional hardware is present. See explanations of the modes below.
 
 Note: calibrationFlowPulses is user-editable config but also can be set by the firmware. This is to allow tuning by the user. Assume most of the time they will be automatically calculated.
 
@@ -292,6 +292,13 @@ Status = "Cooling".
 ##### Manual heating mode (manual_heat)
 In addition to the logic in "manual_circ", run the heating element at heatingSpeedSetPoint.
 Status = "Heating".
+
+##### Prime circulation loop (prime_circ)
+The goal of this mode is to release air from the circulation loop (pump, hoses, mattress pad, etc).
+
+Operate circulation pump at circSpeedSetPoint for PRIME_CIRC_ON_CYCLES (default 3) of systemTime. Status = "Priming, pumping".
+Then stop circulation pump for PRIME_CIRC_OFF_CYCLES (default 1) of systemTime. Status = "Priming, resting".
+Repeat process.
 
 ##### Temperature mode (temperature)
 

@@ -23,6 +23,7 @@
 #define MODE_MANUAL_CIRC "manual_circ"
 #define MODE_MANUAL_COOL "manual_cool"
 #define MODE_MANUAL_HEAT "manual_heat"
+#define MODE_PRIME_CIRC "prime_circ"
 #define MODE_FLOW_CALIBRATION "flow_calibration"
 #define MODE_FLOW_TEST "flow_test"
 

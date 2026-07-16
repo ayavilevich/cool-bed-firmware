@@ -22,6 +22,8 @@
 #define FLOW_TEST_STEP_INTERVAL_RATIO	0.5 // how long to test each speed in a flow test. ratio of the "system time".
 #define FLOW_TEST_FIRST_STEP_INTERVAL_RATIO	1.0 // ratio of the "system time". first step needs more time to prime from stopped, subsequent steps can be faster.
 #define FLOW_TEST_MAX_SPEED				PUMP_MAX_SPEED
+#define PRIME_CIRC_ON_CYCLES			3
+#define PRIME_CIRC_OFF_CYCLES			1
 #define BUTTON_HOLD_MS					5000
 #define WATER_SPECIFIC_HEAT_J_PER_KG_C	4186.0f // how much energy (in joules) it takes to raise 1 kg of water by 1 degree Celsius
 #define SECONDS_PER_MINUTE				60.0f
@@ -405,6 +407,16 @@ void Controller::setMode(const String& newMode) {
 		_setCircSpeed(circSp);
 		_setHeatingSpeed(heatSp);
 		_lastValidFlowMs = millis();
+	} else if (newMode == MODE_PRIME_CIRC) {
+		uint8_t circSp;
+		{
+			StateGuard guard(_state);
+			circSp = _state.circSpeedSetPoint.get();
+			_state.status.set("Priming, pumping");
+		}
+		_setCoolingSpeed(0);
+		_setHeatingSpeed(0);
+		_setCircSpeed(circSp);
 	} else if (newMode == MODE_TEMPERATURE) {
 #ifdef METHOD_VARIABLE_CIRCULATION_SPEED
 		_setCircSpeed(PUMP_MAX_SPEED);
@@ -915,6 +927,31 @@ void Controller::_runMode() {
 		if (!flowGuardCheck()) return;
 		StateGuard guard(_state);
 		_state.status.set("Heating");
+	} else if (currentMode == MODE_PRIME_CIRC) {
+		_setCoolingSpeed(0);
+		_setHeatingSpeed(0);
+
+		if (sysTime == 0) {
+			if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
+			StateGuard guard(_state);
+			_state.status.set("Priming, pumping");
+		} else {
+			const unsigned long phaseDurationMs = (unsigned long)sysTime * 1000UL;
+			const unsigned long cycleSteps = PRIME_CIRC_ON_CYCLES + PRIME_CIRC_OFF_CYCLES;
+			const unsigned long stepsElapsed = (now - _modeStartMs) / phaseDurationMs;
+			const unsigned long cyclePos = stepsElapsed % cycleSteps;
+			const bool pumping = cyclePos < PRIME_CIRC_ON_CYCLES;
+
+			if (pumping) {
+				if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
+				StateGuard guard(_state);
+				_state.status.set("Priming, pumping");
+			} else {
+				if (circSpd != 0) _setCircSpeed(0);
+				StateGuard guard(_state);
+				_state.status.set("Priming, resting");
+			}
+		}
 	} else if (currentMode == MODE_TEMPERATURE) {
 #ifdef METHOD_VARIABLE_CIRCULATION_SPEED
 		if (filteredPerSec < minFlow && circSpd < PUMP_MAX_SPEED) {

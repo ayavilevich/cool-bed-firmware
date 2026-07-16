@@ -341,12 +341,13 @@ void State::toModelJson(JsonObject obj, bool includeConfig, bool includeTelemetr
 	if (isModeSupported(MODE_TEMPERATURE_PREPARE)) modes.add(MODE_TEMPERATURE_PREPARE);
 	if (isModeSupported(MODE_MANUAL_COOL)) modes.add(MODE_MANUAL_COOL);
 	if (isModeSupported(MODE_MANUAL_HEAT)) modes.add(MODE_MANUAL_HEAT);
+	if (isModeSupported(MODE_PRIME_CIRC)) modes.add(MODE_PRIME_CIRC);
 	if (isModeSupported(MODE_FLOW_CALIBRATION)) modes.add(MODE_FLOW_CALIBRATION);
 	if (isModeSupported(MODE_FLOW_TEST)) modes.add(MODE_FLOW_TEST);
 }
 
 bool State::isModeSupported(const String& mode) const {
-	if (mode == MODE_STOP || mode == MODE_MANUAL_CIRC || mode == MODE_TEMPERATURE || mode == MODE_TEMPERATURE_PREPARE) {
+	if (mode == MODE_STOP || mode == MODE_MANUAL_CIRC || mode == MODE_TEMPERATURE || mode == MODE_TEMPERATURE_PREPARE || mode == MODE_PRIME_CIRC) {
 		return true;
 	}
 	if (mode == MODE_MANUAL_COOL) {

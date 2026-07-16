@@ -62,12 +62,12 @@
 				<span x-text="formatTemperatureSetPointDisplay()"></span>
 				<button class="btn btn-primary" x-show="hasMode('temperature') && state.mode !== 'temperature'" @click="startTemperature()">▶ Start Temperature Goal Mode</button>
 				<button class="btn btn-danger" x-show="state.mode === 'temperature'" @click="setMode('stop')">⏹ Stop Temperature Goal Mode</button>
-				<button class="btn btn-primary" x-show="hasMode('temperature_prepare') && state.mode !== 'temperature_prepare'" @click="startTemperaturePrepare()">▶ Start Temperature Prepare Mode</button>
-				<button class="btn btn-danger" x-show="state.mode === 'temperature_prepare'" @click="setMode('stop')">⏹ Stop Temperature Prepare Mode</button>
+				<button class="btn btn-primary" x-show="hasMode('temperature_prepare') && state.mode !== 'temperature_prepare'" @click="startTemperaturePrepare()">▶ Start Temp. Prepare Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'temperature_prepare'" @click="setMode('stop')">⏹ Stop Temp. Prepare Mode</button>
 			</div>
 
 			<!-- Speed mode -->
-			<div class="mode-panel" x-show="hasMode('manual_circ') || hasMode('manual_cool') || hasMode('manual_heat')">
+			<div class="mode-panel" x-show="hasMode('manual_circ') || hasMode('manual_cool') || hasMode('manual_heat') || hasMode('prime_circ')">
 				<label x-text="labelFor('circSpeedSetPoint', 'Manual Circulation Mode')"></label>
 				<input type="range" :min="minFor('circSpeedSetPoint')" :max="maxFor('circSpeedSetPoint')" x-model.number="state.circSpeedSetPoint" @change="onCircSpeedSetPointChanged()" x-show="hasConfigKey('circSpeedSetPoint')">
 				<span x-text="state.circSpeedSetPoint"></span>
@@ -77,6 +77,8 @@
 				<button class="btn btn-danger" x-show="state.mode === 'manual_cool'" @click="setMode('stop')">⏹ Stop Manual Cooling Mode</button>
 				<button class="btn btn-primary" x-show="hasMode('manual_heat') && state.mode !== 'manual_heat'" @click="startManualHeat()">▶ Start Manual Heating Mode</button>
 				<button class="btn btn-danger" x-show="state.mode === 'manual_heat'" @click="setMode('stop')">⏹ Stop Manual Heating Mode</button>
+				<button class="btn btn-primary" x-show="hasMode('prime_circ') && state.mode !== 'prime_circ'" @click="startPrimeCirc()">▶ Start Prime Circulation Mode</button>
+				<button class="btn btn-danger" x-show="state.mode === 'prime_circ'" @click="setMode('stop')">⏹ Stop Prime Circulation Mode</button>
 			</div>
 
 			<!-- Calibration mode -->
