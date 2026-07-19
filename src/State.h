@@ -139,7 +139,7 @@ public:
 	Metric<unsigned int>     flowPulsesFilteredPerSec { "flowPulsesFilteredPerSec", 0, "p/s","Filtered flow", 0, 10000 };
 	Metric<float>            flow            { "flow",            0.0f,             "L/min", "Water flow rate",               0.0f, 100.0f };
 	Metric<float>            temperatureDelta { "temperatureDelta", 0.0f,          "°C",    "Return-out temperature delta",  -40.0f, 40.0f };
-	Metric<float>            coolingPower    { "coolingPower",    0.0f,             "W",     "Cooling power", 0.0f, 10000.0f };
+	Metric<float>            coolingTransfer    { "coolingTransfer",    0.0f,             "W",     "Cooling transfer", 0.0f, 10000.0f };
 
 private:
 	SemaphoreHandle_t _mutex;

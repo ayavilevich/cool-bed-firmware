@@ -129,10 +129,10 @@
 					<span class="label">Temp Delta</span>
 					<span class="value" x-text="formatTelemetry('temperatureDelta', TempUnits.DECIMAL_PLACES_DELTA)"></span>
 				</div>
-				<div class="metric" x-show="hasTelemetryKey('coolingPower')">
+				<div class="metric" x-show="hasTelemetryKey('coolingTransfer')">
 					<span class="icon">❄️</span>
-					<span class="label">Cooling Power</span>
-					<span class="value" x-text="formatTelemetry('coolingPower', 1)"></span>
+					<span class="label">Cooling Transfer</span>
+					<span class="value" x-text="formatTelemetry('coolingTransfer', 1)"></span>
 				</div>
 				<div class="metric" x-show="hasTelemetryKey('flowPulsesFilteredPerSec')">
 					<span class="icon">〰️</span>
@@ -177,7 +177,7 @@
 			<h2>History (last 10 min)</h2>
 			<canvas x-show="hasAnyTelemetry(['outTemperature','returnTemperature','coolingTemperature'])" x-ref="temperatureChart" height="240"></canvas>
 			<canvas x-show="hasAnyTelemetry(['flow'])" x-ref="flowChart" height="240"></canvas>
-			<canvas x-show="hasAnyTelemetry(['coolingPower','circSpeed','circCurrent'])" x-ref="miscChart" height="240"></canvas>
+			<canvas x-show="hasAnyTelemetry(['coolingTransfer','circSpeed','circCurrent'])" x-ref="miscChart" height="240"></canvas>
 		</section>
 		</div>
 	</main>

@@ -222,8 +222,8 @@ Some will be missing if the source of the data is not available as set by the va
 | flowPulsesRawPerSec      | uint   | 0       | flow pulses per second (based on flowPulsesRaw)      | any integer  | div/span          | Sensor         |
 | flowPulsesFilteredPerSec | uint   | 0       | flow pulses per second (based on flowPulsesFiltered) | any integer  | div/span          | Sensor         |
 | flow                     | float  | 0       | flow in liters/min                                   | [0, 100]     | div/span          | Sensor         |
-| temperatureDelta         | float  | 0       | change in temperature in deg C. return - out         | [-40, 40]    | div/span          | Sensor         |
-| coolingPower             | float  | 0       | in watt. Δt * 4186 jauls * flow / 60                 | any float    | div/span          | Sensor         |
+| temperatureDelta         | float  | 0       | change in temperature in deg C. Δt = returnT - outT  | [-40, 40]    | div/span          | Sensor         |
+| coolingTransfer          | float  | 0       | in watt. Δt * 4186 jauls * flow / 60                 | any float    | div/span          | Sensor         |
 
 A type of "uint" refers to an "unsigned int" C/C++ type.
 

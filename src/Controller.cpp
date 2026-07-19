@@ -632,12 +632,12 @@ void Controller::_calculateDerivedMetrics(uint64_t rawNow, uint64_t filteredNow,
 		flowLpm = ((float)filteredPerSec * (float)calVolume * 60.0f) / ((float)calPulses * 1000.0f);
 	}
 	float deltaC = returnTemp - outTemp;
-	float coolingPowerW = deltaC * WATER_SPECIFIC_HEAT_J_PER_KG_C * flowLpm / SECONDS_PER_MINUTE;
+	float coolingTransferW = deltaC * WATER_SPECIFIC_HEAT_J_PER_KG_C * flowLpm / SECONDS_PER_MINUTE;
 	{
 		StateGuard guard(_state);
 		_state.flow.set(flowLpm);
 		_state.temperatureDelta.set(deltaC);
-		_state.coolingPower.set(coolingPowerW);
+		_state.coolingTransfer.set(coolingTransferW);
 	}
 
 	_prevRawPulses = rawNow;

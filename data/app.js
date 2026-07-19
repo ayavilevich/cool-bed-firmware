@@ -209,7 +209,7 @@ function coolBedApp() {
 				timestamp: now,
 				flow: data.flow ?? 0,
 				temperatureDelta: data.temperatureDelta ?? 0,
-				coolingPower: data.coolingPower ?? 0,
+				coolingTransfer: data.coolingTransfer ?? 0,
 				outTemperature: data.outTemperature ?? 0,
 				returnTemperature: data.returnTemperature ?? 0,
 				coolingTemperature: data.coolingTemperature ?? 0,
@@ -397,7 +397,7 @@ function coolBedApp() {
 			const fDatasets = fSeries.map((s) => ({ label: s.labelBase, data: [], borderColor: s.color, tension: 0.3, yAxisID: 'y' }));
 
 			const mSeries = [];
-			if (this.hasTelemetryKey('coolingPower')) mSeries.push({ key: 'coolingPower', labelBase: 'Cooling Power (W)', color: '#22c55e', isTemp: false });
+			if (this.hasTelemetryKey('coolingTransfer')) mSeries.push({ key: 'coolingTransfer', labelBase: 'Cooling Transfer (W)', color: '#22c55e', isTemp: false });
 			if (this.hasTelemetryKey('circSpeed')) mSeries.push({ key: 'circSpeed', labelBase: 'Circulation Speed', color: '#a78bfa', isTemp: false });
 			if (this.hasTelemetryKey('circCurrent')) mSeries.push({ key: 'circCurrent', labelBase: 'Current (mA)', color: '#f43f5e', isTemp: false });
 			const mDatasets = mSeries.map((s) => ({ label: s.labelBase, data: [], borderColor: s.color, tension: 0.3, yAxisID: 'y' }));

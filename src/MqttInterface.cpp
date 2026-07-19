@@ -303,7 +303,7 @@ void MqttInterface::_publishDiscovery() {
 #endif
 
 #if defined(DALLAS_SENSOR_RETURNING_PIN) && defined(FLOW_SENSOR_PIN)
-	addSensor("cooling_power", "power", _state.coolingPower);
+	addSensor("cooling_transfer", "power", _state.coolingTransfer);
 #endif
 
 #ifdef INA226_CIRCULATION_ADDRESS

@@ -183,7 +183,7 @@ void State::_telemetryToJson(JsonObject obj) const {
 #endif
 
 #if defined(DALLAS_SENSOR_RETURNING_PIN) && defined(FLOW_SENSOR_PIN)
-	coolingPower.toJson(obj);
+	coolingTransfer.toJson(obj);
 #endif
 
 	flowSensorPresent.toJson(obj);
@@ -301,7 +301,7 @@ void State::_telemetryModelToJson(JsonObject obj) const {
 #endif
 
 #if defined(DALLAS_SENSOR_RETURNING_PIN) && defined(FLOW_SENSOR_PIN)
-	metricModelToJsonImpl(obj, coolingPower);
+	metricModelToJsonImpl(obj, coolingTransfer);
 #endif
 
 	metricModelToJsonImpl(obj, flowSensorPresent);
