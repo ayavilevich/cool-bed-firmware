@@ -24,17 +24,32 @@ ESP32 firmware for a water-cooled bed device. Pumps water from a tank through a 
 
 Requires [PlatformIO](https://platformio.org/).
 
-```bash
-# TB6612 motor driver
-pio run -e cool-bed-tb6612
+You can build, upload and monitor by using the UI in PlatformIO's VSCode panel.
+It is a common mistake to forget to upload the Filesystem Image. This firmware uses the file system for static files of the web server. Forgetting to upload those will break normal operation.
 
-# Generic PWM motor driver
-pio run -e cool-bed-pwm
+Command line usage (using PlatformIO CLI):
+
+```bash
+# Cool Bed Prototype V1 board
+pio run -e cool-bed-pt-v1-usb
+
+# Quad MOS board
+pio run -e esp32-4mos-usb
 
 # Upload firmware + filesystem
-pio run -e cool-bed-tb6612 -t upload
-pio run -e cool-bed-tb6612 -t uploadfs
+pio run -e cool-bed-pt-v1-usb -t upload
+pio run -e cool-bed-pt-v1-usb -t uploadfs
 ```
+
+## Over-The-Air (OTA) Upload
+
+See `platformio.local.sample.ini` for details. Save as `platformio.local.ini` and complete your parameters, such as password.
+
+The first flash of a board must be done over serial.
+
+## Adding a board or customizing one
+
+Use `platformio.local.ini` to add unversioned PlatformIO environments and define custom boards or make modifications to default boards.
 
 ## First Boot
 
