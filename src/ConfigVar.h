@@ -19,7 +19,12 @@ public:
 		  _prefKey(prefKey ? prefKey : name) {}
 
 	void load(Preferences& prefs) {
-		_load(prefs);
+		if (prefs.isKey(_prefKey)) {
+			_load(prefs);
+		} else {
+			// Key not found, use default value
+			this->_value = this->_defaultValue; // "this->" is needed to access the base class member in a template class
+		}
 	}
 
 	void save(Preferences& prefs) const {
