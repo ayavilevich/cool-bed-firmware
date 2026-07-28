@@ -34,11 +34,11 @@ void setup() {
 		g_mqttInterface.publishState();
 	});
 
-	// Connect to Wi-Fi (blocks until connected or portal opened)
-	g_connectivityObj.begin();
-
 	// Start hardware controller
 	g_controller.begin();
+
+	// Connect to Wi-Fi (blocks until connected or portal opened)
+	g_connectivityObj.begin();
 
 	// Start web server
 	g_webInterface.begin();
