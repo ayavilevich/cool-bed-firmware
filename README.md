@@ -20,6 +20,10 @@ ESP32 firmware for a water-cooled bed device. Pumps water from a tank through a 
 - **mDNS**: Reachable at `<hostname>.local`
 - **Wi-Fi provisioning**: WiFiManager captive portal on first boot
 
+## Main screen
+
+![screen capture](https://ayavilevich.github.io/cool-bed-wiki/img/app-screens.png)
+
 ## Build
 
 Requires [PlatformIO](https://platformio.org/).
