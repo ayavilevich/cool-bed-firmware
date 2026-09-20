@@ -11,44 +11,46 @@
 #include <math.h>
 
 // ---- Constants ----
-#define PUMP_MAX_SPEED					255 // max PWM value for pump speed
-#define SENSOR_SAMPLE_INTERVAL_MS		1000
-#define TEMP_RETRY_COUNT				3
-#define TEMP_MIN_CELSIUS				-5.0f
-#define TEMP_MAX_CELSIUS				40.0f
-#define VARIABLE_SPEED_STEP				10
-#define OUTPUT_RAMP_UP_MS				1000
-#define FLOW_TEST_STEP					10
-#define FLOW_TEST_STEP_INTERVAL_RATIO	0.5 // how long to test each speed in a flow test. ratio of the "system time".
-#define FLOW_TEST_FIRST_STEP_INTERVAL_RATIO	1.0 // ratio of the "system time". first step needs more time to prime from stopped, subsequent steps can be faster.
-#define FLOW_TEST_MAX_SPEED				PUMP_MAX_SPEED
-#define PRIME_CIRC_ON_CYCLES			3
-#define PRIME_CIRC_OFF_CYCLES			1
-#define BUTTON_HOLD_MS					5000
-#define WATER_SPECIFIC_HEAT_J_PER_KG_C	4186.0f // how much energy (in joules) it takes to raise 1 kg of water by 1 degree Celsius
-#define SECONDS_PER_MINUTE				60.0f
-#define COOLING_HYSTERESIS_START		1.0f
-#define COOLING_HYSTERESIS_STOP			0.0f
-#define HEATING_HYSTERESIS_STOP			-1.0f
-#define HEATING_HYSTERESIS_START		-2.0f
+#define PUMP_MAX_SPEED				  255 // max PWM value for pump speed
+#define SENSOR_SAMPLE_INTERVAL_MS	  1000
+#define TEMP_RETRY_COUNT			  3
+#define TEMP_MIN_CELSIUS			  -5.0f
+#define TEMP_MAX_CELSIUS			  40.0f
+#define VARIABLE_SPEED_STEP			  10
+#define OUTPUT_RAMP_UP_MS			  1000
+#define FLOW_TEST_STEP				  10
+#define FLOW_TEST_STEP_INTERVAL_RATIO 0.5 // how long to test each speed in a flow test. ratio of the "system time".
+#define FLOW_TEST_FIRST_STEP_INTERVAL_RATIO \
+	1.0 // ratio of the "system time". first step needs more time to prime from stopped, subsequent steps can be faster.
+#define FLOW_TEST_MAX_SPEED					PUMP_MAX_SPEED
+#define PRIME_CIRC_ON_CYCLES				3
+#define PRIME_CIRC_OFF_CYCLES				1
+#define BUTTON_HOLD_MS						5000
+#define WATER_SPECIFIC_HEAT_J_PER_KG_C		4186.0f // how much energy (in joules) it takes to raise 1 kg of water by 1 degree Celsius
+#define SECONDS_PER_MINUTE					60.0f
+#define COOLING_HYSTERESIS_START			1.0f
+#define COOLING_HYSTERESIS_STOP				0.0f
+#define HEATING_HYSTERESIS_STOP				-1.0f
+#define HEATING_HYSTERESIS_START			-2.0f
 #define INEFFECTIVE_COOLING_WARNING_DELTA_C 8.0f
 
-// Logic to check if temperature sensors might be uncalibrated. Check after some time of flow inactivity when sensors should have equilibrated.
-#define TEMPERATURE_CALIBRATION_EQUILIBRIUM_SECONDS			(10UL * 60UL)
-#define TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C	0.2f
-#define TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT			"Warning: temperature sensors might not be calibrated"
+// Logic to check if temperature sensors might be uncalibrated. Check after some time of flow inactivity when sensors
+// should have equilibrated.
+#define TEMPERATURE_CALIBRATION_EQUILIBRIUM_SECONDS		  (10UL * 60UL)
+#define TEMPERATURE_CALIBRATION_DELTA_WARNING_THRESHOLD_C 0.2f
+#define TEMPERATURE_CALIBRATION_WARNING_STATUS_TEXT		  "Warning: temperature sensors might not be calibrated"
 
 // INA226 settings
-#define INA_CIRC_SHUNT_RESISTANCE			0.1f	// Ohm
-#define INA_CIRC_MAX_CURRENT_A				1.2f	// A
-#define INA_COOLING_SHUNT_RESISTANCE		0.1f	// Ohm
-#define INA_COOLING_MAX_CURRENT_A			1.2f	// A
-#define INA_HEATING_SHUNT_RESISTANCE		0.02f	// Ohm, have a smaller shunt for the heater output to support higher currents
-#define INA_HEATING_MAX_CURRENT_A			6f		// A
+#define INA_CIRC_SHUNT_RESISTANCE	 0.1f  // Ohm
+#define INA_CIRC_MAX_CURRENT_A		 1.2f  // A
+#define INA_COOLING_SHUNT_RESISTANCE 0.1f  // Ohm
+#define INA_COOLING_MAX_CURRENT_A	 1.2f  // A
+#define INA_HEATING_SHUNT_RESISTANCE 0.02f // Ohm, have a smaller shunt for the heater output to support higher currents
+#define INA_HEATING_MAX_CURRENT_A	 6f	   // A
 
-#define SERIAL_PRINT_INTERVAL_MS		5000
-#define WIFI_LED_TOGGLE_INTERVAL_MS		500 // // Wi-Fi built-in LED blink period when connected
-#define LED_TOGGLE_INTERVAL_MS			350
+#define SERIAL_PRINT_INTERVAL_MS	5000
+#define WIFI_LED_TOGGLE_INTERVAL_MS 500 // // Wi-Fi built-in LED blink period when connected
+#define LED_TOGGLE_INTERVAL_MS		350
 
 Controller::Controller(State& state, Connectivity& connectivity)
 	: _state(state),
@@ -118,8 +120,7 @@ void Controller::begin() {
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
 #ifdef CIRCULATION_TB6612_AIN1_PIN
-	_circMotor = new Motor(CIRCULATION_TB6612_AIN1_PIN, CIRCULATION_TB6612_AIN2_PIN,
-	                   CIRCULATION_PWM_PIN, 1, CIRCULATION_TB6612_STBY_PIN);
+	_circMotor = new Motor(CIRCULATION_TB6612_AIN1_PIN, CIRCULATION_TB6612_AIN2_PIN, CIRCULATION_PWM_PIN, 1, CIRCULATION_TB6612_STBY_PIN);
 #else
 	pinMode(CIRCULATION_PWM_PIN, OUTPUT);
 	analogWrite(CIRCULATION_PWM_PIN, 0);
@@ -134,7 +135,8 @@ void Controller::begin() {
 	analogWrite(HEATING_PWM_PIN, 0);
 #endif
 
-// misc pins used to power other low current devices. for sake of convenience when we need to adapt to specific pin layout of off-the-shelf boards
+// misc pins used to power other low current devices. for sake of convenience when we need to adapt to specific pin
+// layout of off-the-shelf boards
 #ifdef MISC_HIGH_1_PIN
 	pinMode(MISC_HIGH_1_PIN, OUTPUT);
 	digitalWrite(MISC_HIGH_1_PIN, HIGH);
@@ -267,10 +269,7 @@ void Controller::loop() {
 	if (now - _lastSerialPrintMs >= SERIAL_PRINT_INTERVAL_MS) {
 		_lastSerialPrintMs = now;
 		StateGuard guard(_state);
-		Serial.printf("[State] mode=%-16s status=%-14s circ=%3u",
-			_state.mode.get().c_str(),
-			_state.status.get().c_str(),
-			_state.circSpeed.get());
+		Serial.printf("[State] mode=%-16s status=%-14s circ=%3u", _state.mode.get().c_str(), _state.status.get().c_str(), _state.circSpeed.get());
 
 #ifdef COOLING_PWM_PIN
 		Serial.printf(" cool=%3u", _state.coolingSpeed.get());
@@ -468,7 +467,9 @@ void Controller::setMode(const String& newMode) {
 }
 
 void Controller::notifyConfigChanged() {
-	if (_onConfigUpdated) _onConfigUpdated();
+	if (_onConfigUpdated) {
+		_onConfigUpdated();
+	}
 }
 
 void Controller::_triggerError(const String& cause) {
@@ -485,7 +486,9 @@ void Controller::_triggerError(const String& cause) {
 	digitalWrite(RED_LED_PIN, HIGH);
 #endif
 	Serial.printf("[Controller] ERROR: %s\n", cause.c_str());
-	if (_onTelemetryUpdated) _onTelemetryUpdated();
+	if (_onTelemetryUpdated) {
+		_onTelemetryUpdated();
+	}
 }
 
 void Controller::_clearError() {
@@ -498,7 +501,9 @@ void Controller::_clearError() {
 #ifdef RED_LED_PIN
 	digitalWrite(RED_LED_PIN, LOW);
 #endif
-	if (_onTelemetryUpdated) _onTelemetryUpdated();
+	if (_onTelemetryUpdated) {
+		_onTelemetryUpdated();
+	}
 }
 
 void Controller::_setCircSpeed(uint8_t speed) {
@@ -513,8 +518,12 @@ void Controller::_setCircSpeed(uint8_t speed) {
 #else
 	analogWrite(CIRCULATION_PWM_PIN, speed);
 #endif
-	if (speed > 0 && _circActiveSinceMs == 0) _circActiveSinceMs = millis();
-	if (speed == 0) _circActiveSinceMs = 0;
+	if (speed > 0 && _circActiveSinceMs == 0) {
+		_circActiveSinceMs = millis();
+	}
+	if (speed == 0) {
+		_circActiveSinceMs = 0;
+	}
 }
 
 void Controller::_setCoolingSpeed(uint8_t speed) {
@@ -527,8 +536,12 @@ void Controller::_setCoolingSpeed(uint8_t speed) {
 		StateGuard guard(_state);
 		_state.coolingSpeed.set(speed);
 	}
-	if (speed > 0 && _coolingActiveSinceMs == 0) _coolingActiveSinceMs = millis();
-	if (speed == 0) _coolingActiveSinceMs = 0;
+	if (speed > 0 && _coolingActiveSinceMs == 0) {
+		_coolingActiveSinceMs = millis();
+	}
+	if (speed == 0) {
+		_coolingActiveSinceMs = 0;
+	}
 }
 
 void Controller::_setHeatingSpeed(uint8_t speed) {
@@ -541,8 +554,12 @@ void Controller::_setHeatingSpeed(uint8_t speed) {
 		StateGuard guard(_state);
 		_state.heatingSpeed.set(speed);
 	}
-	if (speed > 0 && _heatingActiveSinceMs == 0) _heatingActiveSinceMs = millis();
-	if (speed == 0) _heatingActiveSinceMs = 0;
+	if (speed > 0 && _heatingActiveSinceMs == 0) {
+		_heatingActiveSinceMs = millis();
+	}
+	if (speed == 0) {
+		_heatingActiveSinceMs = 0;
+	}
 }
 
 void Controller::_stopAllOutputs() {
@@ -599,7 +616,9 @@ bool Controller::_readTemperatureOnce(DallasTemperature& sensor, float& outVal) 
 
 bool Controller::_readTemperatureRetry(DallasTemperature& sensor, float& outVal) {
 	for (int attempt = 0; attempt < TEMP_RETRY_COUNT; attempt++) {
-		if (_readTemperatureOnce(sensor, outVal)) return true;
+		if (_readTemperatureOnce(sensor, outVal)) {
+			return true;
+		}
 		delay(50);
 	}
 	return false;
@@ -607,7 +626,9 @@ bool Controller::_readTemperatureRetry(DallasTemperature& sensor, float& outVal)
 
 void Controller::_calculateDerivedMetrics(uint64_t rawNow, uint64_t filteredNow, unsigned long nowMs) {
 	unsigned long dt = nowMs - _prevPulsesMs;
-	if (dt == 0) return;
+	if (dt == 0) {
+		return;
+	}
 
 	uint64_t rawDiff = rawNow - _prevRawPulses;
 	uint64_t filteredDiff = filteredNow - _prevFilteredPulses;
@@ -768,30 +789,30 @@ void Controller::_sampleSensors() {
 #ifdef DALLAS_SENSOR_RETURNING_PIN
 	float returnTemp = 0.0f;
 	bool returnOk = false;
-#ifdef METHOD_VARIABLE_CIRCULATION_SPEED
+	#ifdef METHOD_VARIABLE_CIRCULATION_SPEED
 	returnOk = _readTemperatureRetry(_tempReturn, returnTemp);
-#else
+	#else
 	returnOk = _readTemperatureOnce(_tempReturn, returnTemp);
-#endif
+	#endif
 	if (returnOk) {
 		StateGuard guard(_state);
 		_state.returnTemperaturePresent.set(true);
 		returnTemp += _state.returnTemperatureCalibrationOffset.get();
 		_state.returnTemperature.set(returnTemp);
 	} else {
-#ifdef METHOD_VARIABLE_CIRCULATION_SPEED
+	#ifdef METHOD_VARIABLE_CIRCULATION_SPEED
 		_triggerError("Return temperature sensor failure");
 		return;
-#else
+	#else
 		StateGuard guard(_state);
 		_state.returnTemperaturePresent.set(false);
-#endif
+	#endif
 	}
 #else
-#ifdef METHOD_VARIABLE_CIRCULATION_SPEED
+	#ifdef METHOD_VARIABLE_CIRCULATION_SPEED
 	_triggerError("Return temperature sensor missing");
 	return;
-#endif
+	#endif
 #endif
 
 #ifdef DALLAS_SENSOR_COOLING_PIN
@@ -843,11 +864,15 @@ void Controller::_sampleSensors() {
 
 	_checkIvLimitsAndFaults(now);
 
-	if (_onTelemetryUpdated) _onTelemetryUpdated();
+	if (_onTelemetryUpdated) {
+		_onTelemetryUpdated();
+	}
 }
 
 void Controller::_runMode() {
-	if (_inError) return;
+	if (_inError) {
+		return;
+	}
 
 	String currentMode;
 	unsigned int sysTime, minFlow;
@@ -909,22 +934,38 @@ void Controller::_runMode() {
 	} else if (currentMode == MODE_MANUAL_CIRC) {
 		_setCoolingSpeed(0);
 		_setHeatingSpeed(0);
-		if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
-		if (!flowGuardCheck()) return;
+		if (circSpd != circSetPoint) {
+			_setCircSpeed(circSetPoint);
+		}
+		if (!flowGuardCheck()) {
+			return;
+		}
 		StateGuard guard(_state);
 		_state.status.set("Circulating");
 	} else if (currentMode == MODE_MANUAL_COOL) {
-		if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
-		if (coolSpd != coolSetPoint) _setCoolingSpeed(coolSetPoint);
+		if (circSpd != circSetPoint) {
+			_setCircSpeed(circSetPoint);
+		}
+		if (coolSpd != coolSetPoint) {
+			_setCoolingSpeed(coolSetPoint);
+		}
 		_setHeatingSpeed(0);
-		if (!flowGuardCheck()) return;
+		if (!flowGuardCheck()) {
+			return;
+		}
 		StateGuard guard(_state);
 		_state.status.set("Cooling");
 	} else if (currentMode == MODE_MANUAL_HEAT) {
-		if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
-		if (heatSpd != heatSetPoint) _setHeatingSpeed(heatSetPoint);
+		if (circSpd != circSetPoint) {
+			_setCircSpeed(circSetPoint);
+		}
+		if (heatSpd != heatSetPoint) {
+			_setHeatingSpeed(heatSetPoint);
+		}
 		_setCoolingSpeed(0);
-		if (!flowGuardCheck()) return;
+		if (!flowGuardCheck()) {
+			return;
+		}
 		StateGuard guard(_state);
 		_state.status.set("Heating");
 	} else if (currentMode == MODE_PRIME_CIRC) {
@@ -932,7 +973,9 @@ void Controller::_runMode() {
 		_setHeatingSpeed(0);
 
 		if (sysTime == 0) {
-			if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
+			if (circSpd != circSetPoint) {
+				_setCircSpeed(circSetPoint);
+			}
 			StateGuard guard(_state);
 			_state.status.set("Priming, pumping");
 		} else {
@@ -943,11 +986,15 @@ void Controller::_runMode() {
 			const bool pumping = cyclePos < PRIME_CIRC_ON_CYCLES;
 
 			if (pumping) {
-				if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
+				if (circSpd != circSetPoint) {
+					_setCircSpeed(circSetPoint);
+				}
 				StateGuard guard(_state);
 				_state.status.set("Priming, pumping");
 			} else {
-				if (circSpd != 0) _setCircSpeed(0);
+				if (circSpd != 0) {
+					_setCircSpeed(0);
+				}
 				StateGuard guard(_state);
 				_state.status.set("Priming, resting");
 			}
@@ -960,22 +1007,24 @@ void Controller::_runMode() {
 		}
 		if (now - _lastTempAdjMs >= (unsigned long)sysTime * 1000UL) {
 			_lastTempAdjMs = now;
-#ifdef FLOW_SENSOR_PIN
+	#ifdef FLOW_SENSOR_PIN
 			if (returnTemp < setPoint && filteredPerSec > minFlow) {
 				_setCircSpeed((uint8_t)max((int)circSpd - VARIABLE_SPEED_STEP, 0));
 			} else if (returnTemp > setPoint) {
 				_setCircSpeed((uint8_t)min((int)circSpd + VARIABLE_SPEED_STEP, PUMP_MAX_SPEED));
 			}
-#else
+	#else
 			if (returnTemp < setPoint && circSpd > circSetPoint) {
 				_setCircSpeed((uint8_t)max((int)circSpd - VARIABLE_SPEED_STEP, (int)circSetPoint));
 			} else if (returnTemp > setPoint) {
 				_setCircSpeed((uint8_t)min((int)circSpd + VARIABLE_SPEED_STEP, PUMP_MAX_SPEED));
 			}
-#endif
+	#endif
 		}
 #else
-		if (circSpd != circSetPoint) _setCircSpeed(circSetPoint);
+		if (circSpd != circSetPoint) {
+			_setCircSpeed(circSetPoint);
+		}
 #endif
 		if (coolSpd > 0) {
 			if (outTemp < setPoint + COOLING_HYSTERESIS_STOP) {
@@ -996,21 +1045,22 @@ void Controller::_runMode() {
 		{
 			StateGuard guard(_state);
 			if (_state.coolingSpeed.get() > 0) {
-				// check if cooling water is colder than the set point, if not, warn the user that cooling is not effective
+				// check if cooling water is colder than the set point, if not, warn the user that cooling is not
+				// effective
 				if (_state.coolingTemperaturePresent.get() && _state.coolingTemperature.get() > setPoint - INEFFECTIVE_COOLING_WARNING_DELTA_C) {
 					_state.status.set("Cooling (ineffective)");
 				} else {
 					_state.status.set("Cooling");
 				}
-			}
-			else if (_state.heatingSpeed.get() > 0) {
+			} else if (_state.heatingSpeed.get() > 0) {
 				_state.status.set("Heating");
-			}
-			else {
+			} else {
 				_state.status.set("Circulating");
 			}
 		}
-		if (!flowGuardCheck()) return;
+		if (!flowGuardCheck()) {
+			return;
+		}
 	} else if (currentMode == MODE_TEMPERATURE_PREPARE) {
 		_setCoolingSpeed(0);
 		_setHeatingSpeed(0);
@@ -1031,10 +1081,14 @@ void Controller::_runMode() {
 		}
 	} else if (currentMode == MODE_FLOW_TEST) {
 		if (filteredPerSec < minFlow) {
-			if (circSpd != FLOW_TEST_MAX_SPEED) _setCircSpeed(FLOW_TEST_MAX_SPEED);
+			if (circSpd != FLOW_TEST_MAX_SPEED) {
+				_setCircSpeed(FLOW_TEST_MAX_SPEED);
+			}
 			_lastFlowTestStepMs = now;
 		} else {
-			unsigned long intervalMs = (unsigned long)((circSpd == FLOW_TEST_MAX_SPEED ? FLOW_TEST_FIRST_STEP_INTERVAL_RATIO : FLOW_TEST_STEP_INTERVAL_RATIO) * (float)sysTime * 1000.0f);
+			unsigned long intervalMs =
+				(unsigned long)((circSpd == FLOW_TEST_MAX_SPEED ? FLOW_TEST_FIRST_STEP_INTERVAL_RATIO : FLOW_TEST_STEP_INTERVAL_RATIO) *
+								(float)sysTime * 1000.0f);
 			if (now - _lastFlowTestStepMs >= intervalMs) {
 				_lastFlowTestStepMs = now;
 				_setCircSpeed((uint8_t)max((int)circSpd - FLOW_TEST_STEP, 0));

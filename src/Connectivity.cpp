@@ -6,16 +6,14 @@
 
 #include "Connectivity.h"
 #ifdef OTA_ENABLE
-#include <SPIFFS.h>
-#include <ArduinoOTA.h>
+	#include <SPIFFS.h>
+	#include <ArduinoOTA.h>
 #endif
 
-#define LOOP_LOG_INTERVAL_MS		4000
-#define RECONNECTION_ATTEMPT_INTERVAL_MS	20000
+#define LOOP_LOG_INTERVAL_MS			 4000
+#define RECONNECTION_ATTEMPT_INTERVAL_MS 20000
 
-Connectivity::Connectivity(State& state)
-	: _state(state), _connected(false), _otaStarted(false), _lastLoopLogMs(0), _lastReconnectionAttemptMs(0) {
-}
+Connectivity::Connectivity(State& state) : _state(state), _connected(false), _otaStarted(false), _lastLoopLogMs(0), _lastReconnectionAttemptMs(0) {}
 
 void Connectivity::begin() {
 	String apSsid, hostname;
@@ -32,8 +30,7 @@ void Connectivity::begin() {
 	bool ok = _wifiManager.autoConnect(apSsid.c_str());
 	if (ok) {
 		_connected = true;
-		Serial.printf("[Connectivity] Connected to Wi-Fi. IP: %s\n",
-		              WiFi.localIP().toString().c_str());
+		Serial.printf("[Connectivity] Connected to Wi-Fi. IP: %s\n", WiFi.localIP().toString().c_str());
 		_updateRssiMetric();
 		_setupMdns();
 		_setupOta();
@@ -128,9 +125,9 @@ void Connectivity::_setupOta() {
 
 #ifdef OTA_ENABLE
 
-#ifdef OTA_ENABLE_PIN
+	#ifdef OTA_ENABLE_PIN
 	pinMode(OTA_ENABLE_PIN, INPUT_PULLUP);
-#endif
+	#endif
 
 	String hostname;
 	{
@@ -141,32 +138,28 @@ void Connectivity::_setupOta() {
 	ArduinoOTA.setHostname(hostname.c_str());
 	ArduinoOTA.setPort(OTA_PORT);
 
-#ifdef OTA_PASSWORD
+	#ifdef OTA_PASSWORD
 	ArduinoOTA.setPassword(OTA_PASSWORD);
 	Serial.println("[Connectivity] OTA password is enabled");
-#else
+	#else
 	Serial.println("[Connectivity] OTA password is not configured");
-#endif
+	#endif
 
 	ArduinoOTA.onStart([]() {
 		const char* type = "sketch";
 		if (ArduinoOTA.getCommand() == U_SPIFFS) {
 			type = "filesystem";
 			// CRITICAL: Unmount SPIFFS here so the OTA tool can safely overwrite it
-			SPIFFS.end(); 
+			SPIFFS.end();
 		}
 		Serial.printf("[Connectivity] OTA update started: type = \"%s\"\n", type);
 	});
-	ArduinoOTA.onEnd([]() {
-		Serial.println("[Connectivity] OTA update finished");
-	});
+	ArduinoOTA.onEnd([]() { Serial.println("[Connectivity] OTA update finished"); });
 	ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 		unsigned int pct = (total == 0) ? 0 : (progress * 100U) / total;
 		Serial.printf("[Connectivity] OTA progress: %u%%\n", pct);
 	});
-	ArduinoOTA.onError([](ota_error_t error) {
-		Serial.printf("[Connectivity] OTA error [%u]\n", (unsigned int)error);
-	});
+	ArduinoOTA.onError([](ota_error_t error) { Serial.printf("[Connectivity] OTA error [%u]\n", (unsigned int)error); });
 
 	ArduinoOTA.begin();
 	_otaStarted = true;
