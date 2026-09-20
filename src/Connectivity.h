@@ -30,6 +30,8 @@ private:
 	WiFiManager _wifiManager;
 	bool _connected;
 	bool _otaStarted;
+	unsigned long _lastLoopLogMs;
+	unsigned long _lastReconnectionAttemptMs;
 
 	void _setupMdns();
 	void _setupOta();

@@ -10,8 +10,11 @@
 #include <ArduinoOTA.h>
 #endif
 
+#define LOOP_LOG_INTERVAL_MS		4000
+#define RECONNECTION_ATTEMPT_INTERVAL_MS	20000
+
 Connectivity::Connectivity(State& state)
-	: _state(state), _connected(false), _otaStarted(false) {
+	: _state(state), _connected(false), _otaStarted(false), _lastLoopLogMs(0), _lastReconnectionAttemptMs(0) {
 }
 
 void Connectivity::begin() {
@@ -41,9 +44,18 @@ void Connectivity::begin() {
 }
 
 void Connectivity::loop() {
+	// log state for troubleshooting
+	unsigned long now = millis();
+	// if (now - _lastLoopLogMs >= LOOP_LOG_INTERVAL_MS) {
+	// 	_lastLoopLogMs = now;
+	// 	Serial.printf("[Connectivity] Looping, Wi-Fi status: %s, connected flag: %s\n",
+	// 				  WiFi.status() == WL_CONNECTED ? "connected" : "disconnected",
+	// 				  _connected ? "true" : "false");
+	// }
+	// update state when changes happen
 	if (WiFi.status() == WL_CONNECTED) {
 		_updateRssiMetric();
-		if (!_connected) {
+		if (!_connected) { // Wi-Fi has just (re)connected
 			_connected = true;
 			Serial.println("[Connectivity] Wi-Fi reconnected");
 			_updateRssiMetric();
@@ -68,11 +80,14 @@ void Connectivity::loop() {
 				StateGuard guard(_state);
 				_state.rssi.set(_state.rssi.getDefault());
 			}
-			Serial.println("[Connectivity] Wi-Fi disconnected, attempting reconnect...");
+			Serial.println("[Connectivity] Wi-Fi disconnected.");
 		}
-		// WiFiManager / Arduino WiFi will handle reconnection automatically
-		// but we can explicitly trigger it
-		WiFi.reconnect();
+		// start reconnection process unless we are still waiting for the previous reconnection attempt
+		if (now - _lastReconnectionAttemptMs >= RECONNECTION_ATTEMPT_INTERVAL_MS) {
+			_lastReconnectionAttemptMs = now;
+			WiFi.reconnect(); // can't just hammer "reconnect" as we will never get connected this way
+			Serial.println("[Connectivity] Attempting Wi-Fi reconnect...");
+		}
 	}
 }
 
