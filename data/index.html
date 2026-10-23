@@ -139,6 +139,11 @@
 					<span class="label">Flow Pulses/s</span>
 					<span class="value" x-text="state.flowPulsesFilteredPerSec || 0"></span>
 				</div>
+				<div class="metric" x-show="hasTelemetryKey('rssi')">
+					<span class="icon">📶</span>
+					<span class="label">Wi-Fi RSSI</span>
+					<span class="value" x-text="formatTelemetry('rssi', 0)"></span>
+				</div>
 				<div class="metric" x-show="hasTelemetryKey('circVoltage')">
 					<span class="icon">🔌</span>
 					<span class="label">Circulation Voltage</span>

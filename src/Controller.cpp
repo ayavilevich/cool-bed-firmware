@@ -290,10 +290,10 @@ void Controller::loop() {
 #endif
 
 #ifdef FLOW_SENSOR_PIN
-		Serial.printf(" flow=%5.2fL/min RSSI=%d", _state.flow.get(), _state.rssi.get());
+		Serial.printf(" flow=%5.2fL/min", _state.flow.get());
 #endif
 
-		Serial.println();
+		Serial.printf(" RSSI=%d\n", _state.rssi.get());
 	}
 }
 
