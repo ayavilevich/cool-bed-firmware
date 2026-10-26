@@ -65,6 +65,7 @@ function coolBedApp() {
 				const res = await fetch('/api/model');
 				if (!res.ok) return;
 				this.model = await res.json();
+				this._validateAndPersistClientTemperatureRangeC();
 				this.modelLoaded = true;
 			} catch (e) {
 				console.error('Failed to fetch model:', e);
@@ -112,6 +113,9 @@ function coolBedApp() {
 		},
 
 		minFor(key) {
+			if (key === 'temperatureSetPoint') {
+				return this.temperatureSetPointEffectiveMin();
+			}
 			const min = this._getConfigMeta(key).min;
 			if (!Number.isFinite(min)) return null;
 			if (this._isTemperatureConfigKey(key)) {
@@ -121,6 +125,9 @@ function coolBedApp() {
 		},
 
 		maxFor(key) {
+			if (key === 'temperatureSetPoint') {
+				return this.temperatureSetPointEffectiveMax();
+			}
 			const max = this._getConfigMeta(key).max;
 			if (!Number.isFinite(max)) return null;
 			if (this._isTemperatureConfigKey(key)) {
@@ -162,10 +169,11 @@ function coolBedApp() {
 				const data = await res.json();
 				this.state = data;
 				if (!this._editingTemperatureSetPoint) { // if not editing the set point, update the display value to reflect any changes from outside
-					this.temperatureSetPointDisplay = this.fromCelsius(
+					const nextDisplayValue = this.fromCelsius(
 						data.temperatureSetPoint ?? this.defaultFor('temperatureSetPoint', 0),
 						false
 					); // update display value to match state, converting from Celsius to display unit
+					this.temperatureSetPointDisplay = this._clampTemperatureSetPointDisplayValue(nextDisplayValue);
 				}
 				if (this._isStatePayloadValid(data)) {
 					this.lastValidStateAt = Date.now();
@@ -281,6 +289,7 @@ function coolBedApp() {
 		},
 
 		onTemperatureSetPointChanged() {
+			this.temperatureSetPointDisplay = this._clampTemperatureSetPointDisplayValue(this.temperatureSetPointDisplay);
 			const valueC = this.toCelsius(this.temperatureSetPointDisplay, false);
 			this.state.temperatureSetPoint = valueC;
 			this._postConfig({ temperatureSetPoint: valueC });
@@ -289,7 +298,7 @@ function coolBedApp() {
 
 		onTemperatureSetPointInput(value) {
 			this._editingTemperatureSetPoint = true;
-			this.temperatureSetPointDisplay = Number(value);
+			this.temperatureSetPointDisplay = this._clampTemperatureSetPointDisplayValue(value);
 		},
 
 		onCalibrationVolumeChanged() {
@@ -358,6 +367,85 @@ function coolBedApp() {
 
 		_isTemperatureDeltaTelemetryKey(key) {
 			return TEMP_TELEMETRY_DELTA_KEYS.has(key);
+		},
+
+		_toFiniteOrNull(value) {
+			const n = Number(value);
+			return Number.isFinite(n) ? n : null;
+		},
+
+		_clampToRange(value, min, max) {
+			const n = Number(value);
+			if (!Number.isFinite(n)) return min;
+			return Math.min(Math.max(n, min), max);
+		},
+
+		_getServerTemperatureSetPointRangeC() {
+			const min = this._toFiniteOrNull(this._getConfigMeta('temperatureSetPoint').min);
+			const max = this._toFiniteOrNull(this._getConfigMeta('temperatureSetPoint').max);
+			return { min, max };
+		},
+
+		_getClientTemperatureSetPointRangeC() {
+			const { start, end } = TempUnits.getStoredTemperatureRangeC();
+			return {
+				min: this._toFiniteOrNull(start),
+				max: this._toFiniteOrNull(end),
+			};
+		},
+
+		_validateAndPersistClientTemperatureRangeC() {
+			const server = this._getServerTemperatureSetPointRangeC();
+			if (!Number.isFinite(server.min) || !Number.isFinite(server.max) || server.min > server.max) {
+				return;
+			}
+
+			const stored = TempUnits.getStoredTemperatureRangeC();
+			let min = this._toFiniteOrNull(stored.start);
+			let max = this._toFiniteOrNull(stored.end);
+
+			if (!Number.isFinite(min)) min = server.min;
+			if (!Number.isFinite(max)) max = server.max;
+
+			min = this._clampToRange(min, server.min, server.max);
+			max = this._clampToRange(max, server.min, server.max);
+			if (min > max) {
+				min = server.min;
+				max = server.max;
+			}
+
+			TempUnits.setStoredTemperatureRangeC(min, max);
+		},
+
+		_getEffectiveTemperatureSetPointRangeC() {
+			const server = this._getServerTemperatureSetPointRangeC();
+			const client = this._getClientTemperatureSetPointRangeC();
+			let min = server.min;
+			let max = server.max;
+			if (Number.isFinite(client.min)) {
+				min = Math.max(min, client.min);
+			}
+			if (Number.isFinite(client.max)) {
+				max = Math.min(max, client.max);
+			}
+			if (!Number.isFinite(min) || !Number.isFinite(max) || min > max) {
+				return server;
+			}
+			return { min, max };
+		},
+
+		temperatureSetPointEffectiveMin() {
+			return this.fromCelsius(this._getEffectiveTemperatureSetPointRangeC().min, false);
+		},
+
+		temperatureSetPointEffectiveMax() {
+			return this.fromCelsius(this._getEffectiveTemperatureSetPointRangeC().max, false);
+		},
+
+		_clampTemperatureSetPointDisplayValue(value) {
+			const min = this.temperatureSetPointEffectiveMin();
+			const max = this.temperatureSetPointEffectiveMax();
+			return this._clampToRange(value, min, max);
 		},
 
 		// ---- Chart ----

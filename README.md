@@ -64,6 +64,7 @@ Use `platformio.local.ini` to add unversioned PlatformIO environments and define
 ## Configuration
 
 All settings are available via the web UI at `/config.html`, including MQTT credentials, operating thresholds, and calibration values. Settings are persisted in ESP32 NVS (`Preferences`).
+The UI also stores client-side preferences in browser local storage (temperature units, temperature range, etc), and temperature sliders use the intersection of this client-side range with the firmware-provided range.
 
 ## Project Structure
 

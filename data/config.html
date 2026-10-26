@@ -30,7 +30,7 @@
 					<label x-show="hasConfigKey('hostname')">Hostname
 						<input type="text" x-model="cfg.hostname" pattern="[a-zA-Z0-9_\-]+" required>
 					</label>
-					<label>Temperature Units
+					<label>Temperature Units [local]
 						<select :value="temperatureUnit" @change="changeTemperatureUnit($event.target.value)">
 							<option value="C">Celsius (°C)</option>
 							<option value="F">Fahrenheit (°F)</option>
@@ -79,6 +79,12 @@
 					<label x-show="hasConfigKey('heatingSpeedSetPoint')"><span x-text="labelFor('heatingSpeedSetPoint', 'Heating Speed Set Point') + (unitsFor('heatingSpeedSetPoint') ? ' (' + unitsFor('heatingSpeedSetPoint') + ')' : '')"></span>
 						<input type="range" :min="minFor('heatingSpeedSetPoint')" :max="maxFor('heatingSpeedSetPoint')" x-model.number="cfg.heatingSpeedSetPoint">
 						<span x-text="cfg.heatingSpeedSetPoint"></span>
+					</label>
+					<label x-show="hasConfigKey('temperatureSetPoint')"><span x-text="'Temperature range start [local] ' + unitsFor('temperatureSetPoint')"></span>
+						<input type="number" x-model.number="cfg.temperatureRangeStart" step="0.5">
+					</label>
+					<label x-show="hasConfigKey('temperatureSetPoint')"><span x-text="'Temperature range end [local] ' + unitsFor('temperatureSetPoint')"></span>
+						<input type="number" x-model.number="cfg.temperatureRangeEnd" step="0.5">
 					</label>
 					<label x-show="hasConfigKey('temperatureSetPoint')"><span x-text="labelFor('temperatureSetPoint', 'Temperature Set Point') + (unitsFor('temperatureSetPoint') ? ' (' + unitsFor('temperatureSetPoint') + ')' : '')"></span>
 						<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="cfg.temperatureSetPoint">

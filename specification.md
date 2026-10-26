@@ -424,6 +424,13 @@ Show configuration row for temperature units.
 
 On save, send data to backend using POST or fetch and get a response. Show a notification about the result of the save.
 
+#### Configurable effective ranges
+
+For some parameters, such as a temperature set point, the range allowed by the backend is too large to be practical.
+This results in only a small area of the slider being useful. This is true for temperature and motor speed sliders. For temperature, the backend allow 10 to 40 degrees Celsius but usually only a small window around 30 is comfortable to the user. For motor speeds, depending on a particular motor, the range can be only part of the 0-255 PWM output range.
+To address the issue, the web UI allows to specify a smaller range. The relevant slider then uses that range.
+These ranges are client side parameters and are persisted locally.
+
 #### Backend
 
 Simple backend using ESPAsyncWebServer and JSON to provide the client side with the state and to modify settings when asked by the user.
