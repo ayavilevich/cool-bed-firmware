@@ -12,6 +12,8 @@
 
 #define LOOP_LOG_INTERVAL_MS			 4000
 #define RECONNECTION_ATTEMPT_INTERVAL_MS 20000
+#define STA_CONNECT_TIMEOUT_SEC			 30 // how long to try to connect to the saved Wi-Fi credentials before giving up
+#define WM_PORTAL_TIMEOUT_SEC			 180 // how long to keep the Wi-Fi config portal open before timing out
 
 Connectivity::Connectivity(State& state) : _state(state), _connected(false), _otaStarted(false), _lastLoopLogMs(0), _lastReconnectionAttemptMs(0) {}
 
@@ -29,6 +31,8 @@ void Connectivity::begin() {
 
 	_wifiManager.setConfigPortalBlocking(true);
 	_wifiManager.setHostname(hostname.c_str());
+	_wifiManager.setConnectTimeout(STA_CONNECT_TIMEOUT_SEC);
+	_wifiManager.setConfigPortalTimeout(WM_PORTAL_TIMEOUT_SEC);
 
 	// Connect or open config portal
 	bool ok = _wifiManager.autoConnect(apSsid.c_str());
