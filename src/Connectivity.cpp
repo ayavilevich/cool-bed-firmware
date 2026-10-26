@@ -16,6 +16,10 @@
 Connectivity::Connectivity(State& state) : _state(state), _connected(false), _otaStarted(false), _lastLoopLogMs(0), _lastReconnectionAttemptMs(0) {}
 
 void Connectivity::begin() {
+	// disable Wi-Fi sleep to improve connectivity, transmission reliability and transfer performance
+	WiFi.setSleep(false);
+
+	// configure config portal
 	String apSsid, hostname;
 	{
 		StateGuard guard(_state);
