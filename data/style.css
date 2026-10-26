@@ -176,6 +176,18 @@ label.checkbox-label {
 	gap: 0.5rem;
 }
 
+.range-row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.75rem;
+}
+
+@media (max-width: 700px) {
+	.range-row {
+		grid-template-columns: 1fr;
+	}
+}
+
 input[type="text"],
 input[type="number"],
 input[type="password"],
