@@ -56,17 +56,24 @@ private:
 	FlowSensor _flowSensor;
 #endif
 
+	struct Temp {
+		OneWire ow;
+		DallasTemperature sensor;
+		bool requested;
+		unsigned long requestMs;
+		uint16_t waitMs;
+
+		explicit Temp(uint8_t pin) : ow(pin), sensor(&ow), requested(false), requestMs(0), waitMs(0) {}
+	};
+
 #ifdef DALLAS_SENSOR_OUTGOING_PIN
-	OneWire _owOut;
-	DallasTemperature _tempOut;
+	Temp _outTemp;
 #endif
 #ifdef DALLAS_SENSOR_RETURNING_PIN
-	OneWire _owReturn;
-	DallasTemperature _tempReturn;
+	Temp _returnTemp;
 #endif
 #ifdef DALLAS_SENSOR_COOLING_PIN
-	OneWire _owCooling;
-	DallasTemperature _tempCooling;
+	Temp _coolingTemp;
 #endif
 
 #ifdef INA226_CIRCULATION_ADDRESS
@@ -130,8 +137,8 @@ private:
 	void _setHeatingSpeed(uint8_t speed);
 	void _stopAllOutputs();
 	void _updateOutputLedIndicators();
-	bool _readTemperatureOnce(DallasTemperature& sensor, float& outVal);
-	bool _readTemperatureRetry(DallasTemperature& sensor, float& outVal);
+	bool _readTemperatureOnce(Temp& temp, float& outVal);
+	bool _readTemperatureRetry(Temp& temp, float& outVal);
 	void _calculateDerivedMetrics(uint64_t rawNow, uint64_t filteredNow, unsigned long nowMs);
 	void _checkIvLimitsAndFaults(unsigned long now);
 };

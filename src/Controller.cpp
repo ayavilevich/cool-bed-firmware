@@ -14,6 +14,7 @@
 #define PUMP_MAX_SPEED				  255 // max PWM value for pump speed
 #define SENSOR_SAMPLE_INTERVAL_MS	  1000
 #define TEMP_RETRY_COUNT			  3
+#define TEMP_RETRY_INTERVAL_MS		  50
 #define TEMP_MIN_CELSIUS			  -5.0f
 #define TEMP_MAX_CELSIUS			  40.0f
 #define VARIABLE_SPEED_STEP			  10
@@ -59,16 +60,13 @@ Controller::Controller(State& state, Connectivity& connectivity)
 	  _flowSensor(FLOW_SENSOR_PIN),
 #endif
 #ifdef DALLAS_SENSOR_OUTGOING_PIN
-	  _owOut(DALLAS_SENSOR_OUTGOING_PIN),
-	  _tempOut(&_owOut),
+	  _outTemp(DALLAS_SENSOR_OUTGOING_PIN),
 #endif
 #ifdef DALLAS_SENSOR_RETURNING_PIN
-	  _owReturn(DALLAS_SENSOR_RETURNING_PIN),
-	  _tempReturn(&_owReturn),
+	  _returnTemp(DALLAS_SENSOR_RETURNING_PIN),
 #endif
 #ifdef DALLAS_SENSOR_COOLING_PIN
-	  _owCooling(DALLAS_SENSOR_COOLING_PIN),
-	  _tempCooling(&_owCooling),
+	  _coolingTemp(DALLAS_SENSOR_COOLING_PIN),
 #endif
 #ifdef INA226_CIRCULATION_ADDRESS
 	  _inaCirc(INA226_CIRCULATION_ADDRESS),
@@ -158,13 +156,16 @@ void Controller::begin() {
 	_flowSensor.begin();
 #endif
 #ifdef DALLAS_SENSOR_OUTGOING_PIN
-	_tempOut.begin();
+	_outTemp.sensor.begin();
+	_outTemp.sensor.setWaitForConversion(false);
 #endif
 #ifdef DALLAS_SENSOR_RETURNING_PIN
-	_tempReturn.begin();
+	_returnTemp.sensor.begin();
+	_returnTemp.sensor.setWaitForConversion(false);
 #endif
 #ifdef DALLAS_SENSOR_COOLING_PIN
-	_tempCooling.begin();
+	_coolingTemp.sensor.begin();
+	_coolingTemp.sensor.setWaitForConversion(false);
 #endif
 
 	Wire.begin();
@@ -259,13 +260,14 @@ void Controller::loop() {
 	unsigned long now = millis();
 
 	if (now - _lastSampleMs >= SENSOR_SAMPLE_INTERVAL_MS) {
-		_lastSampleMs = now;
-		_sampleSensors();
+		_sampleSensors(); // sampleSensors can block in some edge cases
+		_lastSampleMs = millis(); // make sure to provide a break and not call it back to back
 	}
 
 	_runMode();
 	_updateOutputLedIndicators();
 
+	now = millis();
 	if (now - _lastSerialPrintMs >= SERIAL_PRINT_INTERVAL_MS) {
 		_lastSerialPrintMs = now;
 		StateGuard guard(_state);
@@ -604,22 +606,49 @@ void Controller::_updateOutputLedIndicators() {
 #endif
 }
 
-bool Controller::_readTemperatureOnce(DallasTemperature& sensor, float& outVal) {
-	sensor.requestTemperatures();
-	float val = sensor.getTempCByIndex(0);
-	if (val != DEVICE_DISCONNECTED_C && val >= TEMP_MIN_CELSIUS && val <= TEMP_MAX_CELSIUS) {
-		outVal = val;
-		return true;
+bool Controller::_readTemperatureOnce(Temp& temp, float& outVal) {
+	unsigned long now = millis();
+	if (!temp.requested) {
+		temp.waitMs = DallasTemperature::millisToWaitForConversion(temp.sensor.getResolution());
+		temp.requestMs = now;
+		temp.requested = true;
+		temp.sensor.requestTemperatures();
+		Serial.printf("[Controller] Temperature first conversion pending, blocking for %u ms\n", temp.waitMs);
+		delay(temp.waitMs);
+	} else {
+		unsigned long elapsed = now - temp.requestMs;
+		if (elapsed < temp.waitMs) {
+			unsigned long remaining = temp.waitMs - elapsed;
+			Serial.printf("[Controller] Temperature conversion not ready, blocking additional %lu ms\n", remaining);
+			delay(remaining);
+		}
 	}
-	return false;
+
+	float val = temp.sensor.getTempCByIndex(0);
+	bool ret = false;
+	if (val != DEVICE_DISCONNECTED_C && val >= TEMP_MIN_CELSIUS && val <= TEMP_MAX_CELSIUS) { // if good value
+		outVal = val;
+		ret = true;
+	}
+	// schedule next reading
+	temp.waitMs = DallasTemperature::millisToWaitForConversion(temp.sensor.getResolution());
+	temp.requestMs = millis();
+	temp.requested = true;
+	temp.sensor.requestTemperatures();
+
+	return ret;
 }
 
-bool Controller::_readTemperatureRetry(DallasTemperature& sensor, float& outVal) {
+bool Controller::_readTemperatureRetry(Temp& temp, float& outVal) {
 	for (int attempt = 0; attempt < TEMP_RETRY_COUNT; attempt++) {
-		if (_readTemperatureOnce(sensor, outVal)) {
+		if (_readTemperatureOnce(temp, outVal)) {
 			return true;
 		}
-		delay(50);
+		Serial.printf("[Controller] Temperature read failed (attempt %d/%d), delaying retry by %d ms\n",
+					  attempt + 1,
+					  TEMP_RETRY_COUNT,
+					  TEMP_RETRY_INTERVAL_MS);
+		delay(TEMP_RETRY_INTERVAL_MS);
 	}
 	return false;
 }
@@ -772,7 +801,7 @@ void Controller::_sampleSensors() {
 
 #ifdef DALLAS_SENSOR_OUTGOING_PIN
 	float outTemp = 0.0f;
-	if (!_readTemperatureRetry(_tempOut, outTemp)) {
+	if (!_readTemperatureRetry(_outTemp, outTemp)) {
 		_triggerError("Outgoing temperature sensor failure");
 		return;
 	}
@@ -790,9 +819,9 @@ void Controller::_sampleSensors() {
 	float returnTemp = 0.0f;
 	bool returnOk = false;
 	#ifdef METHOD_VARIABLE_CIRCULATION_SPEED
-	returnOk = _readTemperatureRetry(_tempReturn, returnTemp);
+	returnOk = _readTemperatureRetry(_returnTemp, returnTemp);
 	#else
-	returnOk = _readTemperatureOnce(_tempReturn, returnTemp);
+	returnOk = _readTemperatureOnce(_returnTemp, returnTemp);
 	#endif
 	if (returnOk) {
 		StateGuard guard(_state);
@@ -817,7 +846,7 @@ void Controller::_sampleSensors() {
 
 #ifdef DALLAS_SENSOR_COOLING_PIN
 	float coolingTemp = 0.0f;
-	if (_readTemperatureOnce(_tempCooling, coolingTemp)) {
+	if (_readTemperatureOnce(_coolingTemp, coolingTemp)) {
 		StateGuard guard(_state);
 		_state.coolingTemperaturePresent.set(true);
 		coolingTemp += _state.coolingTemperatureCalibrationOffset.get();
