@@ -64,7 +64,7 @@ Use `platformio.local.ini` to add unversioned PlatformIO environments and define
 ## Configuration
 
 All settings are available via the web UI at `/config.html`, including MQTT credentials, operating thresholds, and calibration values. Settings are persisted in ESP32 NVS (`Preferences`).
-The UI also stores client-side preferences in browser local storage (temperature units, temperature range, etc), and temperature sliders use the intersection of this client-side range with the firmware-provided range.
+The UI also stores client-side preferences in browser local storage (temperature units and local start/end ranges for temperature/circulation/cooling/heating set-point sliders). All affected sliders use the intersection of the client-side range with the firmware-provided range.
 
 ## Project Structure
 
@@ -84,6 +84,8 @@ data/               — SPIFFS web files
   index.html        — Main SPA (telemetry, mode controls, chart)
   config.html       — Configuration page
   app.js / config.js — Alpine.js components
+  temperature-units.js — Temperature unit conversions and preferences
+  ranges.js         — Client-side local slider range persistence
   style.css         — Dark-theme styles
   alpine.min.js     — Alpine.js v3 (local)
   chart.min.js      — Chart.js v4 (local)

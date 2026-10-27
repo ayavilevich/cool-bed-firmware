@@ -2,8 +2,6 @@
 	const CELSIUS = 'C';
 	const FAHRENHEIT = 'F';
 	const TEMP_UNIT_STORAGE_KEY = 'coolBed.temperatureUnit';
-	const TEMP_RANGE_START_C_STORAGE_KEY = 'coolBed.temperatureRangeStartC';
-	const TEMP_RANGE_END_C_STORAGE_KEY = 'coolBed.temperatureRangeEndC';
 	const DECIMAL_PLACES = 1;
 	const DECIMAL_PLACES_DELTA = 2;
 
@@ -85,49 +83,9 @@
 		}
 	}
 
-	function _toFiniteOrNull(value) {
-		const n = Number(value);
-		return Number.isFinite(n) ? n : null;
-	}
-
-	function getStoredTemperatureRangeC() {
-		try {
-			const start = global.localStorage.getItem(TEMP_RANGE_START_C_STORAGE_KEY);
-			const end = global.localStorage.getItem(TEMP_RANGE_END_C_STORAGE_KEY);
-			if (start === null || end === null) { // if one of the values is not set in localStorage
-				return { start: null, end: null }; // return an empty range
-			}
-			return { start: _toFiniteOrNull(start), end: _toFiniteOrNull(end) }; // otherwise, try to work with the stored values
-		} catch (e) {
-			return { start: null, end: null };
-		}
-	}
-
-	function setStoredTemperatureRangeC(start, end) {
-		try {
-			const startN = _toFiniteOrNull(start);
-			const endN = _toFiniteOrNull(end);
-			if (startN === null) {
-				global.localStorage.removeItem(TEMP_RANGE_START_C_STORAGE_KEY);
-			} else {
-				global.localStorage.setItem(TEMP_RANGE_START_C_STORAGE_KEY, String(startN));
-			}
-			if (endN === null) {
-				global.localStorage.removeItem(TEMP_RANGE_END_C_STORAGE_KEY);
-			} else {
-				global.localStorage.setItem(TEMP_RANGE_END_C_STORAGE_KEY, String(endN));
-			}
-		} catch (e) {
-			// Ignore storage write failures.
-		}
-	}
-
 	global.TempUnits = {
 		CELSIUS,
 		FAHRENHEIT,
-		// TEMP_UNIT_STORAGE_KEY,
-		// TEMP_RANGE_START_C_STORAGE_KEY,
-		// TEMP_RANGE_END_C_STORAGE_KEY,
 		DECIMAL_PLACES,
 		DECIMAL_PLACES_DELTA,
 		normalizeUnit,
@@ -137,7 +95,5 @@
 		unitSymbol,
 		getStoredUnit,
 		setStoredUnit,
-		getStoredTemperatureRangeC,
-		setStoredTemperatureRangeC,
 	};
 })(window);

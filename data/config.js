@@ -8,6 +8,13 @@ const TEMP_CLIENT_ABSOLUTE_KEYS = new Set([
 	'temperatureRangeEnd',
 ]);
 
+const LOCAL_RANGE_FIELDS = {
+	temperatureSetPoint: { start: 'temperatureRangeStart', end: 'temperatureRangeEnd' },
+	circSpeedSetPoint: { start: 'circSpeedRangeStart', end: 'circSpeedRangeEnd' },
+	coolingSpeedSetPoint: { start: 'coolingSpeedRangeStart', end: 'coolingSpeedRangeEnd' },
+	heatingSpeedSetPoint: { start: 'heatingSpeedRangeStart', end: 'heatingSpeedRangeEnd' },
+};
+
 const TEMP_CONFIG_DELTA_KEYS = new Set([
 	'outTemperatureCalibrationOffset',
 	'returnTemperatureCalibrationOffset',
@@ -49,8 +56,8 @@ function configApp() {
 		},
 
 		minFor(key) {
-			if (key === 'temperatureSetPoint') {
-				return this.temperatureSetPointEffectiveMin();
+			if (this._isLocalRangeManagedKey(key)) {
+				return this._effectiveDisplayRangeForKey(key).start;
 			}
 			const min = this._meta(key).min;
 			if (!Number.isFinite(min)) return null;
@@ -61,8 +68,8 @@ function configApp() {
 		},
 
 		maxFor(key) {
-			if (key === 'temperatureSetPoint') {
-				return this.temperatureSetPointEffectiveMax();
+			if (this._isLocalRangeManagedKey(key)) {
+				return this._effectiveDisplayRangeForKey(key).end;
 			}
 			const max = this._meta(key).max;
 			if (!Number.isFinite(max)) return null;
@@ -91,7 +98,6 @@ function configApp() {
 
 				this.model = await modelRes.json();
 				const data = await stateRes.json();
-				const validatedClientRangeC = this._loadValidatedClientTemperatureRangeC();
 
 				// Extract only config properties (exclude telemetry)
 				this.cfg = {
@@ -124,10 +130,9 @@ function configApp() {
 					maxHeatingCurrent:      data.maxHeatingCurrent ?? this.defaultFor('maxHeatingCurrent', 0),
 					minHeatingCurrent:      data.minHeatingCurrent ?? this.defaultFor('minHeatingCurrent', 0),
 					minHeatingVoltage:      data.minHeatingVoltage ?? this.defaultFor('minHeatingVoltage', 0),
-					temperatureRangeStart:  this._fromCelsius(validatedClientRangeC.start, false),
-					temperatureRangeEnd:    this._fromCelsius(validatedClientRangeC.end, false),
 				};
-				this._clampTemperatureSetPointToEffectiveRange();
+				this._loadValidatedClientRangesIntoConfig();
+				this._clampAllManagedSetPointValues();
 			} catch (e) {
 				console.error('Failed to load config:', e);
 			} finally {
@@ -137,12 +142,12 @@ function configApp() {
 
 		async save() {
 			TempUnits.setStoredUnit(this.temperatureUnit); // persist temperature unit setting (this is client side config)
-			const validationError = this._persistClientTemperatureRange();
+			const validationError = this._validateAndPersistAllClientRanges();
 			if (validationError) {
 				this._showNotification(validationError, 'error');
 				return;
 			}
-			this._clampTemperatureSetPointToEffectiveRange();
+			this._clampAllManagedSetPointValues();
 
 			// process and send server side config
 			try {
@@ -224,7 +229,7 @@ function configApp() {
 					delta: true,
 				});
 			}
-			this._clampTemperatureSetPointToEffectiveRange();
+			this._clampAllManagedSetPointValues();
 		},
 
 		temperatureUnitLabel() {
@@ -257,21 +262,52 @@ function configApp() {
 			return Number.isFinite(n) ? n : null;
 		},
 
-		_temperatureSetPointServerRangeC() {
-			const min = this._toFiniteOrNull(this._meta('temperatureSetPoint').min);
-			const max = this._toFiniteOrNull(this._meta('temperatureSetPoint').max);
-			return { start: min, end: max };
+		_serverRangeForKey(key) {
+			const meta = this._meta(key);
+			return {
+				start: this._toFiniteOrNull(meta.min),
+				end: this._toFiniteOrNull(meta.max),
+			};
 		},
 
-		_hasValidServerTemperatureRange() {
-			const server = this._temperatureSetPointServerRangeC();
-			return Number.isFinite(server.start) && Number.isFinite(server.end) && server.start <= server.end;
+		_hasValidServerRange(key) {
+			const range = this._serverRangeForKey(key);
+			return Number.isFinite(range.start) && Number.isFinite(range.end) && range.start <= range.end;
 		},
 
-		_loadValidatedClientTemperatureRangeC() {
-			const server = this._temperatureSetPointServerRangeC();
-			const stored = TempUnits.getStoredTemperatureRangeC();
-			if (!this._hasValidServerTemperatureRange()) {
+		_localRangeFieldsForKey(key) {
+			return LOCAL_RANGE_FIELDS[key];
+		},
+
+		_isLocalRangeManagedKey(key) {
+			return Object.prototype.hasOwnProperty.call(LOCAL_RANGE_FIELDS, key);
+		},
+
+		_isTemperatureRangeManagedKey(key) {
+			return key === 'temperatureSetPoint';
+		},
+
+		_toCanonicalRangeValue(key, displayValue) {
+			const n = this._toFiniteOrNull(displayValue);
+			if (n === null) return null;
+			if (this._isTemperatureRangeManagedKey(key)) {
+				return this._toFiniteOrNull(this._toCelsius(n, false));
+			}
+			return n;
+		},
+
+		_fromCanonicalRangeValue(key, canonicalValue) {
+			if (canonicalValue === null || canonicalValue === undefined) return null;
+			if (this._isTemperatureRangeManagedKey(key)) {
+				return this._fromCelsius(canonicalValue, false);
+			}
+			return canonicalValue;
+		},
+
+		_loadValidatedClientRangeForKey(key) {
+			const server = this._serverRangeForKey(key);
+			const stored = Ranges.getStoredClientRange(key);
+			if (!this._hasValidServerRange(key)) {
 				return {
 					start: this._toFiniteOrNull(stored.start),
 					end: this._toFiniteOrNull(stored.end),
@@ -294,44 +330,95 @@ function configApp() {
 				end = server.end;
 			}
 
-			TempUnits.setStoredTemperatureRangeC(start, end);
+			Ranges.setStoredClientRange(key, start, end);
 			return { start, end };
 		},
 
-		_temperatureSetPointClientRangeC() {
+		_loadValidatedClientRangesIntoConfig() {
+			for (const key of Object.keys(LOCAL_RANGE_FIELDS)) {
+				if (!this.hasConfigKey(key)) continue;
+				const fields = this._localRangeFieldsForKey(key);
+				const range = this._loadValidatedClientRangeForKey(key);
+				this.cfg[fields.start] = this._fromCanonicalRangeValue(key, range.start);
+				this.cfg[fields.end] = this._fromCanonicalRangeValue(key, range.end);
+			}
+		},
+
+		_clientCanonicalRangeFromConfigForKey(key) {
+			const fields = this._localRangeFieldsForKey(key);
 			return {
-				start: this._toFiniteOrNull(this._toCelsius(this.cfg.temperatureRangeStart, false)),
-				end: this._toFiniteOrNull(this._toCelsius(this.cfg.temperatureRangeEnd, false)),
+				start: this._toCanonicalRangeValue(key, this.cfg[fields.start]),
+				end: this._toCanonicalRangeValue(key, this.cfg[fields.end]),
 			};
 		},
 
-		_temperatureSetPointEffectiveRangeC() {
-			const server = this._temperatureSetPointServerRangeC();
-			const client = this._temperatureSetPointClientRangeC();
-			let effectiveStart = server.start;
-			let effectiveEnd = server.end;
-			if (Number.isFinite(client.start)) {
-				effectiveStart = Math.max(effectiveStart, client.start);
-			}
-			if (Number.isFinite(client.end)) {
-				effectiveEnd = Math.min(effectiveEnd, client.end);
-			}
-			if (!Number.isFinite(effectiveStart) || !Number.isFinite(effectiveEnd) || effectiveStart > effectiveEnd) {
+		_effectiveCanonicalRangeForKey(key) {
+			const server = this._serverRangeForKey(key);
+			const client = this._clientCanonicalRangeFromConfigForKey(key);
+			let start = server.start;
+			let end = server.end;
+			if (Number.isFinite(client.start)) start = Math.max(start, client.start);
+			if (Number.isFinite(client.end)) end = Math.min(end, client.end);
+			if (!Number.isFinite(start) || !Number.isFinite(end) || start > end) {
 				return server;
 			}
-			return { start: effectiveStart, end: effectiveEnd };
+			return { start, end };
 		},
 
-		temperatureSetPointEffectiveMin() {
-			const range = this._temperatureSetPointEffectiveRangeC();
-			if (!Number.isFinite(range.start)) return null;
-			return this._fromCelsius(range.start, false);
+		_effectiveDisplayRangeForKey(key) {
+			const range = this._effectiveCanonicalRangeForKey(key);
+			return {
+				start: this._fromCanonicalRangeValue(key, range.start),
+				end: this._fromCanonicalRangeValue(key, range.end),
+			};
 		},
 
-		temperatureSetPointEffectiveMax() {
-			const range = this._temperatureSetPointEffectiveRangeC();
-			if (!Number.isFinite(range.end)) return null;
-			return this._fromCelsius(range.end, false);
+		_clampConfigValueToEffectiveRangeForKey(key) {
+			if (!this.hasConfigKey(key)) return;
+			const range = this._effectiveDisplayRangeForKey(key);
+			if (!Number.isFinite(range.start) || !Number.isFinite(range.end)) return;
+			this.cfg[key] = this._clampToRange(this.cfg[key], range.start, range.end);
+		},
+
+		_clampAllManagedSetPointValues() {
+			for (const key of Object.keys(LOCAL_RANGE_FIELDS)) {
+				this._clampConfigValueToEffectiveRangeForKey(key);
+			}
+		},
+
+		_validateAndPersistClientRangeForKey(key) {
+			const fields = this._localRangeFieldsForKey(key);
+			const startDisplay = this._toFiniteOrNull(this.cfg[fields.start]);
+			const endDisplay = this._toFiniteOrNull(this.cfg[fields.end]);
+			if (startDisplay === null || endDisplay === null) {
+				return `Client ${key} range start/end must be valid numbers.`;
+			}
+			if (startDisplay > endDisplay) {
+				return `Client ${key} range start must be less than or equal to end.`;
+			}
+
+			const server = this._serverRangeForKey(key);
+			const startCanonical = this._toCanonicalRangeValue(key, startDisplay);
+			const endCanonical = this._toCanonicalRangeValue(key, endDisplay);
+			if (Number.isFinite(server.start) && Number.isFinite(server.end)
+				&& (startCanonical < server.start || endCanonical > server.end)) {
+				const serverStart = this._fromCanonicalRangeValue(key, server.start);
+				const serverEnd = this._fromCanonicalRangeValue(key, server.end);
+				const units = this.unitsFor(key);
+				return `Client ${key} range must stay within server range (${serverStart} to ${serverEnd}${units ? ` ${units}` : ''}).`;
+			}
+
+			Ranges.setStoredClientRange(key, startCanonical, endCanonical);
+			return null;
+		},
+
+		_validateAndPersistAllClientRanges() {
+			for (const key of Object.keys(LOCAL_RANGE_FIELDS)) {
+				if (!this.hasConfigKey(key)) continue;
+				const error = this._validateAndPersistClientRangeForKey(key);
+				if (error) return error;
+			}
+			return null;
 		},
 
 		_clampToRange(value, min, max) {
@@ -340,33 +427,11 @@ function configApp() {
 			return Math.min(Math.max(n, min), max);
 		},
 
-		_clampTemperatureSetPointToEffectiveRange() {
-			if (!this.hasConfigKey('temperatureSetPoint')) return;
-			const min = this.temperatureSetPointEffectiveMin();
-			const max = this.temperatureSetPointEffectiveMax();
-			this.cfg.temperatureSetPoint = this._clampToRange(this.cfg.temperatureSetPoint, min, max);
-		},
-
-		_persistClientTemperatureRange() {
-			const startDisplay = this._toFiniteOrNull(this.cfg.temperatureRangeStart);
-			const endDisplay = this._toFiniteOrNull(this.cfg.temperatureRangeEnd);
-			if (startDisplay === null || endDisplay === null) {
-				return 'Client temperature range start/end must be valid numbers.';
-			}
-			if (startDisplay > endDisplay) {
-				return 'Client temperature range start must be less than or equal to end.';
-			}
-
-			const startC = this._toCelsius(startDisplay, false);
-			const endC = this._toCelsius(endDisplay, false);
-			const serverRangeC = this._temperatureSetPointServerRangeC();
-			if (Number.isFinite(serverRangeC.start) && Number.isFinite(serverRangeC.end)
-				&& (startC < serverRangeC.start || endC > serverRangeC.end)) {
-				return `Client temperature range must stay within server range (${this._fromCelsius(serverRangeC.start, false)} to ${this._fromCelsius(serverRangeC.end, false)} ${this.temperatureUnitLabel()}).`;
-			}
-
-			TempUnits.setStoredTemperatureRangeC(startC, endC);
-			return null;
+		formatTemperatureSetPoint() {
+			const n = Number(this.cfg.temperatureSetPoint ?? 0);
+			const value = Number.isFinite(n) ? n.toFixed(TempUnits.DECIMAL_PLACES) : '0.0';
+			const units = this.unitsFor('temperatureSetPoint');
+			return units ? `${value} ${units}` : value;
 		},
 	};
 }

@@ -68,17 +68,47 @@
 
 				<fieldset>
 					<legend>Operation</legend>
+					<div class="range-row" x-show="hasConfigKey('circSpeedSetPoint')">
+						<label>Circulation speed range start [local]
+							<input type="number" x-model.number="cfg.circSpeedRangeStart" step="1">
+						</label>
+						<label>Circulation speed range end [local]
+							<input type="number" x-model.number="cfg.circSpeedRangeEnd" step="1">
+						</label>
+					</div>
 					<label x-show="hasConfigKey('circSpeedSetPoint')"><span x-text="labelFor('circSpeedSetPoint', 'Circulation Speed Set Point') + (unitsFor('circSpeedSetPoint') ? ' (' + unitsFor('circSpeedSetPoint') + ')' : '')"></span>
-						<input type="range" :min="minFor('circSpeedSetPoint')" :max="maxFor('circSpeedSetPoint')" x-model.number="cfg.circSpeedSetPoint">
-						<span x-text="cfg.circSpeedSetPoint"></span>
+						<div class="range-with-value">
+							<input type="range" :min="minFor('circSpeedSetPoint')" :max="maxFor('circSpeedSetPoint')" x-model.number="cfg.circSpeedSetPoint">
+							<span x-text="cfg.circSpeedSetPoint"></span>
+						</div>
 					</label>
+					<div class="range-row" x-show="hasConfigKey('coolingSpeedSetPoint')">
+						<label>Cooling speed range start [local]
+							<input type="number" x-model.number="cfg.coolingSpeedRangeStart" step="1">
+						</label>
+						<label>Cooling speed range end [local]
+							<input type="number" x-model.number="cfg.coolingSpeedRangeEnd" step="1">
+						</label>
+					</div>
 					<label x-show="hasConfigKey('coolingSpeedSetPoint')"><span x-text="labelFor('coolingSpeedSetPoint', 'Cooling Speed Set Point') + (unitsFor('coolingSpeedSetPoint') ? ' (' + unitsFor('coolingSpeedSetPoint') + ')' : '')"></span>
-						<input type="range" :min="minFor('coolingSpeedSetPoint')" :max="maxFor('coolingSpeedSetPoint')" x-model.number="cfg.coolingSpeedSetPoint">
-						<span x-text="cfg.coolingSpeedSetPoint"></span>
+						<div class="range-with-value">
+							<input type="range" :min="minFor('coolingSpeedSetPoint')" :max="maxFor('coolingSpeedSetPoint')" x-model.number="cfg.coolingSpeedSetPoint">
+							<span x-text="cfg.coolingSpeedSetPoint"></span>
+						</div>
 					</label>
+					<div class="range-row" x-show="hasConfigKey('heatingSpeedSetPoint')">
+						<label>Heating speed range start [local]
+							<input type="number" x-model.number="cfg.heatingSpeedRangeStart" step="1">
+						</label>
+						<label>Heating speed range end [local]
+							<input type="number" x-model.number="cfg.heatingSpeedRangeEnd" step="1">
+						</label>
+					</div>
 					<label x-show="hasConfigKey('heatingSpeedSetPoint')"><span x-text="labelFor('heatingSpeedSetPoint', 'Heating Speed Set Point') + (unitsFor('heatingSpeedSetPoint') ? ' (' + unitsFor('heatingSpeedSetPoint') + ')' : '')"></span>
-						<input type="range" :min="minFor('heatingSpeedSetPoint')" :max="maxFor('heatingSpeedSetPoint')" x-model.number="cfg.heatingSpeedSetPoint">
-						<span x-text="cfg.heatingSpeedSetPoint"></span>
+						<div class="range-with-value">
+							<input type="range" :min="minFor('heatingSpeedSetPoint')" :max="maxFor('heatingSpeedSetPoint')" x-model.number="cfg.heatingSpeedSetPoint">
+							<span x-text="cfg.heatingSpeedSetPoint"></span>
+						</div>
 					</label>
 					<div class="range-row" x-show="hasConfigKey('temperatureSetPoint')">
 						<label><span x-text="'Temperature range start [local] ' + unitsFor('temperatureSetPoint')"></span>
@@ -89,8 +119,10 @@
 						</label>
 					</div>
 					<label x-show="hasConfigKey('temperatureSetPoint')"><span x-text="labelFor('temperatureSetPoint', 'Temperature Set Point') + (unitsFor('temperatureSetPoint') ? ' (' + unitsFor('temperatureSetPoint') + ')' : '')"></span>
-						<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="cfg.temperatureSetPoint">
-						<span x-text="cfg.temperatureSetPoint + (unitsFor('temperatureSetPoint') ? ' ' + unitsFor('temperatureSetPoint') : '')"></span>
+						<div class="range-with-value">
+							<input type="range" :min="minFor('temperatureSetPoint')" :max="maxFor('temperatureSetPoint')" step="0.5" x-model.number="cfg.temperatureSetPoint">
+							<span x-text="formatTemperatureSetPoint()"></span>
+						</div>
 					</label>
 					<label x-show="hasConfigKey('outTemperatureCalibrationOffset')"><span x-text="labelFor('outTemperatureCalibrationOffset', 'Outgoing Temperature Offset') + (unitsFor('outTemperatureCalibrationOffset') ? ' (' + unitsFor('outTemperatureCalibrationOffset') + ')' : '')"></span>
 						<input type="number" x-model.number="cfg.outTemperatureCalibrationOffset" :min="minFor('outTemperatureCalibrationOffset')" :max="maxFor('outTemperatureCalibrationOffset')" step="any">
@@ -159,6 +191,7 @@
 
 	<script src="/alpine.min.js" defer></script>
 	<script src="/temperature-units.js"></script>
+	<script src="/ranges.js"></script>
 	<script src="/config.js"></script>
 </body>
 </html>
